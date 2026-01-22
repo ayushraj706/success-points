@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>अध्याय 2: ढहते विश्वास - Quiz</title>
+
+    <style>
+
+        /* --- CONFIGURATION (इंडेक्स/कंट्रोल सेक्शन) --- */
+
+        :root {
+
+            --primary-color: #E91E63; /* यहाँ से थीम का रंग बदलें */
+
+            --bg-color: #F8F9FA;
+
+            --correct-color: #28a745;
+
+            --wrong-color: #dc3545;
+
+            --text-dark: #212529;
+
+            --timer-color: #ff5722;
+
+        }
+
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
+
+        body { background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+
+        .header {
+
+            background: var(--primary-color);
+
+            color: white; padding: 15px; text-align: center;
+
+            font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 1000;
+
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+        }
+
+        .quiz-container { max-width: 600px; margin: 20px auto; padding: 15px; padding-bottom: 120px; }
+
+        
+
+        .timer-box { 
+
+            text-align: center; margin-bottom: 15px; font-weight: bold; 
+
+            color: var(--timer-color); font-size: 1.2rem; background: white;
+
+            padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+        }
+
+        .card {
+
+            background: white; border-radius: 12px; padding: 20px;
+
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px;
+
+        }
+
+        .q-text { font-size: 19px; font-weight: 600; margin-bottom: 15px; line-height: 1.5; }
+
+        .options { list-style: none; padding: 0; }
+
+        .options li {
+
+            background: #fff; border: 2px solid #e0e0e0;
+
+            margin-bottom: 12px; padding: 14px; border-radius: 10px;
+
+            cursor: pointer; transition: 0.3s; font-size: 16px;
+
+        }
+
+        .options li:hover { background: #f1f3f5; }
+
+        .options li.selected { border-color: var(--primary-color); background: #fff0f3; font-weight: bold; }
+
+        
+
+        /* Footer Navigation */
+
+        .footer {
+
+            position: fixed; bottom: 0; width: 100%; background: white;
+
+            display: flex; justify-content: space-between; padding: 15px;
+
+            border-top: 1px solid #ddd; z-index: 1000;
+
+        }
+
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
+
+        .btn-next { background: var(--primary-color); color: white; }
+
+        .btn-back { background: #e9ecef; color: #495057; }
+
+        .btn-submit { background: #28a745; color: white; }
+
+        /* Result Screen Styles */
+
+        .result-screen { display: none; text-align: center; animation: fadeIn 0.5s; }
+
+        .score-circle {
+
+            width: 140px; height: 140px; background: var(--primary-color);
+
+            color: white; border-radius: 50%; display: flex;
+
+            align-items: center; justify-content: center;
+
+            font-size: 35px; font-weight: bold; margin: 25px auto;
+
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">अध्याय 2: ढहते विश्वास</div>
+
+<div class="quiz-container" id="main-container">
+
+    <div class="timer-box" id="timer-display">समय: 20:00</div>
+
+    
+
+    <div id="quiz-box">
+
+        <div class="card">
+
+            <div id="q-counter" style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">प्रश्न 1/50</div>
+
+            <div class="q-text" id="q-text">Loading...</div>
+
+            <ul class="options" id="options-list"></ul>
+
+        </div>
+
+    </div>
+
+    <div class="result-screen" id="result-screen">
+
+        <div class="card">
+
+            <h2>आपका परिणाम</h2>
+
+            <div class="score-circle" id="final-score">0/50</div>
+
+            <p id="save-msg" style="font-weight: bold;"></p>
+
+            <button class="btn btn-next" onclick="location.reload()" style="width: 100%; margin-top: 10px;">फिर से टेस्ट दें</button>
+
+            <div id="review-area" style="margin-top: 30px; text-align: left;">
+
+                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">उत्तरों की समीक्षा:</h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer" id="navigation">
+
+    <button class="btn btn-back" id="prev-btn" onclick="changeQ(-1)">पीछे</button>
+
+    <button class="btn btn-submit" onclick="finishQuiz()">सबमिट टेस्ट</button>
+
+    <button class="btn btn-next" id="next-btn" onclick="changeQ(1)">आगे</button>
+
+</div>
+
+<script>
+
+    /* --- डेटा सेट (50 सवाल) --- */
+
+    const TIME_LIMIT_MINS = 20; // समय सीमा यहाँ से सेट करें
+
+    const questions = [
+
+        { q: "1. बारिश होते देख किसे लग रहा था जैसे इस बार भी बाढ़ आयेगी?", opt: ["रानी को", "लक्ष्मी को", "आरती को", "राधा को"], ans: 1 },
+
+        { q: "2. ‘ढहते विश्वास' कहानी में कैसी समस्या का वर्णन है?", opt: ["दहेज की समस्या", "अकाल की समस्या", "बाढ़ की समस्या", "घूसखोरी की समस्या"], ans: 2 },
+
+        { q: "3. ‘महानदी' का पानी कहाँ ठहर जाता है?", opt: ["कोशी बराज में", "इंदिरा गाँधी बराज में", "जोब्रा आनिकट में", "दुर्गापुर बराज में"], ans: 2 },
+
+        { q: "4. सातकोड़ी होता किस भाषा के प्रमुख कथाकार हैं?", opt: ["पंजाबी", "अंग्रेजी", "उड़िया", "हिन्दी"], ans: 2 },
+
+        { q: "5. 'ढहते विश्वास' शीर्षक कहानी में, तूफान में किसका घर टूट गया था?", opt: ["गुणनिधि का", "सरपंच का", "तहसीलदार का", "लक्ष्मी का"], ans: 3 },
+
+        { q: "6. कटक शहर को बाढ़ की चपेट से बचाने के लिए किसने पत्थर का बाँध बँधवाया था?", opt: ["राजा खारवेल ने", "राजा ओड ने", "महाराज ययाति केशरी ने", "राजा स्कन्दवर्मन ने"], ans: 2 },
+
+        { q: "7. 'ढहते विश्वास' शीर्षक पाठ में किस बाँध के टूटने की बात कही गयी है?", opt: ["दलई बाँध", "टिहरी बाँध", "सरदार सरोवर बाँध", "फरक्का बाँध"], ans: 0 },
+
+        { q: "8. 'ढहते विश्वास' कहानी का कहानीकार कौन है?", opt: ["श्री निवास", "साँवर दइया", "सातकोड़ी होता", "सुजाता"], ans: 2 },
+
+        { q: "9. 'ढहते विश्वास' कहानी का प्रमुख पात्र कौन है?", opt: ["लक्ष्मी", "सीता", "गीता", "मंगम्मा"], ans: 0 },
+
+        { q: "10. 'ढहते विश्वास' कहानी में कहाँ के जन-जीवन का चित्रण किया गया है?", opt: ["उड़ीसा", "बिहार", "गुजरात", "पंजाब"], ans: 0 },
+
+        { q: "11. 'ढहते विश्वास' कहानी में किस नदी की चर्चा की गई है?", opt: ["गंगा", "महानदी", "गंडक", "सतलज"], ans: 1 },
+
+        { q: "12. ‘ढहते विश्वास' किस भाषा से अनूदित है?", opt: ["कन्नड़", "तमिल", "उड़िया", "गुजराती"], ans: 2 },
+
+        { q: "13. लक्ष्मी के बड़े लड़के का नाम क्या था?", opt: ["शंकरा", "मकरा", "अच्युत", "गुणनिधि"], ans: 2 },
+
+        { q: "14. 'ढहते विश्वास' कहानी किस लेखक द्वारा अनूदित है?", opt: ["राजेन्द्र प्रसाद मिश्र", "बी० आर० नारायण", "गोपाल दास नागर", "के० एन० जमुना"], ans: 0 },
+
+        { q: "15. लक्ष्मी के कितने लड़के थे?", opt: ["एक", "दो", "तीन", "एक भी नहीं"], ans: 1 },
+
+        { q: "16. 'तुरई के फूल की तरह खिल-खिलाकर हँसते लोग सहसा मुरझा गये'—यह पंक्ति किस कहानी की है?", opt: ["धरती कब तक घूमेगी", "नगर", "माँ", "ढहते विश्वास"], ans: 3 },
+
+        { q: "17. लक्ष्मण कहाँ नौकरी कर रहा था?", opt: ["कोलकाता में", "लखनऊ में", "सूरत में", "पटना में"], ans: 0 },
+
+        { q: "18. लक्ष्मण के पत्नी का नाम क्या था?", opt: ["लक्ष्मी", "सीता", "अम्बिका", "ललीता"], ans: 0 },
+
+        { q: "19. पड़ोस के पढ़ाकू लड़का का नाम क्या था?", opt: ["आनन्द", "शान्तनु", "राकेश", "गुणनिधि"], ans: 3 },
+
+        { q: "20. हीराकुंड बाँध किस नदी पर है :", opt: ["महानदी", "गोदावरी", "नर्मदा", "ताप्ती"], ans: 0 },
+
+        { q: "21. किस शहर को बचाने के लिए महाराज ययाति केशरी ने पत्थर के बाँध बनवाए थे?", opt: ["कटक", "भुवनेश्वर", "पुरी", "कलिंग"], ans: 0 },
+
+        { q: "22. लक्ष्मी के ससुर मर गए थे :", opt: ["मंदिर में काम करते समय", "बाँध में काम करते समय", "विद्यालय में काम करते समय", "मस्जिद में काम करते समय"], ans: 1 },
+
+        { q: "23. गुणनिधि ने किस दल का गठन किया था?", opt: ["स्वेच्छा सेवक दल", "स्वयं सेवक दल", "मजदूर दल", "सेवादल"], ans: 0 },
+
+        { q: "24. 'बाढ़ का पानी बढ़ता जा रहा है' ऐसी खबर गाँव में पहुँचाने के लिए गुणनिधि से किसने कहा?", opt: ["मुखिया", "सरपंच", "थानेदार", "जिला अधिकारी"], ans: 1 },
+
+        { q: "25. लक्ष्मी को कितनी लड़कियां है?", opt: ["दो", "तीन", "छह", "चार"], ans: 0 },
+
+        { q: "26. 'विपत्ति अकेले न आकर संगी-साथियों के साथ आती है', यह पंक्ति किस पाठ की है?", opt: ["नगर", "माँ", "ढहते विश्वास", "धरती कब तक घूमेगी"], ans: 2 },
+
+        { q: "27. बाढ़ की समस्या ....... कहानी के केन्द्र में है।", opt: ["माँ", "ढहते विश्वास", "नगर", "धरती कब तक घूमेगी"], ans: 1 },
+
+        { q: "28. लक्ष्मी का पति ....... में नौकरी करता था।", opt: ["मुंबई", "दिल्ली", "जयपुर", "कलकत्ता"], ans: 3 },
+
+        { q: "29. लक्ष्मी ....... कहानी की केन्द्रीय पात्र है :", opt: ["ढहते विश्वास", "धरती कब तक घूमेगी", "माँ", "नगर"], ans: 0 },
+
+        { q: "30. ‘सातकोड़ी होता' कथाकार हैं :", opt: ["पंजाबी के", "गुजराती के", "उड़िया के", "हिन्दी के"], ans: 2 },
+
+        { q: "31. किस नदी के बाँध के नीचे लक्ष्मी का घर था?", opt: ["गंगा", "यमुना", "सरस्वती", "देवी"], ans: 3 },
+
+        { q: "32. लक्ष्मी के पति का क्या नाम है?", opt: ["वीरेन्द्र", "लक्ष्मण", "राजनेश", "महेश"], ans: 1 },
+
+        { q: "33. ‘ढहते विश्वास' कहानी में स्कूल कहाँ है?", opt: ["पठार के नीचे", "टीले के नीचे", "पहाड़ के नीचे", "पेड़ के नीचे"], ans: 1 },
+
+        { q: "34. कौन हल्ला कर बाढ़ से सबको सचेत कर रहे थे?", opt: ["चंदरा", "गुणनिधि, अच्युत", "शंकरा, मकरा", "इनमें से सभी"], ans: 3 },
+
+        { q: "35. 'स्वेच्छासेवक दल' का गठन किसने किया?", opt: ["गुणनिधि ने", "लक्ष्मी ने", "सरपंच ने", "केशव ने"], ans: 0 },
+
+        { q: "36. किस लेखक के कथा साहित्य में उड़ीसा का जीवन गहरी आंतरिकता के साथ प्रकट हुआ है?", opt: ["सातकोड़ी होता", "श्रीनिवास", "सुजाता", "ईश्वर पेटलीकर"], ans: 0 },
+
+        { q: "37. बारी-बारी से गाँव के लड़के किसकी निगरानी कर रहे हैं?", opt: ["दलई बाँध की", "गाँव की", "नदी की", "मंदिर की"], ans: 0 },
+
+        { q: "38. लक्ष्मी अपनी दोनों लड़कियों और छोटे बेटे को सुलाकर कहाँ गयी?", opt: ["खलिहान में", "गुहाल में", "रसोई में", "कमरे में"], ans: 1 },
+
+        { q: "39. घर पर दो लड़कियों और सालभर के लड़के को लेकर कौन अकेली है?", opt: ["पड़ोसन", "लक्ष्मी", "शंकर की बहन", "गुणनिधि की माँ"], ans: 1 },
+
+        { q: "40. सातकोड़ी होता का जन्म कब हुआ था?", opt: ["24 अक्टूबर, 1927 ई.", "11 अक्टूबर, 1928 ई.", "29 अक्टूबर, 1929 ई.", "30 अक्टूबर, 1930 ई."], ans: 2 },
+
+        { q: "41. हल किराये पर लेकर बीघे भर जमीन में खेती कौन करवायी थी?", opt: ["सरपंच", "मुखिया", "तहसीलदार", "लक्ष्मी"], ans: 3 },
+
+        { q: "42. लक्ष्मी के पूर्वज कितने बीघा खेत छोड़कर गये थे?", opt: ["दो बीघा", "तीन बीघा", "एक बीघा", "चार बीघा"], ans: 2 },
+
+        { q: "43. लक्ष्मी किसके यहाँ छिटपुट काम करती थी?", opt: ["मुखिया के यहाँ", "दरोगा के यहाँ", "तहसीलदार के यहाँ", "सरपंच के यहाँ"], ans: 2 },
+
+        { q: "44. देबी नदी के बाँध के नीचे किसका घर था?", opt: ["सरपंच का", "लक्ष्मी का", "डॉक्टर का", "दरोगा का"], ans: 1 },
+
+        { q: "45. हीराकुंड बाँध में काम करते समय किसका देहान्त हो चुका था?", opt: ["लक्ष्मी के ससुर का", "लक्ष्मी के पति का", "लक्ष्मी के मामा का", "लक्ष्मी के बेटा का"], ans: 0 },
+
+        { q: "46. बाँध के रखवाली के लिए लक्ष्मी ने किसे भेजा?", opt: ["बड़े लड़के को", "छोटे लड़के को", "पति को", "ससुर को"], ans: 0 },
+
+        { q: "47. किसने कहा— 'जुटे रहो बच्चो, पानी में रहकर मगरमच्छ से बैर रखना मुश्किल है।'?", opt: ["सरपंच", "गुणनिधि", "लक्ष्मी", "लक्ष्मण"], ans: 2 },
+
+        { q: "48. चैत की संक्रांति को कहाँ मेला लगता था?", opt: ["स्कूल के छत पर", "टीले पर", "नदी के बाँध पर", "खेल के मैदान में"], ans: 1 },
+
+        { q: "49. लक्ष्मी के छोटे लड़के का क्या नाम था?", opt: ["गुणनिधि", "लक्ष्मण", "अच्युत", "केशव"], ans: 4 },
+
+        { q: "50. लक्ष्मी के ससुराल आये हुए कितने वर्ष हुए थे?", opt: ["तीस साल", "अट्ठाईस साल", "पच्चीस साल", "बीस साल"], ans: 1 }
+
+    ];
+
+    let currIdx = 0;
+
+    let userAnswers = new Array(questions.length).fill(null);
+
+    let timeLeft = TIME_LIMIT_MINS * 60;
+
+    // Timer Logic
+
+    const timerInterval = setInterval(() => {
+
+        let mins = Math.floor(timeLeft / 60);
+
+        let secs = timeLeft % 60;
+
+        document.getElementById("timer-display").innerText = `समय: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        if (timeLeft <= 0) {
+
+            clearInterval(timerInterval);
+
+            finishQuiz();
+
+        }
+
+        timeLeft--;
+
+    }, 1000);
+
+    function renderQuestion() {
+
+        const q = questions[currIdx];
+
+        document.getElementById("q-counter").innerText = `प्रश्न ${currIdx + 1}/${questions.length}`;
+
+        document.getElementById("q-text").innerText = q.q;
+
+        const list = document.getElementById("options-list");
+
+        list.innerHTML = "";
+
+        
+
+        q.opt.forEach((optText, i) => {
+
+            const li = document.createElement("li");
+
+            li.innerText = optText;
+
+            if (userAnswers[currIdx] === i) li.classList.add("selected");
+
+            li.onclick = () => {
+
+                userAnswers[currIdx] = i;
+
+                renderQuestion();
+
+            };
+
+            list.appendChild(li);
+
+        });
+
+        document.getElementById("prev-btn").style.visibility = currIdx === 0 ? "hidden" : "visible";
+
+        document.getElementById("next-btn").style.display = currIdx === questions.length - 1 ? "none" : "block";
+
+    }
+
+    function changeQ(dir) {
+
+        currIdx += dir;
+
+        renderQuestion();
+
+    }
+
+    function finishQuiz() {
+
+        clearInterval(timerInterval);
+
+        let score = 0;
+
+        let reviewHTML = "";
+
+        questions.forEach((q, i) => {
+
+            const isCorrect = userAnswers[i] === q.ans;
+
+            if (isCorrect) score++;
+
+            reviewHTML += `
+
+                <div class="card" style="border-left: 6px solid ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; padding: 15px; margin-bottom: 15px;">
+
+                    <p style="margin: 0 0 10px 0;"><strong>प्र. ${i+1}: ${q.q}</strong></p>
+
+                    <p style="margin: 5px 0; color: ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'};">
+
+                        ${isCorrect ? '✔' : '✘'} आपका उत्तर: ${userAnswers[i] !== null ? q.opt[userAnswers[i]] : '<span style="color:#777">नहीं दिया</span>'}
+
+                    </p>
+
+                    ${!isCorrect ? `<p style="margin: 5px 0; color: var(--correct-color);"><b>सही उत्तर:</b> ${q.opt[q.ans]}</p>` : ''}
+
+                </div>`;
+
+        });
+
+        document.getElementById("quiz-box").style.display = "none";
+
+        document.getElementById("navigation").style.display = "none";
+
+        document.getElementById("timer-display").style.display = "none";
+
+        document.getElementById("result-screen").style.display = "block";
+
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+
+        document.getElementById("review-area").innerHTML += reviewHTML;
+
+        // Firebase Call
+
+        if (window.saveDataToFirebase) {
+
+            window.saveDataToFirebase(score, questions.length);
+
+        }
+
+    }
+
+    renderQuestion();
+
+</script>
+
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+
+        authDomain: "otpin-fb5e3.firebaseapp.com",
+
+        projectId: "otpin-fb5e3",
+
+        storageBucket: "otpin-fb5e3.firebasestorage.app",
+
+        messagingSenderId: "545063232950",
+
+        appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+    window.saveDataToFirebase = async (score, total) => {
+
+        try {
+
+            await addDoc(collection(db, "all_test_results"), {
+
+                testName: "Hindi: ढहते विश्वास",
+
+                score: score,
+
+                total: total,
+
+                date: new Date().toLocaleDateString(),
+
+                timestamp: new Date()
+
+            });
+
+            document.getElementById("save-msg").innerText = "✅ रिजल्ट क्लाउड में सेव हो गया!";
+
+            document.getElementById("save-msg").style.color = "green";
+
+        } catch (e) {
+
+            document.getElementById("save-msg").innerText = "❌ एरर: इंटरनेट चेक करें।";
+
+            document.getElementById("save-msg").style.color = "red";
+
+        }
+
+    };
+
+</script>
+
+</body>
+
+</html>

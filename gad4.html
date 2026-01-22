@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nakhun Kyon Badhte Hain - Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Save Function
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Saving under 'ch_nakhun'
+                const resultRef = doc(db, "users", user.uid, "test_results", "ch_nakhun"); 
+                
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    email: user.email,
+                    testName: "Nakhun Kyon Badhte Hain",
+                    score: score,
+                    totalQuestions: total,
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(resultRef, data);
+                    console.log("Result Saved!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Rose Header */
+        .header-bar {
+            background-color: #be123c; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(190, 18, 60, 0.4);
+        }
+
+        .q-card {
+            background-color: #1c1917; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #292524; border: 2px solid #44403c; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fb7185; background-color: #881337; /* Rose selection */
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #be123c; color: white; border: 1px solid #fb7185; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #fb7185; font-weight: bold; font-size: 14px; border: 1px solid #881337;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-rose-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Nakhun Kyon Badhte Hain</h1>
+        <span id="q-indicator" class="bg-rose-900 text-rose-200 px-3 py-1 rounded-lg text-xs font-bold border border-rose-700">1/56</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-rose-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-rose-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर सेव कर लिया गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-rose-600 text-white p-4 rounded-xl font-bold hover:bg-rose-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘प्राणिशास्त्रियों का ऐसा अनुमान है कि मनुष्य का अनावश्यक अंग उसी प्रकार झड़ जाएगा, जिस प्रकार उसकी पूँछ झड़ गई है।'-किस पाठ की पंक्ति है?", a: "नाखून क्यों बढ़ते हैं", o: ["भारत से हम क्या सीखें", "नाखून क्यों बढ़ते हैं", "परम्परा का मूल्यांकन", "नागरी लिपि"] },
+            { q: "निम्नलिखित में किस पाठ की विधा निबंध है?", a: "नाखून क्यों बढ़ते हैं", o: ["नाखून क्यों बढ़ते हैं", "बहादुर", "मछली", "भारतमाता"] },
+            { q: "कालिदास ने क्या कहा था? 'नाखून क्यों बढ़ते है' शीर्षक पाठ के आधार पर उत्तर दें।", a: "(a) और (b) दोनों", o: ["सब पुराने अच्छे नहीं होते", "सब नए खराब ही नहीं होते", "(a) और (b) दोनों", "सब पुराने और नए सिर्फ अच्छे होते हैं"] },
+            { q: "नाखूनों का बढ़ना किसका प्रमाण है?", a: "पाशविक वृत्ति और संघर्ष चेतना का", o: ["स्मरण शक्ति का", "विस्मरण शक्ति का", "चिंतन का", "पाशविक वृत्ति और संघर्ष चेतना का"] },
+            { q: "‘पुनर्नवा’ शीर्षक उपन्यास किसकी रचना है?", a: "हजारीप्रसाद द्विवेदी", o: ["हजारीप्रसाद द्विवेदी", "अमरकांत", "यतीन्द्र मिश्र", "बिरजू महाराज"] },
+            { q: "‘नाखून क्यों बढ़ते हैं’ शीर्षक पाठ साहित्य की कौन विधा है?", a: "ललित निबंध", o: ["कहानी", "ललित निबंध", "नाटक", "एकांकी"] },
+            { q: "गौड़ देश के लोग क्या पसंद करते थे?", a: "बड़े-बड़े नखों को", o: ["बड़े बालों को", "छोटे बालों को", "ढीले कपड़ों को", "बड़े-बड़े नखों को"] },
+            { q: "नाखूनों का बढ़ना मनुष्य की किस वृत्ति का परिणाम है?", a: "पाशविक वृत्ति का", o: ["मानवीय वृत्ति का", "पाशविक वृत्ति का", "उदार वृत्ति का", "इनमें से कोई नहीं"] },
+            { q: "लेखक हजारी प्रसाद द्विवेदी ने दयनीय जीव किसे कहा है?", a: "अल्पज्ञ पिता को", o: ["अल्पज्ञ पिता को", "अल्पज्ञ माँ को", "अल्पज्ञ भाई को", "अल्पज्ञ बहन को"] },
+            { q: "‘प्रत मानव’ का अर्थ क्या है?", a: "प्राचीन मानव", o: ["आधुनिक मानव", "मध्यकालीन मानव", "धार्मिक मानव", "प्राचीन मानव"] },
+            { q: "नाखून का इतिहास किस पुस्तक में मिलता है?", a: "कामसूत्र में", o: ["कामसूत्र में", "मेघदूत में", "महाभाष्य में", "इनमें से कोई नहीं"] },
+            { q: "हजारी प्रसाद द्विवेदी ने डी० लिट० की उपाधि किस विश्वविद्यालय से प्राप्त की?", a: "लखनऊ विवि से", o: ["मगध विवि से", "लखनऊ विवि से", "चण्डीगढ़ विवि से", "काशी हिन्दू विवि से"] },
+            { q: "कहानी में चन्द्रकार, त्रिकोण, दंतुल वर्तुलाकार आकृतियों का संबंध मानव के किस अंग से है?", a: "नख से", o: ["नख से", "मुख से", "नाक से", "आँख से"] },
+            { q: "अलक्तक का अर्थ है:", a: "आलता", o: ["तेल", "आलता", "हल्दी", "साबुन"] },
+            { q: "द्विवेदी जी को साहित्य अकादमी पुरस्कार किस रचना पर मिला था?", a: "आलोक पर्व पर", o: ["अशोक के फूल पर", "आलोक पर्व पर", "अनामदास का पोथा पर", "कल्पलता"] },
+            { q: "प्राचीन मानव का प्रमुख अस्त्र-शस्त्र था?", a: "नाखून", o: ["दाँत", "नाखून", "पैर", "पत्थर के औजार"] },
+            { q: "नाखूनों का बढ़ना किसका परिणाम है?", a: "मनुष्य की अंध सहजात वृत्ति का", o: ["इच्छा", "मनुष्य की अंध सहजात वृत्ति का", "सफलता का", "असफलता"] },
+            { q: "‘सब पुराने अच्छे नहीं होते और सब नए खराब नहीं होते’ ऐसा किसने कहा?", a: "कालिदास ने", o: ["पंतजलि ने", "कालिदास ने", "वात्स्यायन ने", "कबीर ने"] },
+            { q: "नखधर मनुष्य आज किस पर भरोसा कर रहा है?", a: "एटम बम पर", o: ["बन्दूक पर", "लाठी पर", "एटम बम पर", "लोहे के विभिन्न हथियार पर"] },
+            { q: "मनुष्य की मनुष्यता यही है कि वह सबके दुख-सुख को सहानुभूति के साथ देखता है। यह तथ्य किसका है?", a: "गौतम बुद्ध का", o: ["महावीर स्वामी का", "गौतम बुद्ध का", "कालिदास का", "वात्स्यायन का"] },
+            { q: "‘नाखून क्यों बढ़ते हैं’ के निबंधकार कौन हैं?", a: "आचार्य हजारी प्रसाद द्विवेदी", o: ["गुलाब राय", "शांति प्रिय द्विवेदी", "प्रतापनारायण मिश्र", "आचार्य हजारी प्रसाद द्विवेदी"] },
+            { q: "आचार्य हजारी प्रसाद द्विवेदी जी का साहित्य की किस विधा में लेखन नहीं है?", a: "कहानी", o: ["आलोचना", "उपन्यास", "कहानी", "निबंध"] },
+            { q: "कौन-सी रचना हजारी प्रसाद द्विवेदी की नहीं है?", a: "माटी की मूरतें", o: ["अशोक के फूल", "माटी की मूरतें", "वाणभट्ट की आत्मकथा", "हिंदी साहित्य का आदिकाल"] },
+            { q: "द्विवेदी जी ने निर्लज्ज अपराधी किसे कहा है?", a: "नाखून को", o: ["नाखून को", "चोर को", "डाकू को", "बदमाश को"] },
+            { q: "‘कामसूत्र’ किसकी रचना है?", a: "वात्स्यायन की", o: ["हजारी प्रसाद द्विवेदी की", "पतंजलि की", "वात्स्यायन की", "रामानुजाचार्य की"] },
+            { q: "‘सिक्थक’ का अर्थ होता है:", a: "मोम", o: ["साबुन", "महावर", "दर्पण", "मोम"] },
+            { q: "‘महाभारत’ क्या है?", a: "पुराण", o: ["उपन्यास", "कहानी", "शास्त्र", "पुराण"] },
+            { q: "हजारी प्रसाद द्विवेदी द्वारा रचित पाठ है:", a: "नाखून क्यों बढ़ते हैं", o: ["नाखून क्यों बढ़ते हैं", "बहादुर", "आविन्यों", "मछली"] },
+            { q: "ललित निबंध है:", a: "नाखून क्यों बढ़ते हैं", o: ["मछली", "नाखून क्यों बढ़ते हैं", "बहादुर", "नौबत खाने में इबादत"] },
+            { q: "‘पुराने का मोह सब समय वांछनीय ही नहीं होता’ किस लेखक की पंक्ति है?", a: "हजारी प्रसाद द्विवेदी", o: ["मैक्समूलर", "रामविलास शर्मा", "हजारी प्रसाद द्विवेदी", "अशोक वाजपेयी"] },
+            { q: "प्राचीनकाल में दक्षिण भारत के लोग कैसा नाखून रखते थे?", a: "छोटे-छोटे", o: ["छोटे-छोटे", "बड़े-बड़े", "मध्यम साइज", "इनमें सभी"] },
+            { q: "दधीचि की हड्डी से क्या बना था?", a: "इन्द्र का वज्र", o: ["तलवार", "त्रिशूल", "इन्द्र का वज्र", "कुछ भी नहीं"] },
+            { q: "‘आलोक पर्व’ शीर्षक निबंध संग्रह किसकी रचना है?", a: "हजारी प्रसाद द्विवेदी", o: ["हजारी प्रसाद द्विवेदी", "यतीन्द्र मिश्र", "महात्मा गाँधी", "अशोक वाजपेयी"] },
+            { q: "हजारी प्रसाद द्विवेदी का जन्म कब हुआ?", a: "1907 ई० में", o: ["1905 ई० में", "1907 ई० में", "1909 ई० में", "1911 ई० में"] },
+            { q: "हजारी प्रसाद द्विवेदी का जन्म कहाँ हुआ?", a: "बलिया, उत्तर प्रदेश", o: ["समस्तीपुर, बिहार", "छपरा, बिहार", "बलिया, उत्तर प्रदेश", "इलाहाबाद, उत्तरप्रदेश"] },
+            { q: "कौन मनुष्य का आदर्श नहीं बन सकती?", a: "बंदरियाँ", o: ["शेर", "बंदरियाँ", "भालू", "हाथी"] },
+            { q: "‘देवताओं का राजा’ से किन्हें सम्बोधित किया जाता है?", a: "इन्द्र", o: ["महादेव", "विष्णु", "इन्द्र", "ब्रह्मा"] },
+            { q: "‘नख’ (नाखून) किसका प्रतीक है?", a: "पशुता का", o: ["मानवता का", "पशुता का", "दोनों", "इनमें से कोई नहीं"] },
+            { q: "‘पृथ्वीराज रासो’ किनका सम्पादन है?", a: "हजारी प्रसाद द्विवेदी", o: ["हजारी प्रसाद द्विवेदी", "मैक्समूलर", "सुमित्रानन्द पंत", "नलिन विलोचन शर्मा"] },
+            { q: "हजारी प्रसाद द्विवेदी को कब ‘पद्मभूषण’ की उपाधि से सम्मानित किया गया?", a: "1957 ई० में", o: ["1953 ई० में", "1957 ई० में", "1959 ई० में", "1961 ई० में"] },
+            { q: "‘अशोक के फूल’ किसकी रचना है?", a: "हजारी प्रसाद द्विवेदी", o: ["दिनकर", "सुमित्रानन्दन पंत", "हजारी प्रसाद द्विवेदी", "गुणाकर मूले"] },
+            { q: "लेखक के अनुसार मनुष्य के नाखून किसके जीवंत प्रतीक हैं?", a: "पाशवी वृत्ति के", o: ["मनुष्यता के", "सभ्यता के", "पाशवी वृत्ति के", "सौन्दर्य के"] },
+            { q: "हजारी प्रसाद द्विवेदी की मृत्यु कब और कहाँ हुई?", a: "1979, दिल्ली", o: ["1979, दिल्ली", "1984, अजमेर", "1989, उत्तरप्रदेश", "1994, कानपुर"] },
+            { q: "सहजात वृत्तियाँ किसे कहते हैं?", a: "अनजान स्मृतियों को", o: ["अस्त्रों के संचयन को", "अनजान स्मृतियों को", "‘स्व’ के बंधन को", "उपर्युक्त सभी"] },
+            { q: "द्विवेदीजी से किसने पूछा था-नाखून क्यों बढ़ते हैं?", a: "छोटी लड़की ने", o: ["लड़के ने", "छोटी लड़की ने", "पत्नी ने", "नौकर ने"] },
+            { q: "‘नाखून क्यों बढ़ते हैं।’ पाठ में बूढ़े ने सबसे बड़ी चीज किसे माना है?", a: "प्रेम", o: ["प्रेम", "क्रोध", "भय", "घृणा"] },
+            { q: "किस देश के लोग बड़े-बड़े नख पसंद करते हैं?", a: "गौड़ देश के", o: ["अंगदेश के", "गांधार के", "केकय देश के", "गौड़ देश के"] },
+            { q: "‘पुराने का मोह सब समय वांछनीय ही नहीं होता’—यह पंक्ति किस शीर्षक पाठ की है?", a: "नाखून क्यों बढ़ते हैं", o: ["नाखून क्यों बढ़ते हैं", "बहादुर", "मछली", "नागरी लिपि"] },
+            { q: "‘अनामदास का पोथा’ उपन्यास किस लेखक की कृति है?", a: "हजारी प्रसाद द्विवेदी", o: ["हजारी प्रसाद द्विवेदी", "यतीन्द्र मिश्र", "अमरकांत", "महात्मा गाँधी"] },
+            { q: "कौन नाखून को जिलाए जा रहा है?", a: "प्रकृति", o: ["मनुष्य", "राक्षस", "प्रकृति", "पशु"] },
+            { q: "अनामदास का पोथा साहित्य की किस विधा की रचना है?", a: "उपन्यास", o: ["कहानी", "उपन्यास", "निबंध", "नाटक"] },
+            { q: "असुरों के पास नहीं थी:", a: "लोहे के अस्त्र", o: ["विद्याएँ", "शक्ति", "युद्ध कौशल", "लोहे के अस्त्र"] },
+            { q: "‘कालिदास की लालित्य योजना’ किनकी रचना है?", a: "हजारी प्रसाद द्विवेदी की", o: ["रामविलास शर्मा की", "नलिन विलोचन शर्मा की", "हजारी प्रसाद द्विवेदी की", "अशोक वाजपेयी की"] },
+            { q: "गौतम बुद्ध ने कहा था कि मनुष्य की मनुष्यता है:", a: "सभी के दुःख-सुख को सहानुभूति के साथ देखना", o: ["सभी के दुःख-सुख को सहानुभूति के साथ देखना", "सभी के प्रति असमानता का भाव रखना", "स्वार्थ का भाव रखना", "भौतिक विकास करना"] },
+            { q: "नखधर मनुष्य अब क्या लेकर आगे की ओर चल रहा है?", a: "एटम बम", o: ["रुपया", "एटम बम", "सैनिक", "कलम"] },
+            { q: "मनुष्य किसको नहीं बढ़ने देगा?", a: "नाखून को", o: ["जंगल को", "नाखून को", "आतंक को", "जल को"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes for 56 questions
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-rose-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

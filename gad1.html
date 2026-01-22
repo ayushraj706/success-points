@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ambedkar Test - Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Make functions global so HTML can use them
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                const resultRef = doc(db, "users", user.uid, "test_results", "ch7_ambedkar"); // Saves under User ID
+                const adminRef = doc(db, "all_results", user.uid + "_ch7"); // Saves for Admin view (Optional)
+                
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    email: user.email,
+                    testName: "Chapter 7: Shram Vibhajan",
+                    score: score,
+                    totalQuestions: total,
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(resultRef, data);
+                    console.log("Result Saved!");
+                    // You can also save to a common collection for leaderboard if needed
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("No user logged in (Guest Mode)");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Blue Header */
+        .header-bar {
+            background-color: #2563eb; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #60a5fa; background-color: #1e3a8a;
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #2563eb; color: white; border: 1px solid #60a5fa; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-blue-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Shram Vibhajan Test</h1>
+        <span id="q-indicator" class="bg-blue-900 text-blue-200 px-3 py-1 rounded-lg text-xs font-bold border border-blue-700">1/49</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर सेव कर लिया गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘द अनटचेबल्स’ किसकी रचना है?", a: "भीमराव अंबेडकर की", o: ["महात्मा गाँधी की", "यतीन्द्र मिश्र की", "भीमराव अंबेडकर की", "रामविलास शर्मा की"] },
+            { q: "किसे 'बाबा साहेब' के नाम से पुकारा जाता है?", a: "भीमराव अंबेडकर को", o: ["हजारी प्रसाद द्विवेदी को", "भीमराव अंबेडकर को", "अमरकांत को", "रामविलास शर्मा को"] },
+            { q: "‘बुद्धिज्म एंड कम्युनिज्म’ किसकी रचना है?", a: "भीमराव अंबेडकर", o: ["मैक्स मूलर", "अमरकांत", "महात्मा गाँधी", "भीमराव अंबेडकर"] },
+            { q: "'हू आर शुद्राज' किनकी रचना है?", a: "भीमराव अंबेडकर की", o: ["भीमराव अंबेडकर की", "अमरकांत की", "महात्मा गाँधी की", "यतीन्द्र मिश्र की"] },
+            { q: "'मानव मुक्ति के पुरोधा' किसे कहा गया है?", a: "भीमराव अम्बेडकर", o: ["नलिन विलोचन शर्मा", "यतीन्द्र मिश्र", "भीमराव अम्बेडकर", "अमरकांत"] },
+            { q: "भारत में जाति-प्रथा का मुख्य कारण क्या है?", a: "बेरोजगारी", o: ["बेरोजगारी", "गरीबी", "उद्योग धंधों की कमी", "अमीरी"] },
+            { q: "जाति-प्रथा स्वाभाविक विभाजन नहीं है, क्यों?", a: "रुचि पर आधारित नहीं होने के कारण", o: ["भेदभाव के कारण", "शोषण के कारण", "गरीबी के कारण", "रुचि पर आधारित नहीं होने के कारण"] },
+            { q: "‘श्रम विभाजन और जाति प्रथा’ के लेखक कौन हैं?", a: "बाबासाहब भीमराव अम्बेडकर", o: ["डॉ० राममनोहर लोहिया", "बाबासाहब भीमराव अम्बेडकर", "महात्मा गाँधी", "डॉ० सम्पूर्णानंद"] },
+            { q: "लेखक की दृष्टि में विडंबना की बात क्या है?", a: "जातिवाद के पोषकों की कमी नहीं है", o: ["जातिवाद के पोषकों की कमी नहीं है", "जातिवाद के पोषक नगण्य हैं", "आर्थिक दृष्टि से जातिवाद उचित है", "जातिवाद लोकतंत्र के विरुद्ध नहीं है"] },
+            { q: "लेखक की दृष्टि में आदर्श समाज कैसा होना चाहिए?", a: "जिसमें स्वतंत्रता, समता और भ्रातृत्व का भाव हो", o: ["जिसमें स्वतंत्रता, समता और भ्रातृत्व का भाव हो", "जिसमें सभी धनी हों", "जिसमें सभी पढ़े-लिखे हो", "जिसमें सभी स्वस्थ हो"] },
+            { q: "लेखक बेरोजगारी का प्रमुख और प्रत्यक्ष कारण किसे मानते हैं?", a: "जाति प्रथा को", o: ["अशिक्षा को", "जनसंख्या को", "जाति प्रथा को", "उद्योग-धंधों की कमी को"] },
+            { q: "अम्बेडकर की दृष्टि में, भाईचारे का वास्तविक रूप कैसा होता है?", a: "दूध और पानी के मिश्रण की तरह", o: ["दूध और शक्कर के मिश्रण की तरह", "दूध और पानी के मिश्रण की तरह", "तिल और तंडुल के मिश्रण की तरह", "पानी और नमक के मिश्रण की तरह"] },
+            { q: "भारतीय संविधान के निर्माण में महत्त्वपूर्ण भूमिका किसकी है?", a: "भीमराव अम्बेडकर", o: ["भीमराव अम्बेडकर", "ज्योतिबा फूले", "राजगोपालाचारी", "महात्मा गाँधी"] },
+            { q: "सभ्य समाज की आवश्यकता क्या है?", a: "श्रम-विभाजन", o: ["जाति-प्रथा", "श्रम-विभाजन", "अणु-बम", "दूध-पानी"] },
+            { q: "निम्नलिखित रचनाओं में से कौन-सी रचना डॉ० अम्बेडकर की है?", a: "इनमें से सभी", o: ["द कास्ट्स इन इंडिया", "द अनटचेबल्स, यू आर दे", "हू आर शूद्राज", "इनमें से सभी"] },
+            { q: "आधुनिक सभ्य समाज श्रम विभाजन को आवश्यक क्यों मानता है?", a: "कार्य-कुशलता के लिए", o: ["कार्य-कुशलता के लिए", "भाईचारे के लिए", "रूढ़िवादिता के लिए", "इनमें से कोई नहीं"] },
+            { q: "‘श्रम विभाजन और जाति प्रथा’ पाठ बाबा साहेब के किस भाषण का संपादित अंश है?", a: "एनीहिलेशन ऑफ कास्ट", o: ["द कास्ट्स इन इंडिया : देयर मैकेनिज्म", "जेनेसिस एंड डेवलपमेंट", "एनीहिलेशन ऑफ कास्ट", "हू इज शूद्राज"] },
+            { q: "प्राथमिक शिक्षा प्राप्त करने के बाद अम्बेडकर उच्चतर शिक्षा प्राप्त करने के लिए कहाँ गए?", a: "न्यूयार्क", o: ["इटली", "दक्षिण अफ्रीका", "न्यूयार्क", "दक्षिण कोरिया"] },
+            { q: "अम्बेडकर के चिंतन व रचनात्मकता के लिए प्रेरक व्यक्ति कौन थे?", a: "इनमें से सभी", o: ["बुद्ध", "कबीर", "ज्योतिबा फुले", "इनमें से सभी"] },
+            { q: "जाति-पांति तोड़क मंडल भाषण लाहौर में कब हुआ?", a: "1936 ई० में", o: ["1942 ई० में", "1940 ई० में", "1936 ई० में", "1938 ई० में"] },
+            { q: "श्रम विभाजन और जाति प्रथा क्या है?", a: "निबंध", o: ["कहानी", "भाषण", "निबंध", "साक्षात्कार"] },
+            { q: "अम्बेडकर के भाषण 'एनीहिलेशन ऑफ कास्ट' को किसने हिन्दी में रूपान्तर किया?", a: "ललई सिंह यादव", o: ["ललई सिंह यादव", "किशोरी लाल", "मोहन बाजपेयी", "इनमें से कोई नहीं"] },
+            { q: "अम्बेडकर का जन्म किस परिवार में हुआ था?", a: "दलित", o: ["ब्राह्मण", "क्षत्रिय", "दलित", "कायस्थ"] },
+            { q: "लेखक को इस युग में कहाँ पर विडंबना दिखाई दिया?", a: "जातिवाद में", o: ["जातिवाद में", "नारीवाद में", "निर्विवाद में", "परिवाद में"] },
+            { q: "डॉ० अम्बेडकर के माता का नाम क्या था?", a: "भीमा बाई", o: ["रानीबाई", "कुन्ती बाई", "शीला बाई", "भीमा बाई"] },
+            { q: "डॉ० अम्बेडकर ने पी-एच० डी० की उपाधि कब धारण की?", a: "1916 ई० में", o: ["1920 ई० में", "1918 ई० में", "1916 ई० में", "1914 ई० में"] },
+            { q: "‘द कास्ट्स इन इंडिया: देयर मैकेनिज्म’ किनकी रचना है?", a: "भीमराव अम्बेडकर", o: ["भीमराव अम्बेडकर", "राममनोहर लोहिया", "महात्मा गाँधी", "सुखदेव"] },
+            { q: "‘आदर्श समाज स्वतंत्रता, समानता, भ्रातृत्व पर आधारित होगा’ किसने कहा?", a: "भीमराव अम्बेडकर", o: ["मैक्स मूलर", "भीमराव अम्बेडकर", "बिरजू महाराज", "अज्ञेय"] },
+            { q: "..... पेशे का दोषपूर्ण पूर्व निर्धारण करती है:", a: "जाति-प्रथा", o: ["श्रम-विभाजन", "जाति-प्रथा", "प्रत्यक्ष", "लोकतंत्र"] },
+            { q: "जाति-प्रथा भारत में बेरोजगारी का एक ..... कारण बनी हुई है:", a: "(a) और (b) दोनों", o: ["प्रत्यक्ष", "प्रमुख", "(a) और (b) दोनों", "इनमें से कोई नहीं"] },
+            { q: "‘मूक नायक’ क्या है?", a: "पत्रिका", o: ["अखबार", "पत्रिका", "पुस्तक", "कहानी संग्रह"] },
+            { q: "डॉ० भीमराव अम्बेडकर की मृत्यु कब और कहाँ हुई?", a: "1956, दिल्ली", o: ["1956, दिल्ली", "1957, मध्यप्रदेश", "1958, वाराणसी", "1959, बिहार"] },
+            { q: "डॉ० भीमराव अम्बेडकर का जन्म कब हुआ?", a: "14 अप्रैल, 1891", o: ["14 अप्रैल, 1988", "14 अप्रैल, 1989", "14 अप्रैल, 1890", "14 अप्रैल, 1891"] },
+            { q: "डॉ० भीमराव अम्बेडकर का जन्म कहाँ हुआ?", a: "महू, मध्यप्रदेश", o: ["महू, मध्यप्रदेश", "गोरखपुर, उत्तरप्रदेश", "डुमराँव, बिहार", "दानकुनी, पश्चिम बंगाल"] },
+            { q: "डॉ० अम्बेडकर ने किस पत्रिका का सम्पादन किया?", a: "बहिष्कृत भारत", o: ["उज्जवल भारत", "उड़ता भारत", "बहिष्कृत भारत", "पुरस्कृत भारत"] },
+            { q: "‘भारतीय संविधान’ का निर्माता किसे कहा जाता है?", a: "भीमराव अंबेडकर", o: ["मैक्स मूलर", "महात्मा गाँधी", "भीमराव अंबेडकर", "बिरजू महाराज"] },
+            { q: "डॉ० अम्बेडकर का वाङ्मय हिन्दी के कितने खण्डों में प्रकाशित हो चुकी है?", a: "21 खण्डों में", o: ["15 खण्डों में", "17 खण्डों में", "19 खण्डों में", "21 खण्डों में"] },
+            { q: "आधुनिक सभ्य समाज ‘कार्यकुशलता’ के लिए किसे आवश्यक मानता है?", a: "श्रम-विभाजन", o: ["श्रम-विभाजन", "धन-विभाजन", "जन-विभाजन", "जाति-विभाजन"] },
+            { q: "डॉ० अम्बेडकर के पिता का क्या नाम था?", a: "रामजी सकपाल", o: ["रामदेव सकपाल", "रामजी सकपाल", "रामकिशुन सकपाल", "राधेराम सकपाल"] },
+            { q: "जाति प्रथा श्रम विभाजन के साथ-साथ किसका रूप लिए हुए है?", a: " श्रमिक विभाजन का", o: ["स्वतंत्रता का", "भ्रातृत्व का", " श्रमिक विभाजन का", "इनमें से कोई नहीं"] },
+            { q: "डॉ० भीमराव अम्बेडकर ने किस प्रथा को आर्थिक पहलू से खतरनाक माना है?", a: "जाति-प्रथा", o: ["सती-प्रथा", "दहेज-प्रथा", "बाल-विवाह-प्रथा", "जाति-प्रथा"] },
+            { q: "किनके प्रोत्साहन पर बाबा साहेब उच्चतर शिक्षा हेतु न्यूयॉर्क गए?", a: "बड़ौदा नरेश", o: ["काशी नरेश", "पाटियाला नरेश", "बड़ौदा नरेश", "दरभंगा नरेश"] },
+            { q: "आर्थिक पहलू से भी जाति प्रथा ..... है।", a: "हानिकारक", o: ["लाभदायक", "अनुकूल", "हानिकारक", "इनमें से सभी"] },
+            { q: "सच्चे लोकतंत्र का पर्याय है:", a: "भाई-चारा", o: ["जाति प्रथा", "सुशासन", "भाई-चारा", "कानून व्यवस्था"] },
+            { q: "बाबा साहेब द्वारा रचित पुस्तक है:", a: "इनमें से सभी", o: ["जेनेसिस एण्ड डेवलपमेंट", "बुद्धिज्म एण्ड कम्युनिज्म", "बुद्धा एण्ड हिज धम्मा", "इनमें से सभी"] },
+            { q: "श्रम-विभाजन और जाति-प्रथा शीर्षक किनके द्वारा हिन्दी में रूपांतरित है?", a: "ललई सिंह यादव", o: ["भीमराव अम्बेडकर", "रामचन्द्र शुक्ल", "ललई सिंह यादव", "नलिन विलोचन शर्मा"] },
+            { q: "आधुनिक मनु कहा गया है:", a: "अम्बेडकर को", o: ["डॉ० राजेन्द्र प्रसाद को", "महात्मा गाँधी को", "सच्चिदानन्द सिन्हा को", "अम्बेडकर को"] },
+            { q: "विडम्बना का अर्थ है:", a: "उपहास", o: ["उपहास", "प्रवाहित", "आकांक्षित", "बन्धुत्व"] },
+            { q: "भारत की राष्ट्रीय क्षमता का पूर्ण विकास किस व्यवस्था में सम्भव है?", a: "समाजवादी व्यवस्था", o: ["सामन्तवादी व्यवस्था", "पूँजीवादी व्यवस्था", "समाजवादी व्यवस्था", "इनमें से कोई नहीं"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-blue-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

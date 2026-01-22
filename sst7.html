@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SST Full 51 Questions Poll</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .option-btn:hover { background-color: #f3f4f6; }
+        .correct { background-color: #10b981 !important; color: white; border-color: #10b981 !important; }
+        .wrong { background-color: #ef4444 !important; color: white; border-color: #ef4444 !important; }
+        .hidden { display: none; }
+        body { background-color: #f0f9ff; font-family: 'Segoe UI', sans-serif; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <div class="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-6 mb-6 border-b-4 border-blue-500">
+        <h1 class="text-3xl font-extrabold text-gray-800 text-center mb-2">सामाजिक विज्ञान टेस्ट</h1>
+        <p class="text-center text-gray-500 text-sm mb-4">Total 51 Questions</p>
+        <div class="flex justify-between items-center bg-gray-100 p-3 rounded-lg font-bold text-gray-700">
+            <span>प्रश्न: <span id="current-q" class="text-blue-600">1</span>/<span id="total-q">0</span></span>
+            <span id="timer" class="text-red-500 bg-white px-3 py-1 rounded shadow-sm">30s</span>
+        </div>
+    </div>
+
+    <div id="quiz-container" class="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-6 relative overflow-hidden">
+        <div id="question-box">
+            <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed"></h2>
+            <div id="options-container" class="grid grid-cols-1 gap-4">
+                </div>
+        </div>
+
+        <div class="w-full bg-gray-200 h-2 mt-8 rounded-full">
+            <div id="progress-bar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button id="next-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-transform transform active:scale-95 shadow-lg">अगला प्रश्न &rarr;</button>
+            <button id="submit-btn" class="hidden bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold transition-transform transform active:scale-95 shadow-lg">सबमिट करें</button>
+        </div>
+    </div>
+
+    <div id="result-container" class="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-8 hidden text-center">
+        <div class="inline-block p-4 rounded-full bg-green-100 mb-4">
+            <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">परिणाम घोषित!</h2>
+        <p class="text-gray-500 mb-8">आपका प्रदर्शन रिपोर्ट नीचे है</p>
+
+        <div class="grid grid-cols-3 gap-4 mb-8">
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">कुल प्रश्न</p>
+                <p id="res-total" class="text-3xl font-bold text-blue-600">0</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">सही</p>
+                <p id="res-correct" class="text-3xl font-bold text-green-600">0</p>
+            </div>
+            <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">गलत</p>
+                <p id="res-wrong" class="text-3xl font-bold text-red-600">0</p>
+            </div>
+        </div>
+
+        <div id="review-section" class="text-left space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+            </div>
+
+        <button onclick="location.reload()" class="w-full mt-6 bg-gray-800 hover:bg-gray-900 text-white py-4 rounded-xl font-bold shadow-lg transition-all">
+            फिर से कोशिश करें ↻
+        </button>
+    </div>
+
+    <script>
+        // PDF Data Extracted (Sources 1-33 from DocScanner PDF)
+        const quizData = [
+            { q: "जेनेवा समझौता कब हुआ था?", o: ["1915", "1954", "1861", "1956"], a: 1 }, // Q17
+            { q: "वैश्वीकरण के मुख्य कितने अंग होते हैं?", o: ["7", "2", "10", "5"], a: 3 }, // Q18
+            { q: "किस देश में मिश्रित अर्थव्यवस्था है?", o: ["चीन", "अमेरिका", "भारत", "इटली"], a: 2 }, // Q35/135
+            { q: "उत्तरी एवं दक्षिणी वियतनाम का एकीकरण कब हुआ था?", o: ["1916", "1975", "1875", "1761"], a: 1 }, // Q2
+            { q: "स्वर्ण आभूषण की शुद्धता की जाँच के लिए किस मान्यता प्राप्त चिह्न का होना आवश्यक है?", o: ["एगमार्क", "हॉलमार्क", "वीरमार्क", "शुद्धमार्क"], a: 1 }, // Q19
+            { q: "नंदा देवी राष्ट्रीय उद्यान कहाँ है?", o: ["पटना में", "उत्तराखण्ड में", "महाराष्ट्र में", "पश्चिम बंगाल में"], a: 1 }, // Q36
+            { q: "यूरेनियम का प्रमुख उत्पादक राज्य कौन है?", o: ["कानपुर", "छोटा नागपुर", "जादूगोड़ा", "वियतनाम"], a: 2 }, // Q37
+            { q: "भारत में योजना आयोग का गठन कब हुआ?", o: ["1956", "1850", "1950", "1951"], a: 2 }, // Q3
+            { q: "भूकंप संभावित क्षेत्रों में भवनों की आकृति कैसी होनी चाहिए?", o: ["गोलाकार", "बेलनाकार", "आयताकार", "त्रिभुजाकार"], a: 2 }, // Q20
+            { q: "किसे प्राथमिक क्षेत्र कहा जाता है?", o: ["सेवा क्षेत्र", "कृषि क्षेत्र", "उद्योग क्षेत्र", "पशु क्षेत्र"], a: 1 }, // Q38
+            { q: "रूसो कहाँ का निवासी था?", o: ["फ्रांस", "यूरोप", "रूस", "इटली"], a: 0 }, // Q4
+            { q: "खान अब्दुल गफ्फार खान को किस नाम से जाना जाता है?", o: ["सीमांत गांधी", "खान साहब", "शेख असरफ", "विश्व विख्यात"], a: 0 }, // Q21
+            { q: "काली मृदा का दूसरा नाम क्या है?", o: ["जलोढ़ मृदा", "रेगुर मृदा", "ये दोनों", "बलुआही मृदा"], a: 1 }, // Q39
+            { q: "वियना सम्मेलन कब हुआ था?", o: ["1915", "1993", "1815", "1995"], a: 2 }, // Q5
+            { q: "टाटा आयरन एवं स्टील कम्पनी की स्थापना कब हुई थी?", o: ["1912", "1807", "1907", "1956"], a: 2 }, // Q22
+            { q: "युद्ध एवं शांति (War and Peace) पुस्तक के लेखक कौन हैं?", o: ["कार्ल मार्क्स", "बिस्मार्क", "लियो टॉल्सटॉय", "लेनिन"], a: 2 }, // Q40
+            { q: "लंदन में अनिवार्य प्राथमिक शिक्षा की शुरुआत कब हुई?", o: ["1907", "1807", "1870", "1973"], a: 2 }, // Q6
+            { q: "कार्ल मार्क्स का जन्म कहाँ हुआ था?", o: ["इटली", "जर्मनी", "चीन", "फ्रांस"], a: 1 }, // Q23
+            { q: "रूस में 'जार' का अर्थ क्या होता है?", o: ["राजा", "शासक", "सम्राट", "सभी"], a: 2 }, // Q41
+            { q: "सेडान का युद्ध कब हुआ था?", o: ["1871", "1865", "1815", "1870"], a: 3 }, // Q7
+            { q: "सासाराम नगर का विकास कब हुआ था?", o: ["मध्ययुग", "आधुनिक काल", "प्राचीन काल", "सभी"], a: 0 }, // Q24
+            { q: "रक्त एवं लौह की नीति का अवलंबन किसने किया?", o: ["लेनिन", "कार्ल मार्क्स", "बिस्मार्क", "नेपोलियन"], a: 2 }, // Q42
+            { q: "फ्रैंकफर्ट की संधि कब हुई थी?", o: ["1870", "1975", "1871", "1978"], a: 2 }, // Q8
+            { q: "अंकोरवाट का मंदिर का निर्माण किस शासक ने किया था?", o: ["टिपू सुलतान", "राजा रत्नसेन", "सूर्यवर्मा प्रथम", "सूर्यवर्मा द्वितीय"], a: 3 }, // Q25
+            { q: "इटली के एकीकरण में किसका योगदान था?", o: ["काउन्ट कावूर", "गैरीबाल्डी", "मेजिनी", "सभी"], a: 3 }, // Q43
+            { q: "बंगाल विभाजन कब हुआ था?", o: ["1807", "1912", "1905", "1870"], a: 2 }, // Q9
+            { q: "अंकोरवाट का मंदिर कहाँ है?", o: ["भारत", "कम्बोडिया", "पुर्तगाल", "यूरोप"], a: 1 }, // Q26
+            { q: "जर्मन राइन राज्य का निर्माण किसने किया?", o: ["मेजिनी", "नेपोलियन बोनापार्ट", "गैरीबाल्डी", "काउन्ट कावूर"], a: 1 }, // Q44
+            { q: "मुद्रण की शुरुआत सर्वप्रथम कहाँ हुई थी?", o: ["भारत में", "चीन में", "रूस में", "जर्मनी में"], a: 1 }, // Q10
+            { q: "किनके अनुरोध पर गांधी जी भारत (चंपारण) आये थे?", o: ["जवाहरलाल नेहरू", "राजेन्द्र प्रसाद", "राज कुमार शुक्ल", "डॉ० अम्बेदकर"], a: 2 }, // Q27
+            { q: "रूस में कृषक दास प्रथा का अंत कब हुआ?", o: ["1861", "1931", "1995", "1865"], a: 0 }, // Q45
+            { q: "विश्व व्यापार संगठन (WTO) की शुरुआत कब हुई?", o: ["1855", "1995", "1998", "1899"], a: 1 }, // Q11
+            { q: "समाजवादी शासन का पहला प्रयोग कहाँ हुआ?", o: ["चीन में", "यूरोप में", "वियना में", "रूस में"], a: 3 }, // Q46
+            { q: "'आस' (Os) किस फसल का प्रकार है?", o: ["गेहूँ का", "धान का", "मक्का का", "बाजरा का"], a: 1 }, // Q12
+            { q: "ब्रेटन वुड्स सम्मेलन किस वर्ष हुआ था?", o: ["1986", "1922", "1944", "1918"], a: 2 }, // Q28
+            { q: "अखिल भारतीय ट्रेड यूनियन कांग्रेस (AITUC) की स्थापना कब हुई?", o: ["1875", "1975", "1920", "1995"], a: 2 }, // Q47
+            { q: "बिहार का शोक किस नदी को कहा जाता है?", o: ["गंगा नदी", "ब्रह्मपुत्र को", "कोसी नदी", "मंदाकिनी नदी"], a: 2 }, // Q13
+            { q: "स्पिनिंग जेनी का आविष्कार कब हुआ था?", o: ["1785", "1770", "1815", "1956"], a: 1 }, // Q29
+            { q: "जर्मनी के एकीकरण के लिए कौन उत्तरदायी था?", o: ["बिस्मार्क", "लेनिन", "नेपोलियन", "गैरीबाल्डी"], a: 0 }, // Q48
+            { q: "जालियावाला बाग हत्याकांड कब हुआ था?", o: ["1915", "1865", "13 अप्रैल 1919", "1956"], a: 2 }, // Q14
+            { q: "गांधी जी ने साबरमती आश्रम की स्थापना किस वर्ष की?", o: ["1974", "1916", "1968", "1989"], a: 1 }, // Q30
+            { q: "रॉबर्ट ओवेन कहाँ का निवासी था?", o: ["इटली", "चीन", "तुर्की", "ब्रिटेन"], a: 3 }, // Q49 (Corrected Answer)
+            { q: "भारत की वित्तीय राजधानी किस शहर को कहा जाता है?", o: ["दिल्ली", "कोलकाता", "मुंबई", "पटना"], a: 2 }, // Q15
+            { q: "सिंगापुर कब आजाद हुआ था?", o: ["1986", "1965", "1979", "1995"], a: 1 }, // Q31
+            { q: "जनसंख्या का घनत्व सबसे अधिक कहाँ होता है?", o: ["शहर में", "गाँव में", "महानगर में", "बस्ती में"], a: 2 }, // Q50
+            { q: "किस राज्य को बीमारू राज्य नहीं कहा जाता है?", o: ["बिहार", "उत्तर-प्रदेश", "महाराष्ट्र", "कर्नाटक"], a: 3 }, // Q16
+            { q: "रम्पा विद्रोह कब हुआ था?", o: ["1976", "1916", "1815", "1917"], a: 1 }, // Q32
+            { q: "गुटेनबर्ग ने सर्वप्रथम किस पुस्तक की छपाई की?", o: ["गीता", "रामायण", "यूरोप का परिचय", "बाइबिल"], a: 3 }, // Q51
+            { q: "किस वर्ष साइमन कमीशन भारत आया?", o: ["1945", "1927", "1928", "1919"], a: 2 } // Q33
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let userAnswers = [];
+        let timer;
+        let timeLeft = 30;
+
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        function startQuiz() {
+            document.getElementById('total-q').innerText = quizData.length;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timer);
+            timeLeft = 30;
+            updateTimer();
+            timer = setInterval(countDown, 1000);
+
+            const q = quizData[currentQuestion];
+            document.getElementById('current-q').innerText = currentQuestion + 1;
+            
+            // Progress Bar Update
+            const progressPercent = ((currentQuestion) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            questionText.innerText = q.q;
+            optionsContainer.innerHTML = '';
+            nextBtn.classList.add('hidden');
+
+            q.o.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.innerText = opt;
+                btn.className = "option-btn w-full border-2 border-gray-100 bg-gray-50 p-4 rounded-xl text-left transition-all font-semibold text-gray-700 hover:border-blue-300 hover:shadow-md";
+                btn.onclick = () => selectOption(index);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function countDown() {
+            timeLeft--;
+            updateTimer();
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                selectOption(-1); 
+            }
+        }
+
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = `${timeLeft}s`;
+            if(timeLeft < 10) {
+                timerEl.classList.add('animate-pulse');
+            } else {
+                timerEl.classList.remove('animate-pulse');
+            }
+        }
+
+        function selectOption(index) {
+            clearInterval(timer);
+            const q = quizData[currentQuestion];
+            userAnswers.push(index);
+
+            const buttons = optionsContainer.getElementsByTagName('button');
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-blue-300', 'hover:shadow-md');
+            }
+
+            if (index !== -1) {
+                if (index === q.a) {
+                    buttons[index].classList.add('correct');
+                    score++;
+                } else {
+                    buttons[index].classList.add('wrong');
+                    buttons[q.a].classList.add('correct');
+                }
+            } else {
+                buttons[q.a].classList.add('correct');
+            }
+
+            if (currentQuestion < quizData.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                submitBtn.classList.remove('hidden');
+            }
+        }
+
+        nextBtn.onclick = () => {
+            currentQuestion++;
+            loadQuestion();
+        };
+
+        submitBtn.onclick = showResults;
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+            document.getElementById('res-total').innerText = quizData.length;
+            document.getElementById('res-correct').innerText = score;
+            document.getElementById('res-wrong').innerText = quizData.length - score;
+
+            const reviewSection = document.getElementById('review-section');
+            reviewSection.innerHTML = '';
+
+            quizData.forEach((q, i) => {
+                const isCorrect = userAnswers[i] === q.a;
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-lg border-l-4 ${isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`;
+                div.innerHTML = `
+                    <p class="font-bold text-gray-800 text-sm">Q${i + 1}. ${q.q}</p>
+                    <div class="mt-2 text-sm flex justify-between">
+                        <span class="${isCorrect ? 'text-green-700 font-bold' : 'text-red-600 font-bold'}">
+                            आपका: ${userAnswers[i] === -1 ? 'छोड़ दिया' : q.o[userAnswers[i]]}
+                        </span>
+                        ${!isCorrect ? `<span class="text-green-700 font-bold">सही: ${q.o[q.a]}</span>` : ''}
+                    </div>
+                `;
+                reviewSection.appendChild(div);
+            });
+        }
+
+        startQuiz();
+    </script>
+</body>
+</html>

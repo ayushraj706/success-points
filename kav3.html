@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghananand - Final Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        .header-bar {
+            background-color: #db2777; /* Pink Header for Ghananand */
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #f472b6; background-color: #831843; /* Pinkish selection */
+        }
+        
+        /* Review Mode Styles */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #db2777; color: white; border: 1px solid #f472b6; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-pink-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Ghananand Test</h1>
+        <span id="q-indicator" class="bg-pink-900 text-pink-200 px-3 py-1 rounded-lg text-xs font-bold border border-pink-700">1/42</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">20:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-pink-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-pink-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका टेस्ट पूरा हो गया है</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-pink-600 text-white p-4 rounded-xl font-bold hover:bg-pink-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "घनानंद किस काल के कवि हैं?", a: "रीतिकाल के", o: ["भक्तिकाल के", "वीरगाथा काल के", "छायावाद काल के", "रीतिकाल के"] },
+            { q: "‘अति सूधो सनेह को मारग है’ जहाँ नेक सयानप बाँक नहीं—यह पंक्ति किस कवि की है?", a: "घनानंद", o: ["गुरु नानक", "प्रेमघन", "रसखान", "घनानंद"] },
+            { q: "घनानंद किस भाषा के कवि हैं?", a: "ब्रजभाषा", o: ["अवधी", "खड़ी बोली", "ब्रजभाषा", "मैथिली"] },
+            { q: "घनानंद किसके द्वारा मारे गए?", a: "नादिरशाह के सैनिकों द्वारा", o: ["मुहम्मदशाह के द्वारा", "औरंगजेब के द्वारा", "नादिरशाह के सैनिकों द्वारा", "शिवाजी के द्वारा"] },
+            { q: "‘मो अंसुवानिहि लै बरसौ’ किसकी रचना है?", a: "घनानंद", o: ["रसखान", "घनानंद", "गुरु नानक", "दिनकर"] },
+            { q: "घनानंद किस नर्तकी को प्यार करते थे?", a: "सुजान", o: ["रसीलन", "सुजान", "मोहिनी", "सुमन"] },
+            { q: "घनानंद ने जीवनदायक किसे कहा है?", a: "बादल (पर्जन्य) को", o: ["सुजान को", "ईश्वर को", "बादल (पर्जन्य) को", "स्वयं को"] },
+            { q: "कवि ने ‘परजन्य’ किसे कहा है?", a: "बादल", o: ["कृष्ण", "सुजान", "बादल", "हवा"] },
+            { q: "‘सनेह को मारग’ रेखांकित शब्द कौन सा कारक है?", a: "संबंध", o: ["कर्ता", "कर्म", "संबंध", "अपादान"] },
+            { q: "घनानंद की मृत्यु कब हुई?", a: "1739 ई० में", o: ["1737 ई० में", "1739 ई० में", "1741 ई० में", "1743 ई० में"] },
+            { q: "घनानंद का जन्म कब हुआ था?", a: "1689 ई० के आसपास", o: ["1687 ई०", "1689 ई० के आसपास", "1691 ई०", "1693 ई०"] },
+            { q: "‘सुजान सागर’ किसकी कृति है?", a: "घनानंद", o: ["रसखान", "प्रेमघन", "घनानंद", "दिनकर"] },
+            { q: "लक्षक मूर्तिवत्ता और प्रयोग वैचित्र्य के कवि कौन हैं?", a: "घनानंद", o: ["बिहारी", "घनानंद", "पंत", "निराला"] },
+            { q: "रीतिमुक्त काव्यधारा के सिरमौर कवि किसे माना जाता है?", a: "घनानंद को", o: ["पद्माकर को", "बिहारी को", "घनानंद को", "मतिराम को"] },
+            { q: "घनानंद किसके यहाँ मीर मुंशी का काम करते थे?", a: "मुहम्मदशाह रंगीले", o: ["अकबर", "औरंगजेब", "मुहम्मदशाह रंगीले", "जहाँगीर"] },
+            { q: "‘परहित’ के लिए देह कौन धारण करता है?", a: "बादल", o: ["साधु", "बादल", "पेड़", "नदी"] },
+            { q: "कवि अपने आँसुओं को कहाँ पहुँचाना चाहता है?", a: "सुजान के आँगन में", o: ["नदी में", "समुद्र में", "सुजान के आँगन में", "बादल में"] },
+            { q: "‘निंकु’ शब्द का अर्थ है?", a: "तनिक भी", o: ["तनिक भी", "बिल्कुल", "कभी", "हमेशा"] },
+            { q: "घनानंद के अनुसार प्रेम का मार्ग कैसा है?", a: "सीधा और सरल", o: ["कठिन", "टेढ़ा", "सीधा और सरल", "दुर्गम"] },
+            { q: "कौन सा कवि प्रेम की पीर के कवि कहलाते हैं?", a: "घनानंद", o: ["रसखान", "घनानंद", "जयशंकर प्रसाद", "निराला"] },
+            { q: "घनानंद की महत्वपूर्ण रचना है:", a: "सुजान सागर", o: ["सुजान सागर", "विराग लीला", "लोकसार", "इनमें सभी"] },
+            { q: "घनानंद ने विरक्त होने पर कहाँ शरण ली?", a: "वृंदावन", o: ["काशी", "मथुरा", "वृंदावन", "अयोध्या"] },
+            { q: "नादिरशाह ने दिल्ली पर आक्रमण कब किया?", a: "1739 ई० में", o: ["1739 ई० में", "1730 ई० में", "1745 ई० में", "1750 ई० में"] },
+            { q: "घनानंद ने सुजान से क्या माँगा था?", a: "मिट्टी (धूल)", o: ["पानी", "मिट्टी (धूल)", "सोना", "प्यार"] },
+            { q: "मूँदें आँखें किनकी याद में बैठे रहते थे?", a: "सुजान", o: ["ईश्वर", "माता-पिता", "सुजान", "बादल"] },
+            { q: "‘बिरह लीला’ किसकी रचना है?", a: "घनानंद", o: ["घनानंद", "रसखान", "प्रेमघन", "कुँवर नारायण"] },
+            { q: "घनानंद की कविताओं में किसका गहरा पुट मिलता है?", a: "पीर और प्रेम का", o: ["भक्ति का", "पीर और प्रेम का", "क्रोध का", "हँसी का"] },
+            { q: "‘अति सूधो सनेह को मारग है’ में ‘नेक’ का क्या अर्थ है?", a: "तनिक भी", o: ["नेक इंसान", "तनिक भी", "सुंदर", "सच्चा"] },
+            { q: "पर्जन्य का अर्थ क्या है?", a: "दूसरों के लिए", o: ["बादल", "कृष्ण", "दूसरों के लिए", "हवा"] },
+            { q: "कवि ने प्रेम मार्ग को क्या कहा है?", a: "जहाँ नेक सयानप बाँक नहीं", o: ["कठिन", "जहाँ नेक सयानप बाँक नहीं", "धोखे वाला", "अंधेरा"] },
+            { q: "निस्वार्थ भाव से कौन बरसता है?", a: "पर्जन्य (बादल)", o: ["बादल", "नदी", "ईश्वर", "मनुष्य"] },
+            { q: "घनानंद की काव्य प्रतिभा से कौन प्रभावित थे?", a: "मुहम्मदशाह", o: ["मुहम्मदशाह", "अकबर", "हुमायूँ", "नादिरशाह"] },
+            { q: "‘विराग लीला’ में किसका वर्णन है?", a: "विरह का", o: ["प्रेम का", "विरह का", "भक्ति का", "शौर्य का"] },
+            { q: "घनानंद के सवैये किस भाषा में हैं?", a: "शुद्ध ब्रजभाषा", o: ["मिश्रित अवधी", "शुद्ध ब्रजभाषा", "खड़ी बोली", "भोजपुरी"] },
+            { q: "घनानंद की रचनाओं का संग्रह किसने किया?", a: "विश्वनाथ प्रसाद मिश्र", o: ["भारतेंदु", "विश्वनाथ प्रसाद मिश्र", "रामचंद्र शुक्ल", "निराला"] },
+            { q: "घनानंद को किसका कवि कहा जाता है?", a: "प्रेम की पीर का", o: ["भक्ति का", "प्रेम की पीर का", "प्रकृति का", "करुणा का"] },
+            { q: "सुजान कौन थी?", a: "एक नर्तकी", o: ["कवि की बहन", "एक नर्तकी", "एक रानी", "एक दासी"] },
+            { q: "घनानंद की भाषा में कौन सा गुण है?", a: "माधुर्य", o: ["ओज", "प्रसाद", "माधुर्य", "इनमें सभी"] },
+            { q: "कवि घनानंद ने समाज को क्या संदेश दिया?", a: "सच्चे प्रेम का", o: ["युद्ध का", "सच्चे प्रेम का", "त्याग का", "भक्ति का"] },
+            { q: "घनानंद की कविता कैसी है?", a: "भावप्रधान", o: ["भावप्रधान", "वस्तुप्रधान", "दोनों", "कोई नहीं"] },
+            { q: "‘अति सूधो सनेह को मारग है’ में मुख्य रस क्या है?", a: "शृंगार रस", o: ["वीर रस", "करुण रस", "शृंगार रस", "शांत रस"] },
+            { q: "घनानंद का काव्य कैसा है?", a: "विरह प्रधान", o: ["विरह प्रधान", "मिलन प्रधान", "हास्य प्रधान", "कोई नहीं"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1200;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-pink-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

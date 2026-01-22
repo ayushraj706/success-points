@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>अध्याय 4: नगर - Quiz</title>
+
+    <style>
+
+        /* --- CONFIGURATION (इंडेक्स/कंट्रोल सेक्शन) --- */
+
+        :root {
+
+            --primary-color: #FF5722; /* यहाँ से थीम का रंग बदलें (Deep Orange) */
+
+            --bg-color: #F0F4F8;
+
+            --correct-color: #1B5E20;
+
+            --wrong-color: #B71C1C;
+
+            --text-dark: #263238;
+
+            --timer-bg: #ffffff;
+
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+
+        body { background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+
+        .header {
+
+            background: var(--primary-color);
+
+            color: white; padding: 15px; text-align: center;
+
+            font-size: 22px; font-weight: bold; position: sticky; top: 0; z-index: 1000;
+
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+
+        }
+
+        .quiz-container { max-width: 600px; margin: 20px auto; padding: 15px; padding-bottom: 120px; }
+
+        
+
+        .timer-box { 
+
+            text-align: center; margin-bottom: 15px; font-weight: bold; 
+
+            color: var(--primary-color); font-size: 1.3rem; background: var(--timer-bg);
+
+            padding: 12px; border-radius: 12px; border: 2px solid var(--primary-color);
+
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+        }
+
+        .card {
+
+            background: white; border-radius: 15px; padding: 20px;
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px;
+
+        }
+
+        .q-text { font-size: 18px; font-weight: 600; margin-bottom: 15px; line-height: 1.5; }
+
+        .options { list-style: none; padding: 0; }
+
+        .options li {
+
+            background: #F8F9FA; border: 2px solid #ECEFF1;
+
+            margin-bottom: 12px; padding: 14px; border-radius: 10px;
+
+            cursor: pointer; transition: all 0.2s ease; font-size: 16px;
+
+        }
+
+        .options li:hover { background: #ECEFF1; }
+
+        .options li.selected { border-color: var(--primary-color); background: #FFF3E0; font-weight: bold; }
+
+        
+
+        .footer {
+
+            position: fixed; bottom: 0; width: 100%; background: white;
+
+            display: flex; justify-content: space-between; padding: 15px;
+
+            border-top: 1px solid #CFD8DC; z-index: 1000;
+
+        }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .btn-next { background: var(--primary-color); color: white; }
+
+        .btn-back { background: #CFD8DC; color: #37474F; }
+
+        .btn-submit { background: #1B5E20; color: white; }
+
+        .result-screen { display: none; text-align: center; animation: fadeIn 0.5s ease; }
+
+        .score-circle {
+
+            width: 140px; height: 140px; background: var(--primary-color);
+
+            color: white; border-radius: 50%; display: flex;
+
+            align-items: center; justify-content: center;
+
+            font-size: 36px; font-weight: bold; margin: 25px auto;
+
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">अध्याय 4: नगर - वस्तुनिष्ठ प्रश्न</div>
+
+<div class="quiz-container" id="main-container">
+
+    <div class="timer-box" id="timer-display">समय: 20:00</div>
+
+    
+
+    <div id="quiz-box">
+
+        <div class="card">
+
+            <div id="q-counter" style="font-size: 14px; color: #546E7A; margin-bottom: 10px; font-weight: bold;">प्रश्न 1/49</div>
+
+            <div class="q-text" id="q-text">Loading...</div>
+
+            <ul class="options" id="options-list"></ul>
+
+        </div>
+
+    </div>
+
+    <div class="result-screen" id="result-screen">
+
+        <div class="card">
+
+            <h2>आपका परिणाम</h2>
+
+            <div class="score-circle" id="final-score">0/49</div>
+
+            <p id="save-msg" style="font-weight: bold;"></p>
+
+            <button class="btn btn-next" onclick="location.reload()" style="width: 100%; margin-top: 15px;">पुनः प्रयास करें</button>
+
+            <div id="review-area" style="margin-top: 30px; text-align: left;">
+
+                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 8px; color: var(--primary-color);">उत्तर समीक्षा:</h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer" id="navigation">
+
+    <button class="btn btn-back" id="prev-btn" onclick="changeQ(-1)">पीछे</button>
+
+    <button class="btn btn-submit" onclick="finishQuiz()">सबमिट</button>
+
+    <button class="btn btn-next" id="next-btn" onclick="changeQ(1)">आगे</button>
+
+</div>
+
+<script>
+
+    /* --- डेटा सेट (अध्याय 4: नगर) --- */
+
+    const TIME_LIMIT_MINS = 20; 
+
+    const questions = [
+
+        { q: "1. वल्लि अम्माल किस शीर्षक कहानी की पात्रा है?", opt: ["माँ", "नगर", "ढहते विश्वास", "दही वाली मंगम्मा"], ans: 1 },
+
+        { q: "2. लेखक सुजाता रचित कहानी का नाम क्या है?", opt: ["माँ", "नगर", "ढहते विश्वास", "धरती कब तक घूमेगी"], ans: 1 },
+
+        { q: "3. 'मदुरै पांडिय लोगों की दूसरी राजधानी है।' यह कहाँ लिखा हुआ है?", opt: ["हिन्दी काव्य में", "अंग्रेजी नाटक में", "तुलनात्मक व्याकरण में", "तमिल उपन्यास में"], ans: 2 },
+
+        { q: "4. किसका वातावरण वल्लि अम्माल को भयभीत कर दिया था?", opt: ["रेलवे स्टेशन का", "बस अड्डा का", "अस्पताल का", "गाँव का"], ans: 2 },
+
+        { q: "5. 'मदुरै' को अंग्रेज किस नाम से पुकारते थे?", opt: ["मेढ़क", "मिंडारा", "मदुरा", "मदौरा"], ans: 2 },
+
+        { q: "6. वल्लि अम्माल को किसकी चिंता सताने लगी?", opt: ["पाप्पाति की", "अमलराज की", "डॉक्टर की", "क्लर्क की"], ans: 0 },
+
+        { q: "7. 'नगर' शीर्षक पाठ में अमलराज को कितना नंबर कमरा दिखाने के लिए कहा गया?", opt: ["49 नंबर", "50 नंबर", "48 नंबर", "51 नंबर"], ans: 2 },
+
+        { q: "8. कौन पाप्पाति को अकेला छोड़कर नहीं जाना चाहती थी?", opt: ["वरियम्मा", "कल्डिव अम्माल", "नल्लि अम्माल", "वल्लि अम्माल"], ans: 3 },
+
+        { q: "9. वल्लि अम्माल के गाँव का नाम क्या था?", opt: ["मूनांडिप्पट्टि", "अंजुग्रामम", "अतिपट्टु", "थुथुकुडी"], ans: 0 },
+
+        { q: "10. नगर कहानी के कहानीकार कौन हैं?", opt: ["सुजाता", "श्रीनिवास", "सातकोड़ी होता", "सावर दइया"], ans: 0 },
+
+        { q: "11. नगर कहानी में मुख्य पात्र कौन हैं?", opt: ["मंगम्मा", "पाप्पाति", "सीता", "मंगु"], ans: 1 },
+
+        { q: "12. सुजाता का जन्म कब हुआ था?", opt: ["3 मई, 1935 ई. में", "6 मई, 1935 ई. में", "6 जून, 1935 ई. में", "6 मार्च, 1935 ई. में"], ans: 0 },
+
+        { q: "13. कार्डवेल के तुलनात्मक व्याकरण के अनुसार पांडिय लोगों की दूसरी राजधानी कहाँ थी?", opt: ["मदुरै", "बेलगाँव", "गुलबर्ग", "श्रीरंगपट्टनम"], ans: 0 },
+
+        { q: "14. अंग्रेजी भाषा में मदुरै को कहा जाता है :", opt: ["मदुरा", "मदुरी", "मेदोरा", "मंद्रिा"], ans: 0 },
+
+        { q: "15. यूनानी लोग मदुरै को कहते हैं :", opt: ["मदुरा", "मुदेर", "मेदोरा", "मदुरै"], ans: 2 },
+
+        { q: "16. नेता लोगों के द्वारा किसके विरुद्ध जुलूस निकाला गया था?", opt: ["महँगाई के विरुद्ध", "भाषा के विरुद्ध", "चुनाव के विरुद्ध", "भ्रष्टाचार के विरुद्ध"], ans: 0 },
+
+        { q: "17. वल्लि अम्माल के लड़की का नाम क्या था :", opt: ["पाप्पाति", "महिष्मति", "जुगति", "कुमारी"], ans: 0 },
+
+        { q: "18. पाप्पाति को क्या हुआ था?", opt: ["बुखार (मेनिनजाइटिस)", "खाँसी", "आँख में दर्द", "पेट में दर्द"], ans: 0 },
+
+        { q: "19. पाप्पाति कितने साल की थी :", opt: ["बारह साल की", "चौदह साल की", "सोलह साल की", "ग्यारह साल की"], ans: 0 },
+
+        { q: "20. मीनाक्षी मंदिर कहाँ है?", opt: ["तमिलनाडु में", "केरल में", "कर्नाटक में", "हैदराबाद में"], ans: 0 },
+
+        { q: "21. वल्लि को किस रूम नम्बर वाले कमरे में जाना था :", opt: ["30 रूम नम्बर", "36 रूम नम्बर", "48 रूम नम्बर", "56 रूम नम्बर"], ans: 2 },
+
+        { q: "22. स्टेथस्कोप से मापा जाता है?", opt: ["हवा की गति", "मोटर गाड़ी की गति", "हृदय की गति", "वायुयान की गति"], ans: 2 },
+
+        { q: "23. इस कहानी में किस भयानक रोग का जिक्र किया गया है?", opt: ["टी. बी.", "मेनिनजाइटिस", "प्लेग", "कैंसर"], ans: 1 },
+
+        { q: "24. 'ऑफ्थलमस्कोप' है :", opt: ["आँख देखने की मशीन", "कान देखने की मशीन", "कण्ठ देखने की मशीन", "मस्तिष्क देखने की मशीन"], ans: 0 },
+
+        { q: "25. लम्बी कतार देखकर वल्लि को किस पर गुस्सा आया?", opt: ["डॉक्टर पर", "मृत पति पर", "बेटी पर", "श्रीनिवास पर"], ans: 1 },
+
+        { q: "26. 'एस रंगराजन' किस लेखक का पूरा नाम है?", opt: ["श्रीनिवास", "सातकोड़ी होता", "सुजाता", "ईश्वर पेटलीकर"], ans: 2 },
+
+        { q: "27. वल्लि अम्माल किस गाँव से आयी थी?", opt: ["गुंडलूपेट", "नंजनगुड", "थंजावुर", "मूनांडिप्पट्टि"], ans: 3 },
+
+        { q: "28. 'पाप्पाति' ....... कहानी का पात्र है :", opt: ["ढहते विश्वास", "नगर", "धरती कब तक घूमेगी", "माँ"], ans: 1 },
+
+        { q: "29. मेनिनजाइटिस का संबंध है :", opt: ["बुखार से", "दर्द से", "कब्ज से", "मोतियाबिन्द से"], ans: 0 },
+
+        { q: "30. 'नगर' कहानी किस भाषा से अनूदित है?", opt: ["उड़िया", "तमिल", "गुजराती", "कन्नड़"], ans: 1 },
+
+        { q: "31. पाप्पाति बेहोश क्यों पड़ी थी?", opt: ["सिर दर्द के कारण", "तेज बुखार के कारण", "चोट लगने के कारण", "पेट दर्द के कारण"], ans: 1 },
+
+        { q: "32. 'आई वांट दैट गर्ल एडमिटेड नाउ' किसने कहा?", opt: ["छोटे डॉक्टर", "बड़े डॉक्टर", "प्रशिक्षु डॉक्टर", "नर्स"], ans: 1 },
+
+        { q: "33. 'पाप्पाति' को उसकी माँ इलाज के लिए कौन-से शहर लेकर गई थी?", opt: ["बेंगुलूर", "हैदराबाद", "चेन्नई", "मदुरै"], ans: 3 },
+
+        { q: "34. 'अंदर किसी को देखने जाने का नियम नहीं है'—यह किसने कहा?", opt: ["मेट्रन ने", "मजिस्ट्रेट ने", "परिचारिका ने", "डॉक्टर ने"], ans: 0 },
+
+        { q: "35. वल्लि अम्माल से कहाँ के डॉक्टर ने पाप्पाति को लेकर मदुरै जाने को कहा था?", opt: ["शहर के", "गाँव के", "पड़ोस के", "मैसूर के"], ans: 1 },
+
+        { q: "36. पाप्पाति किस पर लेटी हुई थी?", opt: ["चौकी पर", "स्ट्रेचर पर", "खटिया पर", "पलंग पर"], ans: 1 },
+
+        { q: "37. पहले दिन पाप्पाति को क्या था?", opt: ["सर्दी", "जुकाम", "बुखार", "दर्द"], ans: 2 },
+
+        { q: "38. 'तुलनात्मक व्याकरण' किसकी रचना है?", opt: ["सातकोड़ी होता", "सुजाता", "कार्डवेल", "सांवर दइया"], ans: 2 },
+
+        { q: "39. कहानीकार सुजाता का असली नाम क्या है?", opt: ["एम. रंगराजन", "एस. रंगराजन", "एल. रंगराजन", "एन. रंगराजन"], ans: 1 },
+
+        { q: "40. निम्न में से सुजाता की रचना है?", opt: ["करैयैल्लान शेबक्कप्पू", "कनवुत तोलिरशालै", "(a) एवं (b) दोनों", "इनमें से कोई नहीं"], ans: 2 },
+
+        { q: "41. नगर कहानी के अनुवादक हैं :", opt: ["सुजाता", "के. ए. जमुना", "श्रीनिवास", "सातकोड़ी होता"], ans: 1 },
+
+        { q: "42. पाप्पाति को कितने डॉक्टर घेरे हुए थे?", opt: ["छह", "नव", "सात", "पाँच"], ans: 0 },
+
+        { q: "43. डॉ. धनशेखरन ने किसकी देख-रेख का जिम्मा लिया?", opt: ["वल्लि अम्माल का", "पाप्पाति का", "श्रीनिवास का", "मंगु का"], ans: 1 },
+
+        { q: "44. श्रीनिवासन कौन था?", opt: ["डॉक्टर", "कम्पाउन्डर", "रोगी", "अस्पताल का मालिक"], ans: 1 },
+
+        { q: "45. वल्लि अम्माल के चिट पर किसका दस्तखत नहीं था?", opt: ["माँ का", "डॉक्टर का", "कम्पाउन्डर का", "सचिव का"], ans: 1 },
+
+        { q: "46. वल्लि अम्माल को कितने नम्बर कमरा में जाना था?", opt: ["60 नम्बर", "48 नम्बर", "46 नम्बर", "50 नम्बर"], ans: 1 },
+
+        { q: "47. अस्पताल में रोगी के अभिभावक का वेतन कौन पूछ रहा था?", opt: ["डॉक्टर", "निदेशक", "क्लर्क", "रोगी"], ans: 2 },
+
+        { q: "48. अस्पताल में हेड नर्स का नाम क्या था?", opt: ["श्रीनिवासन", "मिरांडा", "मंगु", "सुजाता"], ans: 1 },
+
+        { q: "49. वैदीश्वरन जी के मंदिर जाकर दोनों हाथों में रेजगारी भरकर भगवान को भेंट चढ़ाने को किसने कहा?", opt: ["श्रीनिवासन", "मिरांडा", "सुजाता", "वल्लि अम्माल"], ans: 3 }
+
+    ];
+
+    let currIdx = 0;
+
+    let userAns = new Array(questions.length).fill(null);
+
+    let timeLeft = TIME_LIMIT_MINS * 60;
+
+    const timerInterval = setInterval(() => {
+
+        let mins = Math.floor(timeLeft / 60);
+
+        let secs = timeLeft % 60;
+
+        document.getElementById("timer-display").innerText = `समय: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        if (timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+
+        timeLeft--;
+
+    }, 1000);
+
+    function renderQuestion() {
+
+        const q = questions[currIdx];
+
+        document.getElementById("q-counter").innerText = `प्रश्न ${currIdx + 1}/${questions.length}`;
+
+        document.getElementById("q-text").innerText = q.q;
+
+        const list = document.getElementById("options-list");
+
+        list.innerHTML = "";
+
+        
+
+        q.opt.forEach((optText, i) => {
+
+            const li = document.createElement("li");
+
+            li.innerText = optText;
+
+            if (userAns[currIdx] === i) li.classList.add("selected");
+
+            li.onclick = () => { userAns[currIdx] = i; renderQuestion(); };
+
+            list.appendChild(li);
+
+        });
+
+        document.getElementById("prev-btn").style.visibility = currIdx === 0 ? "hidden" : "visible";
+
+        document.getElementById("next-btn").style.display = currIdx === questions.length - 1 ? "none" : "block";
+
+    }
+
+    function changeQ(dir) {
+
+        currIdx += dir;
+
+        renderQuestion();
+
+    }
+
+    function finishQuiz() {
+
+        clearInterval(timerInterval);
+
+        let score = 0;
+
+        let reviewHTML = "";
+
+        questions.forEach((q, i) => {
+
+            const isCorrect = userAns[i] === q.ans;
+
+            if (isCorrect) score++;
+
+            reviewHTML += `
+
+                <div class="card" style="border-left: 6px solid ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; padding: 15px;">
+
+                    <p><strong>प्र. ${i+1}: ${q.q}</strong></p>
+
+                    <p style="color: ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; font-weight: bold;">
+
+                        आपका उत्तर: ${userAns[i] !== null ? q.opt[userAns[i]] : 'नहीं दिया'}
+
+                    </p>
+
+                    ${!isCorrect ? `<p style="color: var(--correct-color);">सही उत्तर: ${q.opt[q.ans]}</p>` : ''}
+
+                </div>`;
+
+        });
+
+        document.getElementById("quiz-box").style.display = "none";
+
+        document.getElementById("navigation").style.display = "none";
+
+        document.getElementById("timer-display").style.display = "none";
+
+        document.getElementById("result-screen").style.display = "block";
+
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+
+        document.getElementById("review-area").innerHTML += reviewHTML;
+
+        if (window.saveDataToFirebase) window.saveDataToFirebase(score, questions.length);
+
+    }
+
+    renderQuestion();
+
+</script>
+
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+
+        authDomain: "otpin-fb5e3.firebaseapp.com",
+
+        projectId: "otpin-fb5e3",
+
+        storageBucket: "otpin-fb5e3.firebasestorage.app",
+
+        messagingSenderId: "545063232950",
+
+        appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+    window.saveDataToFirebase = async (score, total) => {
+
+        try {
+
+            await addDoc(collection(db, "all_test_results"), {
+
+                testName: "Hindi: अध्याय 4 (नगर)",
+
+                score: score, total: total,
+
+                date: new Date().toLocaleDateString(),
+
+                timestamp: new Date()
+
+            });
+
+            document.getElementById("save-msg").innerText = "✅ आपका रिजल्ट सेव हो गया है!";
+
+            document.getElementById("save-msg").style.color = "#1B5E20";
+
+        } catch (e) {
+
+            document.getElementById("save-msg").innerText = "❌ एरर: इंटरनेट चेक करें!";
+
+            document.getElementById("save-msg").style.color = "#B71C1C";
+
+        }
+
+    };
+
+</script>
+
+</body>
+
+</html>

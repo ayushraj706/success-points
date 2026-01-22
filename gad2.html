@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vish Ke Dant Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_vishkedant"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_vishkedant_" + user.uid);
+                
+                // समय की गणना (1500 sec total - remaining)
+                const timeTakenSec = 1500 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Vish Ke Dant (Nalin Vilochan)",
+                    chapterId: "ch_vishkedant", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #0f0716; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Purple Header */
+        .header-bar {
+            background-color: #7e22ce; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(126, 34, 206, 0.4);
+        }
+
+        .q-card {
+            background-color: #1e1b24; padding: 20px; border-radius: 16px;
+            border: 1px solid #3b0764; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2a35; border: 2px solid #4c1d95; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #d8b4fe; background-color: #581c87; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #7e22ce; color: white; border: 1px solid #a855f7; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #2e1065; padding: 5px 15px; 
+            border-radius: 20px; color: #f0abfc; font-weight: bold; font-size: 14px; border: 1px solid #6b21a8;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-purple-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Vish ke Dant</h1>
+        <span id="q-indicator" class="bg-purple-900 text-purple-100 px-3 py-1 rounded-lg text-xs font-bold border border-purple-500">1/49</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-purple-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-purple-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-purple-600 text-white p-4 rounded-xl font-bold hover:bg-purple-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "नलिन विलोचन शर्मा के अनुसार महल और झोपड़ी वालों की लड़ाई में अक्सर कौन जीतते हैं?", a: "महल वाले", o: ["महल वाले", "झोपड़ी वाले", "मासूम", "इनमें से कोई नहीं"] },
+            { q: "‘रश्क’ शब्द का अर्थ है:", a: "ईर्ष्या", o: ["प्रेम", "ईर्ष्या", "संबंध", "आदर"] },
+            { q: "मदन पड़ोसियों के आवारागर्द छोकरों के साथ क्या कर रहा था?", a: "लट्टू नचा रहा था", o: ["पतंग उड़ा रहा था", "क्रिकेट खेल रहा था", "लट्टू नचा रहा था", "चोर-सिपाही खेल रहा था"] },
+            { q: "सेन साहब के पास किस रंग की मोटरकार है?", a: "काला", o: ["काला", "नीला", "उजला", "हरा"] },
+            { q: "‘विष के दाँत’ शीर्षक पाठ किस कहानी संग्रह से लिया गया है?", a: "विष के दाँत तथा अन्य कहानियाँ", o: ["मित्र-मिलन", "विष के दाँत तथा अन्य कहानियाँ", "कुहासा", "मौत का नगर"] },
+            { q: "‘वाकिफ’ शब्द का अर्थ क्या है?", a: "परिचित", o: ["सभ्यता", "घटना", "परिचित", "क्रूर"] },
+            { q: "नलिन विलोचन शर्मा पटना विश्व विद्यालय के हिन्दी विभाग के अध्यक्ष कब बने?", a: "सन् 1959 ई० में", o: ["सन् 1958 ई० में", "सन् 1957 ई० में", "सन् 1963 ई० में", "सन् 1959 ई० में"] },
+            { q: "आलोचकों के अनुसार प्रयोगवाद का वास्तविक प्रारंभ किसके कविताओं से हुआ?", a: "नलिन विलोचन के कविता से", o: ["नलिन विलोचन के कविता से", "रामधारी सिंह के कविता से", "बदरी नारायण के कविता से", "सुमित्रानंद पंत के कविता से"] },
+            { q: "नलिन विलोचन शर्मा के कहानियों में किसके तत्त्व समग्रता से उभरकर आए:", a: "मनोवैज्ञानिकता का", o: ["राजनीतिकता का", "मनोवैज्ञानिकता का", "सामाजिकता का", "इनमें से सभी"] },
+            { q: "‘विष के दाँत’ कहानी किस वर्ग के अंतर्विरोधों को उजागर करती है?", a: "मध्यम वर्ग का", o: ["निम्न वर्ग का", "उच्च वर्ग का", "मध्यम वर्ग का", "व्यापारी वर्ग का"] },
+            { q: "खोखा-खोखी किस भाषा का शब्द है?", a: "बांग्ला का", o: ["तमिल का", "भोजपुरी का", "बांग्ला का", "हिन्दी का"] },
+            { q: "सेन साहब की कितनी लड़कियाँ थीं?", a: "पाँच", o: ["तीन", "छह", "पाँच", "चार"] },
+            { q: "शोफर शब्द का अर्थ है:", a: "ड्राइवर", o: ["सभ्यता", "संबंध", "निर्ममता", "ड्राइवर"] },
+            { q: "“ऐसे ही लड़के आगे चलकर गुण्डे, चोर, डाकू बनते हैं।” यह पंक्ति कहानी के किस पात्र ने कही है?", a: "सेन साहब", o: ["सेन साहब की धर्मपत्नी", "गिरधर", "सेन साहब", "शोफर"] },
+            { q: "नलिन विलोचन शर्मा की मृत्यु कब हुई?", a: "12 सितम्बर, 1961", o: ["12 सितम्बर, 1961", "14 सितम्बर, 1961", "16 सितम्बर, 1961", "18 सितम्बर, 1961"] },
+            { q: "मदन अक्सर किसके हाथों से पिटता था?", a: "पिता", o: ["माता", "सेन साहब", "खोखा", "पिता"] },
+            { q: "‘विष के दाँत’ शीर्षक कहानी के कहानीकार कौन हैं?", a: "नलिन विलोचन शर्मा", o: ["मोहन राकेश", "कमलेश्वर", "प्रेमचंद", "नलिन विलोचन शर्मा"] },
+            { q: "गिरधरलाल कौन है?", a: "मदन का पिता", o: ["कांशू का पिता", "मदन का पिता", "रजनी का पिता", "शेफाली का पिता"] },
+            { q: "सेन साहब की पाँचें लड़कियाँ कैसी थीं?", a: "सुशील", o: ["उद्ंड", "नासमझ", "मूर्ख", "सुशील"] },
+            { q: "सेन साहब अपने पुत्र (खोखा) को बनाना चाहते थे:", a: "बिजनेसमैन या इंजीनियर", o: ["बिजनेसमैन या इंजीनियर", "वकील", "प्रोफेसर", "डॉक्टर"] },
+            { q: "मदन की उम्र क्या थी?", a: "पाँच-छह साल", o: ["पाँच-छह साल", "सात-आठ साल", "तीन-चार साल", "नौ-दस साल"] },
+            { q: "काशू मदन के साथ किस खेल में शरीक होना चाहता था?", a: "लट्टू के खेल में", o: ["फुटबॉल के खेल में", "हॉकी के खेल में", "बैडमिंटन के खेल में", "लट्टू के खेल में"] },
+            { q: "मदन ने काशू के कितने दाँत तोड़ डाले?", a: "दो", o: ["तीन", "एक", "दो", "चार"] },
+            { q: "गिरधरलाल किसकी फैक्ट्री में किरानी था?", a: "सेन साहब की फैक्ट्री में", o: ["मुखर्जी साहब की फैक्ट्री में", "सिंह साहब की फैक्ट्री में", "पत्रकार महोदय की फैक्ट्री में", "सेन साहब की फैक्ट्री में"] },
+            { q: "सेन साहब किसके व्यंग्य से ऐंठकर रह गए?", a: "पत्रकार महोदय के व्यंग्य से", o: ["पत्रकार महोदय के व्यंग्य से", "मुखर्जी साहब के व्यंग्य से", "सिंह साहब के व्यंग्य से", "गिरधरलाल के व्यंग्य से"] },
+            { q: "मदन किसका पुत्र था?", a: "गिरधर", o: ["सेन साहब", "गिरधर", "शोफर", "सिंह साहब"] },
+            { q: "‘विष के दाँत’ पाठ की विधा है:", a: "कहानी", o: ["निबंध", "व्यक्तिचित्र", "कविता", "कहानी"] },
+            { q: "सेन साहब की कार की कीमत है:", a: "साढ़े सात हजार", o: ["साढ़े सात हजार", "साढ़े आठ हजार", "साढ़े नौ हजार", "साढ़े सात लाख"] },
+            { q: "नलिन विलोचन शर्मा का जन्म कब हुआ?", a: "18 फरवरी, 1916", o: ["14 जनवरी, 1915", "18 फरवरी, 1916", "22 मार्च, 1917", "24 अप्रैल, 1918"] },
+            { q: "नलिन विलोचन शर्मा का जन्म कहाँ हुआ?", a: "बदरघाट, पटना", o: ["गाँधीघाट, पटना", "कृष्णाघाट, पटना", "बदरघाट, पटना", "रानीघाट, पटना"] },
+            { q: "नलिन विलोचन शर्मा के पिता का नाम क्या था?", a: "पंडित रामावतार शर्मा", o: ["पंडित रामावतार शर्मा", "पंडित कृष्णावतार शर्मा", "पंडित मृत्युंजय शर्मा", "पंडित दशावतार शर्मा"] },
+            { q: "नलिन विलोचन शर्मा के माताजी का क्या नाम था?", a: "रलावती शर्मा", o: ["पद्मावती शर्मा", "कलादती शर्मा", "रलावती शर्मा", "इन्द्रावती शर्मा"] },
+            { q: "दृष्टिकोण किनकी रचना है?", a: "नलिन विलोचन शर्मा", o: ["रामावतार शर्मा", "नलिन विलोचन शर्मा", "मोहन राकेश", "प्रेमचन्द"] },
+            { q: "‘लड़कियाँ क्या हैं, कठपुतलियाँ हैं’ किसे इस बात पर गर्व है?", a: "माता-पिता को", o: ["भाई-बहन को", "चाचा-चाची को", "मामा-मामी को", "माता-पिता को"] },
+            { q: "मोटरकार को किससे खतरा हो सकता था?", a: "खोखा से", o: ["राम से", "मदन से", "खोखा से", "इंजिनियर से"] },
+            { q: "सेन साहब की आँखों का तारा है:", a: "खोखा", o: ["कार", "खोखा", "खोखी", "उपर्युक्त सभी"] },
+            { q: "खोखा के दाँत किसने तोड़े?", a: "मदन ने", o: ["मदन ने", "मदन के दोस्त ने", "सेन साहब ने", "गिरधर ने"] },
+            { q: "“महल और झोपड़ीवालों की लड़ाई में अक्सर महलवाले ही जीतते हैं...” किस पाठ की पंक्ति है?", a: "विष के दाँत", o: ["बहादुर", "शिक्षा और संस्कृति", "मछली", "विष के दाँत"] },
+            { q: "सीमा, रजनी, आलो, शेफाली, आरती—पाँचों किसकी बहनें थीं?", a: "खोखा की", o: ["मदन की", "खोखा की", "लेखक की", "सेन साहब की"] },
+            { q: "‘मैं तो खोखा को इंजीनियर बनाने जा रहा हूँ’—यह कथन किसका है?", a: "सेन साहब का", o: ["सेन साहब का", "मिस्टर सिंह का", "गिरधर लाल का", "मुकर्जी साहब का"] },
+            { q: "मदन के लिए क्या खाना मामूली बात थी?", a: "मार", o: ["दुत्कार", "प्यार", "मार", "फटकार"] },
+            { q: "किसके अनुसार सेनों ने सिद्धान्तों को भी बदल लिया था?", a: "खोखा के अनुसार", o: ["बेटियों के अनुसार", "खोखा के अनुसार", "मदन के अनुसार", "गिरधर के अनुसार"] },
+            { q: "सेन साहब के मित्र कौन थे?", a: "पत्रकार", o: ["डॉक्टर", "वकील", "पत्रकार", "शिक्षक"] },
+            { q: "कौओं की जमात में शामिल होने के लिए कौन ललक गया?", a: "हंस", o: ["कबूतर", "हंस", "बत्तख", "मछली"] },
+            { q: "सेन साहब की मोटरकार थी:", a: "स्ट्रीमल ईंड", o: ["स्ट्रीमल ईंड", "मारूती 800", "इंडिका स्ट्रीमल", "डिजाइर मोटरकार"] },
+            { q: "सेन साहब ने किसे खूब फटकार लगाई?", a: "गिरधरलाल को", o: ["गिरधरलाल को", "खोखा को", "मदन को", "शैफाली को"] },
+            { q: "किससे मोटर की चमक-दमक को कोई खतरा नहीं था?", a: "सेन साहब की पुत्रियों से", o: ["खोखा से", "मदन से", "पड़ोस के बच्चे से", "सेन साहब की पुत्रियों से"] },
+            { q: "गिरधरलाल किस वर्ग का प्रतिनिधित्व करता है?", a: "निम्न मध्य वर्ग", o: ["मध्यम वर्ग", "उच्च वर्ग", "निम्न वर्ग", "निम्न मध्य वर्ग"] },
+            { q: "नलिन विलोचन शर्मा कथ्य, शिल्प तथा भाषा आदि स्तरों पर आग्रही थे:", a: "नवीनता के", o: ["प्राचीनता के", "भक्ति के", "नवीनता के", "सामाजिकता के"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-purple-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

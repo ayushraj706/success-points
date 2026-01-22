@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Max Muller Test - Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Save Function
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Saving under 'ch_maxmuller'
+                const resultRef = doc(db, "users", user.uid, "test_results", "ch_maxmuller"); 
+                
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    email: user.email,
+                    testName: "Bharat Se Hum Kya Seekhe",
+                    score: score,
+                    totalQuestions: total,
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(resultRef, data);
+                    console.log("Result Saved!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Teal Header */
+        .header-bar {
+            background-color: #0891b2; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(8, 145, 178, 0.4);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #22d3ee; background-color: #164e63; /* Teal selection */
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #0891b2; color: white; border: 1px solid #22d3ee; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #22d3ee; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-cyan-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Max Muller Test</h1>
+        <span id="q-indicator" class="bg-cyan-900 text-cyan-200 px-3 py-1 rounded-lg text-xs font-bold border border-cyan-700">1/49</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-cyan-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर सेव कर लिया गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-cyan-600 text-white p-4 rounded-xl font-bold hover:bg-cyan-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "लैटिन कवि वर्जिल पर किसने एक बड़ी अच्छी कविता लिखी थी?", a: "अंग्रेज कवि टेनीसन", o: ["अंग्रेज कवि टेनीसन", "हिंदी कवि प्रेमघन", "गुरु नानक", "रेनर मारिया रिल्के"] },
+            { q: "‘टेनीसन’ किस भाषा के कवि हैं?", a: "अंग्रेजी", o: ["फ्रेंच", "स्पेनिश", "अंग्रेजी", "मंदारी"] },
+            { q: "मैक्स मूलर का जन्म आधुनिक जर्मनी के किस नगर में हुआ था?", a: "डेसाउ", o: ["डेसाउ", "हेस्से", "बवेरिया", "थुरिंगिया"] },
+            { q: "भारत किसकी भूमि है?", a: "ब्राह्मण या वैदिक धर्म की", o: ["पाश्चात्य संस्कृति की", "ब्राह्मण या वैदिक धर्म की", "लैटिन संस्कृति की", "सीरियाई संस्कृति की"] },
+            { q: "मेघदूत नामक पुस्तक का अनुवाद मैक्समूलर ने किस भाषा में किया?", a: "जर्मन भाषा में", o: ["ग्रीक भाषा में", "लैटिन भाषा में", "हिन्दी भाषा में", "जर्मन भाषा में"] },
+            { q: "मैक्समूलर को ‘वेदांतियों का वेदांती’ किसने कहा?", a: "स्वामी विवेकानन्द", o: ["गाँधी जी", "स्वामी विवेकानन्द", "अम्बेडकर", "गुणाकर मुले"] },
+            { q: "संस्कृत भाषा और यूरोपियन भाषा का तुलनात्मक व्याख्यान किसने दिया?", a: "मैक्समूलर ने", o: ["मैक्समूलर ने", "गुणाकर मुले ने", "नलिन विलोचन ने", "अमरकांत ने"] },
+            { q: "महारानी विक्टोरिया ने नाइट की उपाधि प्रदान की:", a: "मैक्समूलर को", o: ["मैक्समूलर को", "अमरकांत को", "बिरजू महाराज को", "अशोक वाजपेयी को"] },
+            { q: "‘कठ’ और केन उपनिषद का अनुवाद मैक्समूलर ने किस भाषा में किया?", a: "जर्मन में", o: ["ग्रीक में", "हिन्दी में", "जर्मन में", "लैटिन में"] },
+            { q: "लिपजिंग विश्व विद्यालय में मैक्समूलर ने किस भाषा का अध्ययन किया?", a: "संस्कृत का", o: ["हिन्दी का", "जर्मन का", "संस्कृत का", "उर्दू का"] },
+            { q: "यूनान व रोम के सम्पूर्ण साहित्य से कहीं अधिक विशाल है:", a: "संस्कृत भाषा और साहित्य", o: ["संस्कृत भाषा और साहित्य", "उर्दू साहित्य", "जर्मन भाषा और साहित्य", "रूसी भाषा और साहित्य"] },
+            { q: "जनरल कनिंघम का संबंध किससे है?", a: "पुरातत्व से", o: ["वनस्पति विज्ञान से", "भू-विज्ञान से", "पुरातत्व से", "मनोविज्ञान से"] },
+            { q: "172 दारिस नामक सोने के सिक्का का घड़ा कहाँ मिला था?", a: "वाराणसी में", o: ["दिल्ली में", "गाँधी नगर में", "वाराणसी में", "श्रीनगर में"] },
+            { q: "नालंदा विश्वविद्यालय कहाँ पर स्थित है?", a: "बिहार में", o: ["बिहार में", "उत्तर प्रदेश में", "मध्य प्रदेश में", "गुजरात में"] },
+            { q: "‘भारत से हम क्या सीखें’ के रचनाकार कौन हैं?", a: "मैक्समूलर", o: ["विवेकानंद", "मैक्समूलर", "रवींद्रनाथ ठाकुर", "दयानंद सरस्वती"] },
+            { q: "‘नृवंश विद्या’ का संबंध किससे है?", a: "मानव विज्ञान से", o: ["वनस्पति विज्ञान से", "प्राणिविज्ञान से", "मानव विज्ञान से", "अंतरिक्ष विज्ञान से"] },
+            { q: "वारेन हेस्टिंग्स था:", a: "भारत का गवर्नर जनरल", o: ["भारत का गवर्नर जनरल", "फारस का राजा", "महान दार्शनिक", "प्रसिद्ध समाज सुधारक"] },
+            { q: "‘दारिस’ क्या है?", a: "सोने की प्राचीनकालीन सिक्का", o: ["चाँदी का प्राचीनकालीन सिक्का", "सोने की प्राचीनकालीन सिक्का", "एक देवता", "एक धार्मिक ग्रंथ"] },
+            { q: "प्लेटो का संबंध किस देश से है?", a: "यूनान से", o: ["इटली से", "स्पेन से", "भारत से", "यूनान से"] },
+            { q: "‘शाहनामा’ का रचनाकाल है:", a: "दसवीं-ग्यारहवीं सदी", o: ["सातवीं-आठवीं सदी", "दसवीं-ग्यारहवीं सदी", "चौथी-पाँचवी सदी", "पाँचवी-छठी सदी"] },
+            { q: "‘मुण्डा’ किस देश की जाति है?", a: "भारत", o: ["मंगोल", "चीन", "मुल्तान", "भारत"] },
+            { q: "संस्कृत का ‘अग्नि’ शब्द लैटिन में किस रूप में मिलता है?", a: "इग्निस", o: ["एग्निस", "आग्निस", "इग्निस", "ओग्निस"] },
+            { q: "सर विलियम जोन्स ने भारत की यात्रा कब की थी?", a: "1783 ई० में", o: ["1957 ई० में", "1750 ई० में", "1790 ई० में", "1783 ई० में"] },
+            { q: "‘भारत से हम क्या सीखें’ पाठ में ‘नए सिकंदर’ विशेषण किसके लिए प्रयुक्त हुआ है?", a: "युवा अँगरेज अधिकारियों के लिए", o: ["भारत के वीरों के लिए", "यूरोप के वीरों के लिए", "युवा अँगरेज अधिकारियों के लिए", "उपर्युक्त में से कोई नहीं"] },
+            { q: "हकर्स क्या थे?", a: "वनस्पति वैज्ञानिक", o: ["ज्योतिषाचार्य", "खगोल वैज्ञानिक", "भूगर्भशास्त्री", "वनस्पति वैज्ञानिक"] },
+            { q: "स्वामी विवेकानंद ने ‘वेदान्तियों का वेदान्ती’ किसे कहा है?", a: "मैक्समूलर को", o: ["टी० एस० इलियट को", "दयानंद सरस्वती को", "मैक्समूलर को", "राजा राममोहन राय को"] },
+            { q: "मैक्समूलर ने ....... वर्ष की अवस्था में लिपजिंग विश्वविद्यालय में संस्कृत का अध्ययन प्रारंभ किया:", a: "अठारह", o: ["पन्द्रह", "सोलह", "सत्रह", "अठारह"] },
+            { q: "पारसियों के धर्म का क्या नाम है?", a: "जरथुस्ट", o: ["बौद्ध धर्म", "जैन धर्म", "वैदिक धर्म", "जरथुस्ट"] },
+            { q: "मैक्समूलर का जन्म कब हुआ?", a: "6 दिसम्बर, 1823", o: ["6 सितम्बर, 1823", "6 अक्टूबर, 1823", "6 नवम्बर, 1823", "6 दिसम्बर, 1823"] },
+            { q: "मैक्समूलर का जन्म कहाँ हुआ?", a: "डेसाउ, जर्मनी", o: ["रत्नापार्क, नेपाल", "डेसाउ, जर्मनी", "वाशिंगटन, अमेरिका", "दिल्ली, भारत"] },
+            { q: "मैक्समूलर के पिता का नाम क्या था?", a: "विल्हेल्म मूलर", o: ["विल्हेल्म मूलर", "हेस्टिंग्स मूलर", "जॉनसन मूलर", "पीटर मूलर"] },
+            { q: "नालन्दा विश्वविद्यालय की स्थापना किसने किया था?", a: "कुमारगुप्त", o: ["कुमारगुप्त", "अशोक", "कनिष्क", "अजातशत्रु"] },
+            { q: "कौन प्राचीनतम भाषा है?", a: "संस्कृत", o: ["हिन्दी", "मराठी", "संस्कृत", "उर्दू"] },
+            { q: "मैक्समूलर की मृत्यु कब हुई?", a: "28 अक्टूबर, 1900", o: ["16 अक्टूबर, 1901", "20 अक्टूबर, 1901", "24 अक्टूबर, 1900", "28 अक्टूबर, 1900"] },
+            { q: "किसके अध्ययन क्षेत्र में भारत के कारण नवजीवन का संचार हो चुका है?", a: "नीतिकथा", o: ["विधिशास्त्र", "नीतिकथा", "भाषा विज्ञान", "दैवत विज्ञान"] },
+            { q: "दारिस नामक सोने के सिक्कों से भरा घड़ा किसे मिला था?", a: "वारेन हेस्टिंग्स", o: ["हेकल", "हकर्स", "वारेन हेस्टिंग्स", "विलियम जोन्स"] },
+            { q: "‘मेघदूत’ का जर्मन में अनुवाद किसने किया?", a: "मैक्समूलर ने", o: ["ईश्वर पेटलीकर ने", "रूसो ने", "मैक्समूलर ने", "सातकोड़ी होता ने"] },
+            { q: "‘भारत से हम क्या सीखें’ क्या है?", a: "भाषण", o: ["निबंध", "कहानी", "भाषण", "व्यक्तिचित्र"] },
+            { q: "मैक्समूलर के अनुसार सच्चे भारत के दर्शन कहाँ हो सकते हैं?", a: "ग्रामीण भारत में", o: ["मुंबई में", "दिल्ली में", "ग्रामीण भारत में", "कोलकाता में"] },
+            { q: "प्लेटो और कान्ट थे महान:", a: "दार्शनिक", o: ["वीर", "दार्शनिक", "नाविक", "सैनिक"] },
+            { q: "‘हितोपदेश’ का जर्मन भाषा में अनुवाद किसने प्रकाशित करवाया?", a: "मैक्स मूलर ने", o: ["महात्मा गाँधी ने", "मैक्स मूलर ने", "गुणाकर मुले ने", "अमरकान्त ने"] },
+            { q: "मैक्स मूलर ने कालिदास की किस पुस्तक का जर्मन भाषा में अनुवाद किया?", a: "मेघदूत का", o: ["मालविकाग्निमित्रम्", "अभिज्ञानशकुंतलम् का", "मेघदूत का", "रघुवंशम् का"] },
+            { q: "दक्षिण भारत में द्रविड़ भाषा परिवार की कौन-सी भाषा अधिक प्राचीन है?", a: "तमिल", o: ["तमिल", "तेलुगू", "मराठी", "कन्नड़"] },
+            { q: "पुरानी स्लावोनिक भाषा में चूहे को क्या कहते हैं?", a: "माइस", o: ["मूष:", "मूस", "मुस", "माइस"] },
+            { q: "मैक्समूलर ने सर्वविद् सम्पदा और प्राकृतिक सौंदर्य से परिपूर्ण किस देश को माना है?", a: "भारत को", o: ["जापान को", "श्रीलंका को", "भारत को", "कनाडा को"] },
+            { q: "ज्ञातव्य का क्या अर्थ है?", a: "जानने योग्य", o: ["जानने योग्य", "मारने योग्य", "देखने योग्य", "क्रोध करने योग्य"] },
+            { q: "मैक्समूलर कौन-सी भाषा में बाल्याकाल में ही निपुण होकर कविता लिखने लगे थे?", a: "लैटिन", o: ["संस्कृत", "लैटिन", "अंग्रेजी", "अमेरिकन"] },
+            { q: "भारत को कैसे स्वप्नदर्शियों की आवश्यकता है?", a: "सर विलियम जोन्स", o: ["वारेन हेस्टिंग्स", "सर विलियम जोन्स", "संत पॉल", "जनरल कनिंघम"] },
+            { q: "मैक्समूलर ने मानव सभ्यता का मूल स्रोत किसे माना?", a: "वैदिक तत्वज्ञान को", o: ["भौतिक विज्ञान को", "पाश्चात्य सभ्यता के ज्ञान को", "वैदिक तत्वज्ञान को", "विश्व इतिहास के ज्ञान को"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-cyan-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guru Nanak - Final Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        .header-bar {
+            background-color: #2563eb;
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        /* Selected State (During Quiz) */
+        .option-btn.selected {
+            border-color: #3b82f6; background-color: #1e3a8a;
+        }
+        
+        /* Review Mode Styles */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #2563eb; color: white; border: 1px solid #60a5fa; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-blue-700 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Guru Nanak Test</h1>
+        <span id="q-indicator" class="bg-blue-900 text-blue-200 px-3 py-1 rounded-lg text-xs font-bold border border-blue-700">1/39</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">20:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका टेस्ट पूरा हो गया है</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "गुरु नानक की किस मुग़ल सम्राट से मुलाक़ात हुई थी?", a: "बाबर से", o: ["बाबर से", "हुमायूँ से", "अकबर से", "शाहजहाँ से"] },
+            { q: "‘जपुजी’ किसकी रचना है?", a: "गुरु नानक", o: ["कबीर", "रहीम", "गुरु नानक", "घनानंद"] },
+            { q: "‘‘दंड कमंडल सिखा सूत धोती तीरथ गवनु अति भ्रमणु करै।’’ यह पंक्ति किस शीर्षक कविता से उद्धत है?", a: "राम नाम बिनु बिरथे जगि जनमा", o: ["राम नाम बिनु बिरथे जगि जनमा", "स्वदेशी", "भारतमाता", "जनतंत्र का जन्म"] },
+            { q: "गुरु नानक के किस पद में राम-नाम के कीर्तन पर बल दिया गया है?", a: "प्रथम पद", o: ["द्वितीय पद", "प्रथम पद", "तृतीय पद", "इनमें से कोई नहीं"] },
+            { q: "गुरु नानक की रचनाओं का संग्रह गुरु अर्जुनदेव ने कब किया?", a: "1604 ई० में", o: ["1601 ई० में", "1602 ई० में", "1604 ई० में", "1603 ई० में"] },
+            { q: "‘तलवंडी’ वर्तमान में कहाँ है?", a: "पाकिस्तान में", o: ["पाकिस्तान में", "भारत में", "अफ़गानिस्तान में", "चीन में"] },
+            { q: "वर्णाश्रम और कर्मकांड का विरोध किसने किया?", a: "गुरु नानक ने", o: ["गुरु नानक ने", "रसखान ने", "घनानंद ने", "रविदास ने"] },
+            { q: "गुरु नानक ने किस भाषा में कविताएँ लिखीं?", a: "(a) एवं (b)", o: ["पंजाबी", "हिन्दी", "उर्दू", "(a) एवं (b)"] },
+            { q: "सिख धर्म के पाँचवे गुरु थे:", a: "अर्जुन देव", o: ["गुरुनानक", "अर्जुन देव", "गुरुअंगद", "गुरुराम दास"] },
+            { q: "राम नाम के कीर्तन पर किसने जोर दिया?", a: "गुरु नानक ने", o: ["गाँधी जी ने", "गुरु अंगद ने", "गुरु नानक ने", "गुरु रामदास ने"] },
+            { q: "नारियों के उचित स्थान के लिए आवाज बुलन्द किया:", a: "गुरु नानक ने", o: ["गाँधी जी ने", "अमरदास ने", "गुरु नानक ने", "गुरु अर्जुन ने"] },
+            { q: "किसके बिना प्राणी को मुक्ति नहीं मिलती?", a: "गुरु-ज्ञान के बिना", o: ["कर्मकांड के बिना", "मूर्ति-पूजन के बिना", "चारों धाम की यात्रा के बिना", "गुरु-ज्ञान के बिना"] },
+            { q: "किसके बिना इस संसार में जन्म लेना बेकार है?", a: "राम नाम के बिना", o: ["राम नाम के बिना", "गुरु नाम के बिना", "माँ नाम के बिना", "पिता नाम के बिना"] },
+            { q: "जपुजी, आसदी बार और सोहिला किसकी रचना है?", a: "गुरु नानक की", o: ["गुरु अंगद की", "गुरु नानक की", "गुरु रामदास की", "गुरु अर्जुन की"] },
+            { q: "क्या कहते हुए नानक ने अपना प्राण त्यागा?", a: "वाह गुरु", o: ["राम-राम", "वाह गुरु", "जय श्रीराम", "हरि ओम"] },
+            { q: "गुरु नानक की रचनाओं का संग्रह किसने किया?", a: "गुरु अर्जुन देव", o: ["गुरु अर्जुन देव", "गुरु गोविंद सिंह", "हृदयाल सिंह", "कालुचंद"] },
+            { q: "गुरु नानक की रचनाओं के संग्रह का क्या नाम है?", a: "गुरु ग्रंथ साहब", o: ["वाह गुरु", "गुरु ग्रंथ साहब", "नानकाना साहब", "फतह साहब"] },
+            { q: "‘राम नाम बिनु बिरथे जगि जनमा’ पद में किसकी आलोचना की गई है?", a: "बाह्याडंबर की", o: ["बाह्याडंबर की", "राम-नाम की", "गुरु-ज्ञान की", "इनमें से कोई नहीं"] },
+            { q: "‘रहिरास’ किसकी कृति है?", a: "गुरु नानक की", o: ["गुरु नानक की", "गुरु तेजबहादुर सिंह की", "गुरु गोविंद सिंह की", "गुरु अर्जुन देव की"] },
+            { q: "गुरु नानक किस भक्तिधारा के कवि हैं?", a: "निर्गुण भक्तिधारा", o: ["सगुण भक्तिधारा", "निर्गुण भक्तिधारा", "राम भक्तिधारा", "कृष्ण भक्तिधारा"] },
+            { q: "गुरु नानक की मृत्यु कब हुई?", a: "1539 ई० में", o: ["1540 ई० में", "1560 ई० में", "1539 ई० में", "1565 ई० में"] },
+            { q: "‘राम नाम बिनु बिरथे जगि जनमा’ यह पंक्ति ........ की है:", a: "गुरुनानक", o: ["गुरुनानक", "रसखान", "घनानंद", "प्रेमघन"] },
+            { q: "वाणी कब विष के समान हो जाती है?", a: "राम-नाम के बिना", o: ["राम-नाम के बिना", "तीर्थ-यात्रा के बिना", "ज्ञान के बिना", "इनमें से कोई नहीं"] },
+            { q: "‘नानकाना साहब’ कहाँ अवस्थित है?", a: "पाकिस्तान में", o: ["भारत में", "पाकिस्तान में", "श्रीलंका में", "नेपाल में"] },
+            { q: "गुरु नानक ने किन्हें सम्मान दिया?", a: "स्त्री को", o: ["कविता को", "लेखन को", "स्त्री को", "पुरुष को"] },
+            { q: "कौन पहले संत हैं जिन्होंने विदेशी आक्रमणकारियों के विरोध में आवाज उठाई?", a: "गुरु नानक", o: ["गुरु तेगबहादुर", "गुरु अर्जुनदेव", "गुरु अर्जुन", "गुरु नानक"] },
+            { q: "‘जो नर दुख में दुख नहिं मानै’ किस लेखक की कृति है?", a: "गुरु नानक", o: ["कबीरदास", "गुरु नानक", "कालिदास", "सूरदास"] },
+            { q: "गुरु नानक का कथन किस कवि के कथन से मिलती है?", a: "कबीरदास", o: ["कबीरदास", "कालिदास", "सूरदास", "रविदास"] },
+            { q: "गुरु नानक का जन्म कब हुआ?", a: "1469 ई० में", o: ["1467 ई० में", "1468 ई० में", "1469 ई० में", "1470 ई० में"] },
+            { q: "गुरु नानक का जन्म कहाँ हुआ?", a: "तलवंडी, लाहौर", o: ["अयोध्या", "दुर्ग", "अमृतसर", "तलवंडी, लाहौर"] },
+            { q: "गुरु नानक के पिताजी का नाम क्या था?", a: "कालुचन्द खत्री", o: ["गुरु तेगबहादुर", "गुरु अर्जुनदेव", "कालुचन्द खत्री", "लालचन्द खत्री"] },
+            { q: "गुरु नानक के माताजी का नाम क्या था?", a: "तृप्ता", o: ["सुशीला", "तृप्ता", "सुलखणी", "तृप्ति"] },
+            { q: "‘सुलखणी’ कौन थी?", a: "गुरु नानक की पत्नी", o: ["बहन", "माँ", "मौसी", "गुरु नानक की पत्नी"] },
+            { q: "गुरु नानक के ‘पद’ किस भाषा में रचित हैं?", a: "पंजाबी मिश्रित ब्रजभाषा", o: ["हिन्दी मिश्रित", "अरबी मिश्रित", "पंजाबी मिश्रित ब्रजभाषा", "तमिल मिश्रित"] },
+            { q: "गुरु नानक के जन्म-स्थान को क्या कहते हैं?", a: "नानकाना साहब", o: ["नानकाना साहब", "गुरु ग्रंथ साहब", "फतह साहब", "जन्म-स्थली"] },
+            { q: "गुरु नानक की पत्नी का क्या नाम था?", a: "सुलखणी", o: ["सुलखणी", "सुलोचना", "सरला", "सुलोचनी"] },
+            { q: "गुरु नानक पंजाबी के अलावे और किस भाषा में कविताएँ लिखे?", a: "हिन्दी", o: ["उड़िया", "हिन्दी", "मराठी", "बंगाली"] },
+            { q: "‘आसादीवार’ किस कवि की रचना है?", a: "गुरु नानक", o: ["रसखान", "कुँवर नारायण", "दिनकर", "गुरु नानक"] },
+            { q: "गुरु नानक ने किस धर्म का प्रवर्तन किया?", a: "सिख धर्म का", o: ["सिख धर्म का", "हिन्दू धर्म का", "मुस्लिम धर्म का", "ईसाई धर्म का"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1200;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-blue-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

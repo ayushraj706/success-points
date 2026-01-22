@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>अध्याय 3: माँ - Quiz</title>
+
+    <style>
+
+        /* --- CONFIGURATION (इंडेक्स/कंट्रोल सेक्शन) --- */
+
+        :root {
+
+            --primary-color: #673AB7; /* यहाँ से थीम का रंग बदलें (Deep Purple) */
+
+            --bg-color: #F4F7FE;
+
+            --correct-color: #2e7d32;
+
+            --wrong-color: #d32f2f;
+
+            --text-dark: #202124;
+
+            --timer-bg: #fff;
+
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body { background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+
+        .header {
+
+            background: var(--primary-color);
+
+            color: white; padding: 15px; text-align: center;
+
+            font-size: 22px; font-weight: bold; position: sticky; top: 0; z-index: 1000;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+
+        }
+
+        .quiz-container { max-width: 600px; margin: 20px auto; padding: 15px; padding-bottom: 120px; }
+
+        
+
+        .timer-box { 
+
+            text-align: center; margin-bottom: 15px; font-weight: bold; 
+
+            color: var(--primary-color); font-size: 1.3rem; background: var(--timer-bg);
+
+            padding: 12px; border-radius: 10px; border: 2px solid var(--primary-color);
+
+        }
+
+        .card {
+
+            background: white; border-radius: 15px; padding: 20px;
+
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px;
+
+        }
+
+        .q-text { font-size: 18px; font-weight: 600; margin-bottom: 15px; line-height: 1.6; }
+
+        .options { list-style: none; padding: 0; }
+
+        .options li {
+
+            background: #f8f9fa; border: 2px solid #e9ecef;
+
+            margin-bottom: 12px; padding: 14px; border-radius: 12px;
+
+            cursor: pointer; transition: all 0.2s ease; font-size: 16px;
+
+        }
+
+        .options li:hover { background: #e9ecef; }
+
+        .options li.selected { border-color: var(--primary-color); background: #f3e5f5; font-weight: bold; }
+
+        
+
+        /* Footer Navigation */
+
+        .footer {
+
+            position: fixed; bottom: 0; width: 100%; background: white;
+
+            display: flex; justify-content: space-between; padding: 15px;
+
+            border-top: 1px solid #ddd; z-index: 1000;
+
+        }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+
+        .btn-next { background: var(--primary-color); color: white; }
+
+        .btn-back { background: #eee; color: #333; }
+
+        .btn-submit { background: #2e7d32; color: white; }
+
+        /* Result Screen */
+
+        .result-screen { display: none; text-align: center; animation: slideUp 0.5s ease-out; }
+
+        .score-circle {
+
+            width: 150px; height: 150px; background: var(--primary-color);
+
+            color: white; border-radius: 50%; display: flex;
+
+            align-items: center; justify-content: center;
+
+            font-size: 40px; font-weight: bold; margin: 30px auto;
+
+            border: 5px solid white; box-shadow: 0 0 20px rgba(0,0,0,0.1);
+
+        }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">अध्याय 3: माँ - वस्तुनिष्ठ प्रश्न</div>
+
+<div class="quiz-container" id="main-container">
+
+    <div class="timer-box" id="timer-display">समय: 20:00</div>
+
+    
+
+    <div id="quiz-box">
+
+        <div class="card">
+
+            <div id="q-counter" style="font-size: 14px; color: #757575; margin-bottom: 10px; font-weight: bold;">प्रश्न 1/44</div>
+
+            <div class="q-text" id="q-text">Loading...</div>
+
+            <ul class="options" id="options-list"></ul>
+
+        </div>
+
+    </div>
+
+    <div class="result-screen" id="result-screen">
+
+        <div class="card">
+
+            <h2>आपका परिणाम</h2>
+
+            <div class="score-circle" id="final-score">0/44</div>
+
+            <p id="save-msg" style="font-weight: bold; font-size: 1.1rem;"></p>
+
+            <button class="btn btn-next" onclick="location.reload()" style="width: 100%; margin-top: 15px; font-size: 16px;">फिर से शुरू करें</button>
+
+            <div id="review-area" style="margin-top: 35px; text-align: left;">
+
+                <h3 style="border-left: 5px solid var(--primary-color); padding-left: 10px; color: var(--primary-color);">उत्तरों की समीक्षा:</h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer" id="navigation">
+
+    <button class="btn btn-back" id="prev-btn" onclick="changeQ(-1)">पीछे</button>
+
+    <button class="btn btn-submit" onclick="finishQuiz()">सबमिट करें</button>
+
+    <button class="btn btn-next" id="next-btn" onclick="changeQ(1)">आगे</button>
+
+</div>
+
+<script>
+
+    /* --- डेटा सेट (44 माँ कहानी के सवाल) --- */
+
+    const TIME_LIMIT_MINS = 20; 
+
+    const questions = [
+
+        { q: "1. तीन गोरे निष्णात डॉक्टरों ने एकमत होकर मंगु के पागलपन का क्या निदान प्रकट किया?", opt: ["इलाज संभव है", "कुछ कहा नहीं जा सकता", "पागलपन मिटाना संभव नहीं", "इलाज की आवश्यकता नहीं है"], ans: 2 },
+
+        { q: "2. 'उस कुसुम की तरह यह भी थोड़े समय में समझदार हो जाएगी'—यह किसने कहा?", opt: ["डॉक्टर ने", "मेट्रन ने", "कमु ने", "इनमें से कोई नहीं"], ans: 1 },
+
+        { q: "3. 'दौड़ों रे दौड़ो! मेरी मंगु को मार डाला रे...!' ऐसा कहते हुए कौन चीख रही थी?", opt: ["बड़ी बेटी", "माँ", "छोटी बेटी", "बहू"], ans: 1 },
+
+        { q: "4. 'खून की सगाई' किनकी प्रसिद्ध कहानी है?", opt: ["सातकोड़ी होता की", "ईश्वर पेटलीकर की", "सुजाता की", "सांवर दइया की"], ans: 1 },
+
+        { q: "5. 'माँ' शीर्षक कहानी में किसने अपने बड़े पुत्र को घर आने के लिए पत्र लिखवाया?", opt: ["माँ जी ने", "छोटे पुत्र ने", "कमु ने", "पड़ोसी ने"], ans: 0 },
+
+        { q: "6. 'माँ' कहानी किस लेखक द्वारा रचित है?", opt: ["श्रीनिवास", "सातकोड़ी होता", "ईश्वर पेटलीकर", "सुजाता"], ans: 2 },
+
+        { q: "7. मंगु की माँ की कितनी संतानें थीं?", opt: ["दो", "तीन", "चार", "पाँच"], ans: 2 },
+
+        { q: "8. मंगु के अलावा उसकी माँ की कितनी संतानें थीं?", opt: ["दो", "तीन", "चार", "एक"], ans: 1 },
+
+        { q: "9. 'माँ' कहानी का मुख्य पात्र कौन था?", opt: ["लक्ष्मी", "सीता", "नगम्मा", "मंगु"], ans: 3 },
+
+        { q: "10. मंगु जन्म से ही थी :", opt: ["पागल", "गुंगी", "अंधी", "'a' एवं 'b'"], ans: 3 },
+
+        { q: "11. मंगु के कितने भाई थे?", opt: ["दो", "एक", "तीन", "चार"], ans: 0 },
+
+        { q: "12. 'पराई माँ ही कान छेदती है' यह है :", opt: ["कहावत", "मुहावरा", "छन्द", "सोरठा"], ans: 0 },
+
+        { q: "13. किसने कहा था कि अगहन महीना में मंगु ठीक हो जाएगी?", opt: ["ज्योतिषी", "पंडित", "विद्वान", "वैज्ञानिक"], ans: 0 },
+
+        { q: "14. माँ के लिए कौन-सा माह आराध्यदेव बन गया था?", opt: ["माघ", "अगहन", "पौष", "चैत"], ans: 1 },
+
+        { q: "15. मंगु कब से पागल है?", opt: ["पाँच साल से", "तीन साल से", "दो साल से", "जन्म से"], ans: 3 },
+
+        { q: "16. कन्या विद्यालय में पढ़ने वाली लड़की जो बाद में पागल हो गई उसका नाम क्या था?", opt: ["कुसुम", "मीरा", "मधु", "सवीता"], ans: 0 },
+
+        { q: "17. 'माँ' कहानी किस भाषा से अनुदित है?", opt: ["कन्नड़", "गुजराती", "तमिल", "उड़िया"], ans: 1 },
+
+        { q: "18. मंगु की माँ अस्पताल को किसकी उपमा देती थी?", opt: ["गौशाला", "पाठशाला", "कारागार", "छात्रावास"], ans: 0 },
+
+        { q: "19. ईश्वर पेटलीकर किस भाषा के कथाकार/लेखक हैं?", opt: ["मलयालम", "भोजपुरी", "गुजराती", "तमिल"], ans: 2 },
+
+        { q: "20. मंगु को लोग कहाँ भर्ती करने की सलाह देते थे?", opt: ["गौशाला", "पाठशाला", "कारागार", "अस्पताल"], ans: 3 },
+
+        { q: "21. मंगु की प्राकृतिक मौत को माँ क्या मानती थी?", opt: ["बंधन", "मुक्ति", "छुटकारा", "संतोष"], ans: 1 },
+
+        { q: "22. मंगु की बड़ी बहन का नाम क्या था?", opt: ["मनु", "कुसुम", "मिनी", "कमु"], ans: 3 },
+
+        { q: "23. 'काला पानी' किसकी लोकप्रिय उपन्यास है?", opt: ["सातकोड़ी होता की", "सुजाता की", "सांवर दइया की", "ईश्वर पेटलीकर की"], ans: 3 },
+
+        { q: "24. पागलों के अस्पताल में उपद्रवी पागलों को कहाँ रखा जाता था?", opt: ["बाँधकर", "अलग कमरे में", "कमरे में बंद कर", "जंजीरों से जकड़कर"], ans: 2 },
+
+        { q: "25. मंगु को अस्पताल में भर्ती करने के लिए माँ के बड़े पुत्र ने किसका आर्डर प्राप्त किया?", opt: ["डॉक्टर से", "मजिस्ट्रेट से", "सिविल सर्जन से", "पुलिस से"], ans: 1 },
+
+        { q: "26. माँ को कितनी पुत्रियाँ थीं?", opt: ["तीन", "दो", "चार", "एक"], ans: 1 },
+
+        { q: "27. 'रात में रोशनी जलती रहने से इसे नींद नहीं आती' - ऐसा किसने कहा?", opt: ["भाई ने", "माँ ने", "बहन ने", "डॉक्टर ने"], ans: 1 },
+
+        { q: "28. माँ जी किसे गौशालाओं की उपमा देती थी?", opt: ["घर को", "अस्पताल को", "विद्यालय को", "मंदिर को"], ans: 1 },
+
+        { q: "29. कौन महीना माँ जी का आशा भरा महीना था?", opt: ["पूस", "माघ", "अगहन", "कार्तिक"], ans: 2 },
+
+        { q: "30. मंगु को भर्ती करने के लिए माँ ने किसे पत्र लिखकर बुलवाया?", opt: ["बड़े पुत्र को", "छोटे पुत्र को", "बड़ी बहू को", "दामाद को"], ans: 0 },
+
+        { q: "31. गोपालदास नागर द्वारा संपादित एवं अनूदित कहानी है :", opt: ["माँ", "नगर", "दहीवाला मंगम्मा", "ढहते विश्वास"], ans: 0 },
+
+        { q: "32. 'खून की सगाई' क्या है?", opt: ["कहानी", "नाटक", "उपन्यास", "कविता"], ans: 0 },
+
+        { q: "33. 'अपने पुत्रों के कर्मों पर परदा डालने के लिए मंगु को छाती से चिपकाये रखती थी' - ऐसा किसने कहा?", opt: ["बहू ने", "कमु ने", "पड़ोसिन ने", "माँ ने"], ans: 0 },
+
+        { q: "34. माँ के भाव एकदम से वात्सल्यपूर्ण हो जाते थे जब वह कहती थी :", opt: ["भाभी (बहू)", "कमु", "पति", "बेटा"], ans: 3 },
+
+        { q: "35. मंगु चौदह वर्ष की कब हो जाती?", opt: ["पूस के महीने में", "अगहन के महीने में", "चैत के महीने में", "श्रावण के महीने में"], ans: 1 },
+
+        { q: "36. मंगु के बड़ी बहन की शादी कब हुई थी?", opt: ["पन्द्रहवाँ वर्ष पर", "चौदहवाँ वर्ष पर", "तेरहवाँ वर्ष पर", "सोलहवाँ वर्ष पर"], ans: 1 },
+
+        { q: "37. मंगु के दोनों भाई कहाँ कमाते थे?", opt: ["गाँव में", "शहर में", "घर में", "विदेश में"], ans: 1 },
+
+        { q: "38. अस्पताल में कुसुम को बाँध कर रखा जाता था। ऐसी खबर किसको मिला?", opt: ["पुत्र को", "माँ को", "बहू को", "मंगु को"], ans: 1 },
+
+        { q: "39. किसको देखने के लिए सारा गाँव उमड़ पड़ा था?", opt: ["कुसुम को", "मंजू को", "डॉक्टर को", "शिक्षक को"], ans: 0 },
+
+        { q: "40. माँ ने अस्पताल का हाल-चाल किससे पूछा?", opt: ["डॉक्टर से", "पड़ोसिन से", "कुसुम से", "पुत्र से"], ans: 2 },
+
+        { q: "41. माँ मंगु को कब अस्पताल में भर्ती कराना चाहती है?", opt: ["जाड़े में", "वर्षा में", "गर्मी में", "बसंत में"], ans: 2 },
+
+        { q: "42. माँ जी कहाँ से फिसल गई?", opt: ["ड्योढ़ी से", "फर्श से", "बेंच से", "सीढ़ियों से"], ans: 0 },
+
+        { q: "43. मंगु रेलवे स्टेशन कैसे गई?", opt: ["साईकिल से", "बैलगाड़ी से", "मोटर कार से", "पैदल"], ans: 1 },
+
+        { q: "44. 'रात में चार-पाँच बार जाँच की जाती है' ऐसा किसने कहा?", opt: ["माँ ने", "पुत्र ने", "परिचारिका ने", "डॉक्टर ने"], ans: 2 }
+
+    ];
+
+    let currIdx = 0;
+
+    let userAns = new Array(questions.length).fill(null);
+
+    let timeLeft = TIME_LIMIT_MINS * 60;
+
+    const timerInterval = setInterval(() => {
+
+        let mins = Math.floor(timeLeft / 60);
+
+        let secs = timeLeft % 60;
+
+        document.getElementById("timer-display").innerText = `समय: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        if (timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+
+        timeLeft--;
+
+    }, 1000);
+
+    function renderQuestion() {
+
+        const q = questions[currIdx];
+
+        document.getElementById("q-counter").innerText = `प्रश्न ${currIdx + 1}/${questions.length}`;
+
+        document.getElementById("q-text").innerText = q.q;
+
+        const list = document.getElementById("options-list");
+
+        list.innerHTML = "";
+
+        
+
+        q.opt.forEach((optText, i) => {
+
+            const li = document.createElement("li");
+
+            li.innerText = optText;
+
+            if (userAns[currIdx] === i) li.classList.add("selected");
+
+            li.onclick = () => { userAns[currIdx] = i; renderQuestion(); };
+
+            list.appendChild(li);
+
+        });
+
+        document.getElementById("prev-btn").style.visibility = currIdx === 0 ? "hidden" : "visible";
+
+        document.getElementById("next-btn").style.display = currIdx === questions.length - 1 ? "none" : "block";
+
+    }
+
+    function changeQ(dir) {
+
+        currIdx += dir;
+
+        renderQuestion();
+
+    }
+
+    function finishQuiz() {
+
+        clearInterval(timerInterval);
+
+        let score = 0;
+
+        let reviewHTML = "";
+
+        questions.forEach((q, i) => {
+
+            const isCorrect = userAns[i] === q.ans;
+
+            if (isCorrect) score++;
+
+            reviewHTML += `
+
+                <div class="card" style="border-left: 6px solid ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; padding: 15px;">
+
+                    <p><strong>प्र. ${i+1}: ${q.q}</strong></p>
+
+                    <p style="color: ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; font-weight: bold;">
+
+                        आपका उत्तर: ${userAns[i] !== null ? q.opt[userAns[i]] : 'नहीं दिया'}
+
+                    </p>
+
+                    ${!isCorrect ? `<p style="color: var(--correct-color);">सही उत्तर: ${q.opt[q.ans]}</p>` : ''}
+
+                </div>`;
+
+        });
+
+        document.getElementById("quiz-box").style.display = "none";
+
+        document.getElementById("navigation").style.display = "none";
+
+        document.getElementById("timer-display").style.display = "none";
+
+        document.getElementById("result-screen").style.display = "block";
+
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+
+        document.getElementById("review-area").innerHTML += reviewHTML;
+
+        if (window.saveDataToFirebase) window.saveDataToFirebase(score, questions.length);
+
+    }
+
+    renderQuestion();
+
+</script>
+
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+
+        authDomain: "otpin-fb5e3.firebaseapp.com",
+
+        projectId: "otpin-fb5e3",
+
+        storageBucket: "otpin-fb5e3.firebasestorage.app",
+
+        messagingSenderId: "545063232950",
+
+        appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+    window.saveDataToFirebase = async (score, total) => {
+
+        try {
+
+            await addDoc(collection(db, "all_test_results"), {
+
+                testName: "Hindi: अध्याय 3 (माँ)",
+
+                score: score, total: total,
+
+                date: new Date().toLocaleDateString(),
+
+                timestamp: new Date()
+
+            });
+
+            document.getElementById("save-msg").innerText = "✅ आपका रिजल्ट सेव हो गया है!";
+
+            document.getElementById("save-msg").style.color = "#2e7d32";
+
+        } catch (e) {
+
+            document.getElementById("save-msg").innerText = "❌ एरर: इंटरनेट चेक करें!";
+
+            document.getElementById("save-msg").style.color = "#d32f2f";
+
+        }
+
+    };
+
+</script>
+
+</body>
+
+</html>

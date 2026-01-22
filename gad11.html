@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Naubatkhane Mein Ibadat Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_naubatkhana"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_naubatkhana_" + user.uid);
+                
+                // समय की गणना (1800 sec total - remaining)
+                const timeTakenSec = 1800 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Naubatkhane Mein Ibadat",
+                    chapterId: "ch_naubatkhana", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #431407; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Orange Header */
+        .header-bar {
+            background-color: #ea580c; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4);
+        }
+
+        .q-card {
+            background-color: #7c2d12; padding: 20px; border-radius: 16px;
+            border: 1px solid #9a3412; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #9a3412; border: 2px solid #c2410c; border-radius: 12px;
+            color: #ffedd5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fdba74; background-color: #ea580c; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #ea580c; color: white; border: 1px solid #fdba74; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #7c2d12; padding: 5px 15px; 
+            border-radius: 20px; color: #fdba74; font-weight: bold; font-size: 14px; border: 1px solid #ea580c;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-orange-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Naubatkhana Test</h1>
+        <span id="q-indicator" class="bg-orange-900 text-orange-100 px-3 py-1 rounded-lg text-xs font-bold border border-orange-500">1/54</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">30:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-orange-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-orange-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-orange-600 text-white p-4 rounded-xl font-bold hover:bg-orange-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘नेमत’ शब्द का अर्थ है :", a: "ईश्वर की देन", o: ["न्योता", "ईश्वर की देन", "नामी", "नियंत्रण"] },
+            { q: "‘जिजीविषा’ शब्द का अर्थ है :", a: "जीने की लालसा", o: ["जीने की लालसा", "घूमने की इच्छा", "जिंदगी से हार मानना", "जिंदगी से लापरवाही"] },
+            { q: "बिस्मिल्ला खाँ साहब अस्सी बरस से प्रार्थना में क्या माँगते थे?", a: "सुर", o: ["धन-दौलत", "शोहरत", "सुर", "आयु"] },
+            { q: "सींग का बना वाद्ययंत्र क्या कहलाता है?", a: "शृंगी", o: ["मृदंग", "करताल", "शृंगी", "झाल"] },
+            { q: "अमीरुद्दीन व शम्सुद्दीन के मामाद्वय कौन थे?", a: "सादिक हुसैन तथा अलीबख्श", o: ["निजामुद्दीन खाँ तथा तारीफ खाँ", "सादिक हुसैन तथा अलीबख्श", "हजरत खाँ तथा विलायत खाँ", "नादिम हुसैन तथा इरफान"] },
+            { q: "अमीरुद्दीन का जन्म कहाँ हुआ था?", a: "बिहार में", o: ["महाराष्ट्र में", "उत्तर प्रदेश", "बिहार में", "प० बंगाल में"] },
+            { q: "सुलोचना कौन थी?", a: "अभिनेत्री", o: ["लेखिका", "अभिनेत्री", "कवयित्री", "हलवाइन"] },
+            { q: "बिस्मिल्ला खाँ कौन-सा वाद्य-यंत्र बजाते थे?", a: "शहनाई", o: ["ढोलक", "बाँसुरी", "तबला", "शहनाई"] },
+            { q: "अमीरुद्दीन के बड़े भाई का नाम क्या था?", a: "शम्सुद्दीन", o: ["अलीबख्श", "शम्सुद्दीन", "सादिक हुसैन", "मुजफ्फर अली"] },
+            { q: "गीतकार गुलजार की कविताओं का संपादन यतींद्र मिश्र ने किस नाम से किया?", a: "यार जुलाहे", o: ["यदा-कदा", "अनमोल विचार", "यार जुलाहे", "गिरिजा"] },
+            { q: "किस स्थान पर मरण भी मंगल माना गया है?", a: "काशी में", o: ["काशी में", "राँची में", "पटना में", "रायपुर में"] },
+            { q: "किसका जन्म संगीत प्रेमी परिवार में हुआ था?", a: "बिस्मिल्ला खाँ का", o: ["हजारी प्रसाद द्विवेदी का", "बिस्मिल्ला खाँ का", "यतीन्द्र मिश्र का", "अमरकान्त का"] },
+            { q: "शहनाई को सुषिर वाद्यों में किसकी उपाधि मिली है?", a: "शाह", o: ["मंत्री", "शाह", "बेसुरा", "कनिष्ठ"] },
+            { q: "दक्षिण भारत में मंगल ‘नागस्वरम्’ की तरह शहनाई, किसकी मंगलध्वनि की संपूरक है?", a: "प्रभाती की", o: ["चैता की", "पर्वगीत की", "श्रमगीत की", "प्रभाती की"] },
+            { q: "“मरते दम तक न शहनाई छूटेगी न काशी”—यह कथन किसका है?", a: "बिस्मिल्ला खाँ का", o: ["बिस्मिल्ला खाँ का", "पंडित रामसहाय मिश्र का", "बुद्धादित्य मुखर्जी का", "मोहम्मद खान का"] },
+            { q: "‘नसीहत’ शब्द का अर्थ क्या है?", a: "शिक्षा", o: ["लालसा", "शिक्षा", "शिष्ट तरीका", "आराम"] },
+            { q: "नौबतखाने में इबादत शीर्षक पाठ साहित्य की कौन विधा है?", a: "व्यक्तिचित्र", o: ["ललित रचना", "निबंध", "साक्षात्कार", "व्यक्तिचित्र"] },
+            { q: "‘सुषिर वाद्यों में शाह’ की उपाधि प्राप्त है :", a: "शहनाई को", o: ["तबला को", "ढोलक को", "बाँसुरी को", "शहनाई को"] },
+            { q: "‘बिस्मिल्ला खाँ’ का संबंध है :", a: "शहनाई से", o: ["बाँसुरी से", "तबला से", "हारमोनियम से", "शहनाई से"] },
+            { q: "‘नौबत खाने में इबादत’ पाठ के केन्द्र में हैं :", a: "बिस्मिल्ला खाँ", o: ["बिरजू महाराज", "जाकिर हुसैन", "बिस्मिल्ला खाँ", "इनमें से कोई नहीं"] },
+            { q: "सुषिर वाद्यों में गिना जाता है :", a: "शहनाई को", o: ["सारंगी को", "शहनाई को", "हरमोनियम को", "सभी को"] },
+            { q: "संगीत आयोजन की एक प्राचीन एवं अद्भुत परम्परा रही है :", a: "काशी में", o: ["अयोध्या में", "काशी में", "दिल्ली में", "जौनपुर में"] },
+            { q: "बिस्मिल्ला खाँ के पिता का क्या नाम था?", a: "पैगंबर बख्श खाँ", o: ["सलार हुसैन खाँ", "अलीबख्श खाँ", "पैगंबर बख्श खाँ", "सादिक हुसैन"] },
+            { q: "बिस्मिल्ला खाँ के बचपन का नाम क्या था?", a: "कमरुद्दीन", o: ["अजहर", "शम्सुद्दीन", "कमरुद्दीन", "गयासुद्दीन"] },
+            { q: "बिस्मिल्ला खाँ के परदादा का नाम था :", a: "उस्ताद सलार हुसैन", o: ["उस्ताद सलार हुसैन", "महताब हुसैन", "अब्दुल हुसैन", "इकबाल हुसैन"] },
+            { q: "बिस्मिल्ला खाँ के मामा का नाम था :", a: "सादिक हुसैन", o: ["रियाजुल हुसैन", "सादिक हुसैन", "असगर खाँ", "आफताब अली"] },
+            { q: "बिस्मिल्ला खाँ का जन्म हुआ था :", a: "डुमराँव, बिहार में", o: ["उत्तर प्रदेश में", "महाराष्ट्र में", "पश्चिमी बंगाल में", "डुमराँव, बिहार में"] },
+            { q: "रसूलनबाई थी :", a: "गायिका", o: ["नर्तकी", "कवयित्री", "गायिका", "लेखिका"] },
+            { q: "‘यदा-कदा’ किस लेखक की काव्य-संग्रह है?", a: "यतीन्द्र मिश्र", o: ["यतीन्द्र मिश्र", "शम्सुद्दीन", "बिस्मिल्ला खाँ", "गुणाकर मूले"] },
+            { q: "‘ड्योढ़ी पर आलाप’ शीर्षक काव्य-संग्रह किसकी रचना है?", a: "यतींद्र मिश्र", o: ["अनामिका", "जीवनानंद दास", "वीरेन डंगवाल", "यतींद्र मिश्र"] },
+            { q: "बिस्मिल्ला खाँ का निधन कब हुआ?", a: "21 अगस्त, 2006", o: ["14 जुलाई, 2005", "18 जनवरी, 2004", "27 मई, 2006", "21 अगस्त, 2006"] },
+            { q: "कुलसुम कौन थी?", a: "हलवाइन", o: ["लेखिका", "हलवाइन", "गायिका", "नर्तकी"] },
+            { q: "बिस्मिल्ला खाँ रियाज के लिए कहाँ जाते थे?", a: "बालाजी मंदिर", o: ["बालाजी मंदिर", "विश्वनाथ मंदिर", "संकटमोचन मंदिर", "दादा के पास"] },
+            { q: "‘नरकट’ का प्रयोग किस वाद्य-यंत्र में होता है?", a: "शहनाई", o: ["शहनाई", "ढोल", "मृदंग", "बिगुल"] },
+            { q: "भारत सरकार ने बिस्मिल्ला खाँ को किस सम्मान से अलंकृत किया?", a: "भारत रत्न", o: ["बिहार रत्न", "वाद्य रत्न", "भारत रत्न", "शहनाई रत्न"] },
+            { q: "यतीन्द्र मिश्र ने किस अर्द्धवार्षिक पत्रिका का सम्पादन किया?", a: "सहित", o: ["सत्या", "सुकून", "सहित", "सुगन्ध"] },
+            { q: "बिस्मिल्ला खाँ के खानदान का कोई भी सदस्य किस दिन शहनाई नहीं बजाता था?", a: "मुहर्रम के दिन", o: ["दुर्गापूजा के दिन", "मुहर्रम के दिन", "दीपावली के दिन", "ईद के दिन"] },
+            { q: "बिस्मिल्ला खाँ को किस चीज का बुखार था?", a: "फिल्म देखने का", o: ["शहनाई बजाने का", "गाना गाने का", "ढोल बजाने का", "फिल्म देखने का"] },
+            { q: "अरब देश में फूँककर बजाए जाने वाली वाद्य यंत्र, जिसमें नाड़ी (रीड) होती है, को क्या कहते हैं?", a: "नय", o: ["नय", "राग", "लय", "इनमें से कोई नहीं"] },
+            { q: "बिस्मिल्ला खाँ को बालाजी मंदिर में शहनाई बजाने पर कितनी मेहनताना मिलती थी?", a: "आठ आना", o: ["चार आना", "बारह आना", "आठ आना", "सोलह आना"] },
+            { q: "यतीन्द्र मिश्र को किस पुरस्कार से सम्मानित किया गया?", a: "इनमें सभी", o: ["रजा पुरस्कार", "ऋतुराज सम्मान", "भारत भूषण अग्रवाल पुरस्कार", "इनमें सभी"] },
+            { q: "बिस्मिल्ला खाँ के पिताजी कहाँ शहनाई बजाते थे?", a: "मंदिर में", o: ["मंदिर में", "गुरुद्वारा में", "मस्जिद में", "चर्च में"] },
+            { q: "यतींद्र मिश्र ने गीतकार गुलजार की कविताओं का संपादन किस नाम से किया है?", a: "यार जुलाहे", o: ["यार जुलाहे", "यदा-कदा", "गिरिजा", "थाती"] },
+            { q: "बिस्मिल्ला खाँ के बड़े भाई का नाम क्या था?", a: "शम्सुद्दीन", o: ["सादिक हुसैन", "अमीरुद्दीन", "शम्सुद्दीन", "इनमें से कोई नहीं"] },
+            { q: "यतीन्द्र मिश्र का जन्म कब हुआ?", a: "1977 ई० में", o: ["1975 ई० में", "1977 ई० में", "1976 ई० में", "1978 ई० में"] },
+            { q: "यतीन्द्र मिश्र का जन्म कहाँ हुआ?", a: "अयोध्या, उत्तर प्रदेश", o: ["अयोध्या, उत्तर प्रदेश", "डुमराँव, बिहार", "इलाहाबाद, उत्तर प्रदेश", "भागलपुर, बिहार"] },
+            { q: "‘बिस्मिल्ला खाँ के शहनाई के साथ किस मुस्लिम पर्व का नाम जुड़ा हुआ है?", a: "मुहर्रम", o: ["ईद", "शबे बारात", "बकरीद", "मुहर्रम"] },
+            { q: "काशी किसकी पाठशाला है?", a: "संस्कृति की", o: ["संस्कृति की", "नर्तन की", "नृत्य की", "वादन की"] },
+            { q: "बिस्मिल्ला खाँ दशकों से कौन-सी दुआ ईश्वर से माँग रहे हैं?", a: "सच्चे सुर की नेमत की", o: ["सुख-सुविधा की", "सच्चे सुर की नेमत की", "सम्मान की", "मुक्ति की"] },
+            { q: "‘कमरूद्दीन’ नाम किसका था?", a: "बिस्मिल्ला खाँ का", o: ["मिट्ठन मियाँ का", "अलीबख्श का", "बिस्मिल्ला खाँ का", "जमाल शेख का"] },
+            { q: "‘काशी’ में मरण भी माना गया है :", a: "मंगल", o: ["अमंगल", "कठिन", "अशुभ", "मंगल"] },
+            { q: "नौबतखाना का क्या अर्थ है?", a: "प्रवेश द्वार के ऊपर मंगल ध्वनि बजाने का स्थान", o: ["दहलीज", "प्रवेश द्वार के ऊपर मंगल ध्वनि बजाने का स्थान", "नवीन घर", "वाद्ययंत्र"] },
+            { q: "पक्का महाल क्या है?", a: "काशी विश्वनाथ से लगा हुआ इलाका", o: ["संगीतकार का घर", "काशी विश्वनाथ से लगा हुआ इलाका", "अभिनेता का नाम", "लेखक का नाम"] },
+            { q: "शाहनेय की उपाधि किसे दी गई?", a: "शहनाई को", o: ["शहनाई को", "शम्सुद्दीन को", "तबला को", "सादिक हुसैन को"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1800; // 30 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-orange-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

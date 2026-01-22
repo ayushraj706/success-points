@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birju Maharaj Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल (User Profile)
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_birju"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank) - ताकी रैंक बन सके
+                const leaderboardRef = doc(db, "leaderboard", "ch_birju_" + user.uid);
+                
+                // समय की गणना (30 मिनट - बचा हुआ समय = लिया गया समय)
+                const timeTakenSec = 1800 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Jit-Jit Main Nirakhat Hoon",
+                    chapterId: "ch_birju", // For filtering
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, // For Tie-Breaker
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #2e1065; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Fuchsia Header */
+        .header-bar {
+            background-color: #c026d3; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(192, 38, 211, 0.4);
+        }
+
+        .q-card {
+            background-color: #4a044e; padding: 20px; border-radius: 16px;
+            border: 1px solid #701a75; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #581c87; border: 2px solid #7c3aed; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #f0abfc; background-color: #86198f; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #c026d3; color: white; border: 1px solid #f0abfc; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #4a044e; padding: 5px 15px; 
+            border-radius: 20px; color: #f5d0fe; font-weight: bold; font-size: 14px; border: 1px solid #c026d3;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-fuchsia-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Birju Maharaj Test</h1>
+        <span id="q-indicator" class="bg-fuchsia-900 text-fuchsia-100 px-3 py-1 rounded-lg text-xs font-bold border border-fuchsia-500">1/57</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">30:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-fuchsia-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-fuchsia-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-fuchsia-600 text-white p-4 rounded-xl font-bold hover:bg-fuchsia-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘साफा’ क्या है?", a: "साफ लंबा वस्त्र जिसे नर्तक कंधे से लेकर कमर तक लपेट लेते है", o: ["छोटा कुरता जिसे संगीतज्ञ पहनते हैं", "बैठने के लिए आरामदायक गद्दा", "साफ लंबा वस्त्र जिसे नर्तक कंधे से लेकर कमर तक लपेट लेते है", "साफ करने की एक विधि"] },
+            { q: "बिरजू महाराज अपना सबसे बड़ा जज किसको मानते थे?", a: "अम्मा को", o: ["बाबूजी को", "अम्मा को", "ताऊ को", "पत्नी को"] },
+            { q: "पंडित बिरजू महाराज कानपुर में कितने साल रहे?", a: "दो-ढाई साल", o: ["तीन साल", "एक साल", "साढ़े तीन साल", "दो-ढाई साल"] },
+            { q: "बिरजू महाराज को ‘गण्डा’ किसने बाँधा?", a: "उनके बाबूजी ने", o: ["उनके चाचा ने", "उनके गुरु ने", "उनके बाबूजी ने", "उनकी माताजी ने"] },
+            { q: "‘नटरंग’ शीर्षक पत्रिका की संपादक कौन हैं?", a: "रश्मि वाजपेयी", o: ["बालासरस्वती", "रश्मि वाजपेयी", "सितार देवी", "मृणालिनी साराभाई"] },
+            { q: "‘जित-जित मैं निरखत हूँ’ है:", a: "साक्षात्कार", o: ["कहानी", "निबंध", "ललित रचना", "साक्षात्कार"] },
+            { q: "बिरजू महाराज के बहनों का जन्म हुआ था:", a: "रामपुर में", o: ["रामपुर में", "बीकानेर में", "जौनपुर में", "दुलारपुर में"] },
+            { q: "बिरजू को क्या पहनने का बहुत शौक था:", a: "टोपी", o: ["घड़ी", "टोपी", "चश्मा", "अँगुठी"] },
+            { q: "हिन्दुस्तान डांस अकादमी में थीं:", a: "(a) एवं (b) दोनों", o: ["कपिला जी", "लीला कृपलानी", "(a) एवं (b) दोनों", "इनमें से कोई नहीं"] },
+            { q: "बिरजू कितने साल के थे, जब उनकी पिता की मृत्यु हुई थी:", a: "9.5 साल के", o: ["8 साल के", "9.5 साल के", "10 साल के", "6.5 साल के"] },
+            { q: "बिरजू ने अपने पिता के साथ आखिरी प्रोग्राम कहाँ पर किया था?", a: "मैनपुरी में", o: ["मैनपुरी में", "जोधपुर में", "जौनपुर में", "उदयपुर में"] },
+            { q: "शागिर्द का अर्थ है:", a: "शिष्य", o: ["राही", "दोस्त", "शिष्य", "अपना"] },
+            { q: "पंडित बिरजू महाराज हैं:", a: "नर्तक", o: ["गायक", "लेखक", "कहानीकार", "नर्तक"] },
+            { q: "बिरजू महाराज का साक्षात्कार किसने लिया है?", a: "रश्मि वाजपेयी", o: ["रश्मि वाजपेयी", "शाश्वती", "दीपा", "अर्चना"] },
+            { q: "पंडित बिरजू महाराज का जन्म कहाँ हुआ था?", a: "लखनऊ", o: ["इलाहाबाद", "लखनऊ", "कानपुर", "पटना"] },
+            { q: "पंडित बिरजू महाराज किस लड़के को डांस सिखाते थे?", a: "सीताराम बागला", o: ["राधेश्याम बागला", "गौरीशंकर बागला", "सीताराम बागला", "राधामोहन बागला"] },
+            { q: "नेपाल में बिरजू महाराज के एक रिश्तेदार थे, जिनका नाम था:", a: "झुमकालाल", o: ["तुमकलाल", "चुनुलाल", "हरिहरलाल", "झुमकालाल"] },
+            { q: "पंडित बिरजू महाराज की गुरुवाइन कौन थीं?", a: "उनकी माँ", o: ["उनकी माँ", "उनकी चाची", "उनकी बहन", "उनकी मौसी"] },
+            { q: "जब पंडित बिरजू महाराज को संगीत नाटक अकादमी अवार्ड मिला तब उनकी उम्र क्या थी?", a: "27 वर्ष", o: ["27 वर्ष", "26 वर्ष", "25 वर्ष", "24 वर्ष"] },
+            { q: "बिरजू महाराज अपने पिता के दसवाँ एवं तेरवीं करने के लिए कितने पैसे इकट्ठा किए?", a: "₹ 500", o: ["₹ 300", "₹ 600", "₹ 700", "₹ 500"] },
+            { q: "बिरजू महाराज को ‘संगीत नाटक अकादमी पुरस्कार’ कब प्राप्त हुआ?", a: "1965 ई० में", o: ["1965 ई० में", "1968 ई० में", "1970 ई० में", "1972 ई० में"] },
+            { q: "बिरजू महाराज खुद को किसका शागिर्द मानते थे?", a: "पिता का", o: ["पिता का", "माँ का", "मामा का", "भाई का"] },
+            { q: "बिरजू महाराज की ख्याति किस रूप में है?", a: "नर्तक", o: ["शहनाईवादक", "नर्तक", "तबलावादक", "संगीतकार"] },
+            { q: "बिरजू महाराज किस शैली के नर्तक हैं?", a: "कथक", o: ["कथक", "मणिपुरी", "कुचिपुड़ी", "कारबा"] },
+            { q: "बिरजू महाराज का संबंध किस घराने से है?", a: "लखनऊ", o: ["लखनऊ", "डुमराँव", "बनारस", "किसी से भी नहीं"] },
+            { q: "पंडित बिरजू महाराज का जन्म कब हुआ था?", a: "4 फरवरी, 1938", o: ["4 जनवरी, 1938", "4 फरवरी, 1938", "4 मार्च, 1938", "4 अप्रैल, 1938"] },
+            { q: "बिरजू महाराज के पिता क्या थे?", a: "प्रसिद्ध नर्तक", o: ["प्रसिद्ध संगीतज्ञ", "प्रसिद्ध नाट्यकार", "प्रसिद्ध कलाप्रेमी", "प्रसिद्ध नर्तक"] },
+            { q: "बिरजू महाराज को प्रारंभिक शिक्षा किससे प्राप्त हुई थी?", a: "कपिलाजी से", o: ["पिताजी से", "माताजी से", "कपिलाजी से", "इनमें से सभी"] },
+            { q: "बिरजू महाराज का संबंध है:", a: "कथक नृत्य से", o: ["बाँसुरी वादन से", "तबला वादन से", "कथक नृत्य से", "संतूर वादन से"] },
+            { q: "किस उम्र में बिरजू महाराज नृत्यकला में पारंगत हो गए?", a: "9 वर्ष", o: ["7 वर्ष", "8 वर्ष", "9 वर्ष", "10 वर्ष"] },
+            { q: "बिरजू महाराज की पहली शिष्या थी:", a: "रश्मि", o: ["दुर्गा", "अनुराधा", "रश्मि", "रमा"] },
+            { q: "इबादत का अर्थ है:", a: "उपासना", o: ["उपासना", "इठलाना", "ईंट", "ईख"] },
+            { q: "किसने शास्त्रीय नृत्यकला को गति और चमक प्रदान की?", a: "बिरजू महाराज", o: ["रश्मि वाजपेयी", "बिरजू महाराज", "कपिलाजी", "इनमें से कोई नहीं"] },
+            { q: "पंडित बिरजू महाराज लखनऊ घराने की किस पीढ़ी के कलाकार थे?", a: "सातवीं पीढ़ी", o: ["छठी पीढ़ी", "सातवीं पीढ़ी", "नौवीं पीढ़ी", "आठवीं पीढ़ी"] },
+            { q: "जब दिल्ली में हिन्दू-मुस्लिम दंगे होने लगे तो डर के मारे बिरजू महाराज और उनकी अम्मा कहाँ गए?", a: "लखनऊ", o: ["इलाहाबाद", "कलकत्ता", "लखनऊ", "पंजाब"] },
+            { q: "बिरजू महाराज को ‘संगीत भारती’ से जोड़ने में किनका योगदान था?", a: "कपिलाजी का", o: ["पिताजी का", "माताजी का", "कपिलाजी का", "इनमें से कोई नहीं"] },
+            { q: "बिरजू महाराज की कितनी संतानें थीं?", a: "दो", o: ["दो", "तीन", "चार", "इनमें से कोई नहीं"] },
+            { q: "बिरजू महाराज के चाचा का नाम क्या था?", a: "शम्भु महाराज", o: ["शम्भु महाराज", "गोदई महाराज", "श्री महाराज", "विष्णु महाराज"] },
+            { q: "शम्भु महाराज बिरजू महाराज के कौन थे?", a: "चाचा", o: ["मौसा", "भाई", "चाचा", "पिता"] },
+            { q: "बिरजू महाराज ने ठुमरियाँ किससे सीखी?", a: "अम्मा से", o: ["अम्मा से", "बाबू जी से", "चाचा से", "मामा से"] },
+            { q: "बिरजू महाराज ने कितने प्रोग्राम करके बाबू जी की दसवीं और तेरहवीं करवाई?", a: "दो", o: ["दो", "तीन", "चार", "पाँच"] },
+            { q: "बिरजू महाराज को तालिम किससे मिली?", a: "बाबूजी से", o: ["दादा से", "बाबूजी से", "नाना से", "चाचा से"] },
+            { q: "‘जित-जित मैं निरखत हूँ’ पाठ के लेखक कौन हैं?", a: "पंडित बिरजू महाराज", o: ["यतीन्द्र मिश्र", "महात्मा गाँधी", "अमरकांत", "पंडित बिरजू महाराज"] },
+            { q: "बिरजू महाराज का जन्म लखनऊ के किस अस्पताल में हुआ था?", a: "जफरीन", o: ["पारस", "जफरीन", "गोदावरी", "रूद्र सदन"] },
+            { q: "बिरजू महाराज के बड़ी बहन कितने साल इनसे बड़ी थी?", a: "15 साल", o: ["15 साल", "13 साल", "16 साल", "21 साल"] },
+            { q: "बिरजू महाराज क्या नहीं खाते थे?", a: "आमलेट-मछली", o: ["रोटी", "प्याज", "आमलेट-मछली", "भुजा"] },
+            { q: "बिरजू महाराज के पिता जी को रोग था:", a: "लू", o: ["शुगर रोग", "हृदय रोग", "ब्लड प्रेशर", "मोतियाबिन"] },
+            { q: "बिरजू महाराज फिर वापस लखनऊ कितने वर्ष के उम्र में आए?", a: "14 वर्ष", o: ["21 वर्ष", "14 वर्ष", "13 वर्ष", "15 वर्ष"] },
+            { q: "‘बैले’ क्या है?", a: "यूरोपीय नृत्य", o: ["यूरोपीय नृत्य", "यूरोपीय भोज", "यूरोपीय जाति", "यूरोपीय खेल"] },
+            { q: "हिन्दुस्तानी म्यूजिक डांस अकादमी में बिरजू महाराज को कितने रुपये मिल रहे थे?", a: "₹ 250", o: ["₹ 250", "₹ 300", "₹ 600", "₹ 150"] },
+            { q: "बिरजू महाराज की शादी कितने वर्ष के उम्र में हुई थी?", a: "18 साल", o: ["16 साल", "18 साल", "15 साल", "17 साल"] },
+            { q: "बिरजू महाराज लोकप्रिय हुए:", a: "इनमें सभी में", o: ["कलकत्ता में", "मुम्बई में", "द० राज्य में", "इनमें सभी में"] },
+            { q: "संगीत भारती के कमाई से बिरजू ने क्या खरीदे थे?", a: "साइकिल", o: ["साइकिल", "स्कूटर", "मोटरकार", "इनमें से सभी"] },
+            { q: "बिरजू महाराज को आगे बढ़ाने में किनका बहुत बड़ा हाथ था?", a: "अम्माजी का", o: ["पिताजी का", "अम्माजी का", "चाचाजी का", "कपिला जी का"] },
+            { q: "ब्रजनारायण ने बिरजू को कहाँ बुलाया था?", a: "मुम्बई", o: ["मुम्बई", "कोलकाता", "सूरत", "गोरखपुर"] },
+            { q: "बिरजू महाराज के शागिर्द है:", a: "शाश्वती", o: ["शाश्वती", "भानुमती", "सरस्वती", "कपिला"] },
+            { q: "दिल्ली में ‘हिन्दुस्तान डांस म्यूजिक स्कूल’ किनका था?", a: "निर्मलाजी का", o: ["निर्मलाजी का", "कपिला का", "भानुमती का", "शाश्वती का"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1800; // 30 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-fuchsia-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

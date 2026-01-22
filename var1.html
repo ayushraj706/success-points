@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hindi Quiz - दही वाली मंगम्मा</title>
+    <style>
+        /* --- CONFIGURATION (यहाँ से आप कलर और टाइम बदल सकते हैं) --- */
+        :root {
+            --primary-color: #1877F2; /* थीम का मुख्य रंग */
+            --bg-color: #F0F2F5;
+            --correct-color: #42b72a;
+            --wrong-color: #fa3e3e;
+            --text-dark: #050505;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+
+        .header {
+            background: var(--primary-color);
+            color: white; padding: 15px; text-align: center;
+            font-weight: bold; position: sticky; top: 0; z-index: 100;
+        }
+
+        .quiz-container { max-width: 600px; margin: 20px auto; padding: 15px; padding-bottom: 100px; }
+        
+        .timer-box { 
+            text-align: center; margin-bottom: 10px; font-weight: bold; 
+            color: var(--wrong-color); font-size: 18px; 
+        }
+
+        .card {
+            background: white; border-radius: 12px; padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px;
+        }
+
+        .q-text { font-size: 18px; font-weight: 600; margin-bottom: 15px; line-height: 1.4; }
+
+        .options { list-style: none; padding: 0; }
+        .options li {
+            background: #f0f2f5; border: 2px solid #ddd;
+            margin-bottom: 10px; padding: 12px; border-radius: 8px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .options li.selected { border-color: var(--primary-color); background: #e7f3ff; }
+        
+        /* Review Colors */
+        .options li.correct-ans { background: #d4edda; border-color: var(--correct-color); }
+        .options li.wrong-ans { background: #f8d7da; border-color: var(--wrong-color); }
+
+        .footer {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; justify-content: space-between; padding: 15px;
+            border-top: 1px solid #ddd; align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 6px;
+            font-weight: bold; cursor: pointer;
+        }
+        .btn-next { background: var(--primary-color); color: white; }
+        .btn-back { background: #e4e6eb; color: #050505; }
+        .btn-submit { background: var(--correct-color); color: white; }
+
+        .result-screen { display: none; text-align: center; }
+        .score-circle {
+            width: 120px; height: 120px; background: var(--primary-color);
+            color: white; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 30px; font-weight: bold; margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">दही वाली मंगम्मा - वस्तुनिष्ठ प्रश्न</div>
+
+<div class="quiz-container" id="main-container">
+    <div class="timer-box" id="timer-display">समय: 20:00</div>
+    
+    <div id="quiz-box">
+        <div class="card">
+            <div id="q-counter" style="font-size: 14px; color: #65676B; margin-bottom: 10px;">प्रश्न 1/50</div>
+            <div class="q-text" id="q-text">Loading...</div>
+            <ul class="options" id="options-list"></ul>
+        </div>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <div class="card">
+            <h2>आपका परिणाम</h2>
+            <div class="score-circle" id="final-score">0/50</div>
+            <p id="save-msg">प्रतीक्षा करें, रिजल्ट सेव हो रहा है...</p>
+            <button class="btn btn-next" onclick="location.reload()" style="width: 100%;">पुनः प्रयास करें</button>
+            <div id="review-area" style="margin-top: 20px; text-align: left;">
+                <h3>उत्तरों की समीक्षा:</h3>
+                </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer" id="navigation">
+    <button class="btn btn-back" id="prev-btn" onclick="changeQ(-1)">पीछे</button>
+    <button class="btn btn-submit" onclick="finishQuiz()">सबमिट</button>
+    <button class="btn btn-next" id="next-btn" onclick="changeQ(1)">आगे</button>
+</div>
+
+<script>
+    // --- SETTINGS ---
+    const TIME_LIMIT_MINS = 20; // समय (मिनट में)
+    const questions = [
+        { q: "1. माँ जी के पास आँगन में बैठकर मंगम्मा क्या खाती थी?", opt: ["दही", "मिठाई", "पान-सुपारी", "रोटी-सब्जी"], ans: 2 },
+        { q: "2. 'अरे कहावत है, दवा करने से तो मसान ही जगता है।' यह कथन है :", opt: ["मंगम्मा का", "माँ जी का", "नंजम्मा का", "रंगप्पा का"], ans: 0 },
+        { q: "3. 'दही वाली मंगम्मा' शीर्षक कहानी किस कहानी से साभार ली गयी है?", opt: ["'गुजराती कहानियों' से", "'उड़िया कहानियों' से", "'तमिल कहानियों' से", "'कन्नड़ कहानियों' से"], ans: 3 },
+        { q: "4. अवलूर के पास किसी गाँव की रहनेवाली निम्न में से कौन है?", opt: ["मंगम्मा", "लेखक", "लक्ष्मी", "मुखिया"], ans: 0 },
+        { q: "5. मंगम्मा किसके लिए मिठाई रख रही थी?", opt: ["रंगप्पा", "नंजम्मा", "पोता", "पति"], ans: 2 },
+        { q: "6. श्रीनिवास जी का पूरा नाम क्या है?", opt: ["मस्ती वेंकटेश अय्यंगार", "श्रीकांत", "ईश्वर पेटलीकर", "सावर दइया"], ans: 0 },
+        { q: "7. मंगम्मा कहाँ की रहने वाली थी?", opt: ["मयूरभंज", "इलाहाबाद", "वेंकटपुर", "वेंकटपुर (बेंगुलूर)"], ans: 2 },
+        { q: "8. मंगम्मा को किसके साथ विवाद था?", opt: ["पोते के साथ", "बहू के साथ", "मालकिन के साथ", "पड़ोसी के साथ"], ans: 1 },
+        { q: "9. 'दही वाली मंगम्मा' कहानी का कहानीकार कौन है?", opt: ["श्री निवास", "सातकोड़ी होता", "ईश्वर", "सुजाता"], ans: 0 },
+        { q: "10. 'दही वाली मंगम्मा' कहानी का प्रमुख पात्र कौन है?", opt: ["लक्ष्मी", "मंगम्मा", "पाप्पति", "सीता"], ans: 1 },
+        { q: "11. 'दही वाली मंगम्मा' कहानी का कथा वाचक कहाँ से है?", opt: ["पटना", "दिल्ली", "बेंगुलूर", "कोलकाता"], ans: 2 },
+        { q: "12. 'दही वाली मंगम्मा' कहानी किसे संदेश देती है?", opt: ["माताओं को", "पुत्रियों को", "बहुओं को", "छात्रों को"], ans: 2 },
+        { q: "13. मंगम्मा क्या बेचती थी?", opt: ["दूध", "घी", "दही", "माठा (छाछ)"], ans: 2 },
+        { q: "14. मंगम्मा के गाँव का नाम था :", opt: ["शोलापुर", "खिदिरपुर", "वेंकटपुर", "रामपुर"], ans: 2 },
+        { q: "15. मंगम्मा क्या खाती थी :", opt: ["तिरंगा (गुटखा)", "पान-सुपारी", "खैनी", "इनमें से कोई नहीं"], ans: 1 },
+        { q: "16. मंगम्मा ने बेटे से अलग होने को कहा, आज :", opt: ["दोपहर से", "शाम से", "रात से", "सुबह से"], ans: 0 },
+        { q: "17. मंगम्मा किस कपड़े की ब्लाउज पहनना चाहती थी?", opt: ["सूती के", "टेरीकॉट के", "मखमल के", "रेशम के"], ans: 2 },
+        { q: "18. रंगप्पा कहाँ का रहने वाला था :", opt: ["शोलापुर", "खिदिरपुर", "रामपुर", "वेंकटपुर"], ans: 3 },
+        { q: "19. रंगप्पा मंगम्मा से कहाँ मिलता था :", opt: ["कुआँ के पास", "स्कूल के पास", "शिवालय के पास", "चौराहे के पास"], ans: 0 },
+        { q: "20. रंगप्पा था :", opt: ["व्यापारी", "जुआरी", "वकील", "किसान"], ans: 1 },
+        { q: "21. लेखक ने कहानी में मगरमच्छ की उपमा किसको दिया है?", opt: ["सास को", "बहू को", "बेटे को", "ससुर को"], ans: 1 },
+        { q: "22. मंगम्मा अपना पैसा कहाँ रखना चाहती है :", opt: ["बेटे के पास", "माँ जी के पास", "थानेदार के पास", "रंगप्पा के पास"], ans: 1 },
+        { q: "23. श्रीनिवास जी का जन्म कब हुआ था?", opt: ["6 जून, 1891 ई. में", "7 जून, 1890 ई. में", "10 जून, 1892 ई. में", "11 जून, 1880 ई. में"], ans: 0 },
+        { q: "24. मंगम्मा से कौन कर्ज माँग रहा था?", opt: ["रंगप्पा", "बहू", "बेटा", "माँ जी"], ans: 0 },
+        { q: "25. मंगम्मा की बहू का नाम क्या था?", opt: ["सबीता", "नंजम्मा", "कविता", "सवित्री"], ans: 1 },
+        { q: "26. सास-बहू में झगड़ा क्यों हुआ था?", opt: ["बच्चे को पीटने के लिए", "खाना बनाने के लिए", "गहने के लिए", "दही बेचने के लिए"], ans: 0 },
+        { q: "27. बी. आर. नारायण ने किस कहानी का अनुवाद किया है?", opt: ["ढहते विश्वास", "दही वाली मंगम्मा", "नगर", "माँ"], ans: 1 },
+        { q: "28. उस घर में अब सास और बहू में स्वतंत्रता की होड़ लगी है। यह पंक्ति किस कहानी की है?", opt: ["नगर", "माँ", "ढहते विश्वास", "दही वाली मंगम्मा"], ans: 3 },
+        { q: "29. 'दही वाली मंगम्मा' कहानी किस भाषा से अनूदित है?", opt: ["उड़िया", "कन्नड़", "तमिल", "तेलुगु"], ans: 1 },
+        { q: "30. अमराई का कुआँ कहाँ है?", opt: ["शहर में", "बाजार में", "रास्ते में", "रंगप्पा के खेत में"], ans: 2 },
+        { q: "31. मंगम्मा को किससे विवाद था?", opt: ["बेटे से", "बहू से", "पोते से", "सास से"], ans: 1 },
+        { q: "32. 'नंजम्मा' मंगम्मा की कौन थी?", opt: ["बेटी", "मौसी", "बहू", "सौतन"], ans: 2 },
+        { q: "33. 'क्यों री राक्षसी, इस छोटे-से बच्चे को क्यों पीट रही है?' किसने कहा?", opt: ["मंगम्मा ने", "पप्पाति ने", "लक्ष्मी ने", "सीता ने"], ans: 0 },
+        { q: "34. मंगम्मा कहाँ की रहने वाली है?", opt: ["अवलूर के पास किसी गाँव की", "सतूर के पास किसी गाँव की", "जालौन के पास किसी गाँव की", "नागौर के पास किसी गाँव की"], ans: 0 },
+        { q: "35. मंगम्मा किस भाषा की कहानी है?", opt: ["तेलुगु", "उड़िया", "हिन्दी", "कन्नड़"], ans: 3 },
+        { q: "36. मंगम्मा मिठाई किसके लिए ले जा रही थी?", opt: ["पोता के लिए", "पोती के लिए", "माँ जी के लिए", "बहू के लिए"], ans: 0 },
+        { q: "37. 'दही वाली मंगम्मा' शीर्षक पाठ में बहू ने सास से समझौता क्यों कर लिया?", opt: ["डर से", "प्रेम से", "मजबूरी से", "शौक से"], ans: 2 },
+        { q: "38. श्रीनिवास जी का जन्म कहाँ हुआ था?", opt: ["मयूरभंज, उड़ीसा", "कोलार, कर्नाटक", "अमृतवेल, गुजरात", "अजेरी, राजस्थान"], ans: 1 },
+        { q: "39. 'लड़का अगर कुछ उधम करता है तो उसे मना करने का हक मुझे नहीं है?' - यह किसने कहा?", opt: ["मंगम्मा", "मंगम्मा का बेटा", "नंजम्मा", "रंगप्पा"], ans: 2 },
+        { q: "40. 'घरवाले के रहते एक अच्छी साड़ी नसीब नहीं हुई' - ऐसा किसने कहा?", opt: ["मंगम्मा", "नंजम्मा", "लेखक की पत्नी", "इनमें से कोई नहीं"], ans: 0 },
+        { q: "41. 'दही वाली मंगम्मा' शीर्षक कहानी में, रास्ते में क्या है?", opt: ["अमराई का कुआँ", "आम का बागीचा", "खेल का मैदान", "मंदिर"], ans: 0 },
+        { q: "42. श्रीनिवास के कहानी संकलन 'सण्णा कथेगुलु' के लिए साहित्य अकादमी पुरस्कार कब मिला था?", opt: ["1964 ई. में", "1968 ई. में", "1966 ई. में", "1965 ई. में"], ans: 1 },
+        { q: "43. बारी का अर्थ क्या है?", opt: ["रोज आकर दही देना और महीने के बाद पैसा लेना", "मालिक के लिए सब कुछ न्यौछावर कर देना", "गाय का दूध बेचना", "इनमें से कोई नहीं"], ans: 0 },
+        { q: "44. 'सोने जैसा बेटा पैदा किया है' ऐसा किसने कहा?", opt: ["लक्ष्मी ने", "मंगम्मा ने", "सीता ने", "सुजाता ने"], ans: 1 },
+        { q: "45. 'शाम को एक बढ़िया साड़ी पहन कर रहना चाहिए' ऐसा किसने कहा?", opt: ["मंगम्मा", "सीता", "लक्ष्मी", "सुजाता"], ans: 0 },
+        { q: "46. मंगम्मा का मिठाई कौन लेकर भाग गया?", opt: ["पोता", "रंगप्पा", "कौवा", "बेटा"], ans: 2 },
+        { q: "47. रंगप्पा ने मंगम्मा से क्या माँगा?", opt: ["दही एवं घी", "दूध एवं माठा", "चूना एवं पान", "खैनी एवं बीड़ी"], ans: 2 },
+        { q: "48. सारी रात घर में महाभारत किसने मचाया?", opt: ["बहू ने", "मंगम्मा ने", "पोता ने", "बेटा ने"], ans: 0 },
+        { q: "49. मखमल के ब्लाउज में कितने रुपये लगते थे?", opt: ["सात-आठ रुपये", "दस-बारह रुपये", "पाँच-सात रुपये", "छह-सात रुपये"], ans: 0 },
+        { q: "50. पोता दादी के साथ कहाँ जाने की जिद करने लगा?", opt: ["दिल्ली", "बेंगुलूर", "चेन्नई", "कोलकाता"], ans: 1 }
+    ];
+
+    let currIdx = 0;
+    let userAns = new Array(questions.length).fill(null);
+    let timeLeft = TIME_LIMIT_MINS * 60;
+
+    // Timer Logic
+    const timerInterval = setInterval(() => {
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        document.getElementById("timer-display").innerText = `समय: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            finishQuiz();
+        }
+        timeLeft--;
+    }, 1000);
+
+    function renderQuestion() {
+        const q = questions[currIdx];
+        document.getElementById("q-counter").innerText = `प्रश्न ${currIdx + 1}/${questions.length}`;
+        document.getElementById("q-text").innerText = q.q;
+        const list = document.getElementById("options-list");
+        list.innerHTML = "";
+        
+        q.opt.forEach((optText, i) => {
+            const li = document.createElement("li");
+            li.innerText = optText;
+            if (userAns[currIdx] === i) li.classList.add("selected");
+            li.onclick = () => {
+                userAns[currIdx] = i;
+                renderQuestion();
+            };
+            list.appendChild(li);
+        });
+
+        document.getElementById("prev-btn").style.visibility = currIdx === 0 ? "hidden" : "visible";
+        document.getElementById("next-btn").style.display = currIdx === questions.length - 1 ? "none" : "block";
+    }
+
+    function changeQ(dir) {
+        currIdx += dir;
+        renderQuestion();
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        let score = 0;
+        let reviewHTML = "";
+
+        questions.forEach((q, i) => {
+            const isCorrect = userAns[i] === q.ans;
+            if (isCorrect) score++;
+
+            // Review HTML creation
+            reviewHTML += `
+                <div class="card" style="border-left: 5px solid ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}">
+                    <p><strong>Q${i+1}: ${q.q}</strong></p>
+                    <p style="color: ${isCorrect ? 'green' : 'red'}">आपका उत्तर: ${userAns[i] !== null ? q.opt[userAns[i]] : 'नहीं दिया'}</p>
+                    <p style="color: green">सही उत्तर: ${q.opt[q.ans]}</p>
+                </div>`;
+        });
+
+        document.getElementById("quiz-box").style.display = "none";
+        document.getElementById("navigation").style.display = "none";
+        document.getElementById("timer-display").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+        document.getElementById("review-area").innerHTML += reviewHTML;
+
+        // Firebase Call
+        if (window.saveDataToFirebase) {
+            window.saveDataToFirebase(score, questions.length);
+        }
+    }
+
+    renderQuestion();
+</script>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+        apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+        authDomain: "otpin-fb5e3.firebaseapp.com",
+        projectId: "otpin-fb5e3",
+        storageBucket: "otpin-fb5e3.firebasestorage.app",
+        messagingSenderId: "545063232950",
+        appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.saveDataToFirebase = async (score, total) => {
+        try {
+            await addDoc(collection(db, "all_test_results"), {
+                testName: "Hindi: दही वाली मंगम्मा",
+                score: score,
+                total: total,
+                timestamp: new Date()
+            });
+            document.getElementById("save-msg").innerText = "✅ रिजल्ट सफलतापूर्वक सेव हुआ!";
+            document.getElementById("save-msg").style.color = "green";
+        } catch (e) {
+            document.getElementById("save-msg").innerText = "❌ एरर: डेटा सेव नहीं हो सका।";
+        }
+    };
+</script>
+
+</body>
+</html>

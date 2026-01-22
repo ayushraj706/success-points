@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nagari Lipi Test - Final</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Save Function
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // Saving under 'ch_nagarilipi'
+                const resultRef = doc(db, "users", user.uid, "test_results", "ch_nagarilipi"); 
+                
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    email: user.email,
+                    testName: "Nagari Lipi (Gunakar Mule)",
+                    score: score,
+                    totalQuestions: total,
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(resultRef, data);
+                    console.log("Result Saved!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Indigo Header */
+        .header-bar {
+            background-color: #4f46e5; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+        }
+
+        .q-card {
+            background-color: #1e1b2e; padding: 20px; border-radius: 16px;
+            border: 1px solid #312e81; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2e2a42; border: 2px solid #4338ca; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #818cf8; background-color: #3730a3; /* Indigo selection */
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #4f46e5; color: white; border: 1px solid #818cf8; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #312e81; padding: 5px 15px; 
+            border-radius: 20px; color: #a5b4fc; font-weight: bold; font-size: 14px; border: 1px solid #4f46e5;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-indigo-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Nagari Lipi Test</h1>
+        <span id="q-indicator" class="bg-indigo-900 text-indigo-100 px-3 py-1 rounded-lg text-xs font-bold border border-indigo-500">1/69</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">35:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर सेव कर लिया गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘हस्तलिपि’ किसे कहते हैं?", a: "हाथ की लिखावट को", o: ["हाथ की मेहंदी को", "हाथ से बनी मूर्ति को", "हाथ से बने व्यंजन को", "हाथ की लिखावट को"] },
+            { q: "बादशाह अकबर ने जो सिक्का चलाया था उस पर किनकी आकृति अंकित है?", a: "राम-सीता की", o: ["लक्ष्मी-गणेश की", "राधा-कृष्ण की", "राम-सीता की", "शिव-पार्वती की"] },
+            { q: "बादशाह अकबर ने जो सिक्का चलाया था उस पर कौन शब्द अंकित है?", a: "रामसीय", o: ["राधा-कृष्ण", "सियाराम", "कृष्ण-रहीम", "रामसीय"] },
+            { q: "निम्न भाषाओं में से किस भाषा को देवनागरी लिपि में लिखते हैं?", a: "हिंदी", o: ["अंग्रेजी", "पंजाबी", "बांग्ला", "हिंदी"] },
+            { q: "स्थापत्य की उत्तर भारत की एक विशेष शैली को क्या कहते हैं?", a: "नागर शैली", o: ["देवनागरी शैली", "नागर शैली", "द्रविड़ शैली", "देवनगर शैली"] },
+            { q: "‘टकसाल’ शब्द का अर्थ है:", a: "जहाँ सिक्के ढलते हैं", o: ["जहाँ दिन ढलता है", "जहाँ सिक्के ढलते हैं", "जहाँ भोजन बनता है", "जहाँ अपराधियों को रखा जाता है"] },
+            { q: "किस शासक ने ऐसा सिक्का चलाया जिसपर नागरी लिपि में ‘रामसीय’ शब्द अंकित है?", a: "बादशाह अकबर ने", o: ["बादशाह जहाँगीर ने", "बादशाह अकबर ने", "बादशाह औरंगजेब ने", "बादशाह बाबर ने"] },
+            { q: "चन्द्रगुप्त (द्वितीय) विक्रमादित्य का व्यक्तिगत नाम क्या था?", a: "देव", o: ["बहादुर", "महादेव", "देव", "ददन"] },
+            { q: "काशी क्या है?", a: "देवनगरी", o: ["असुरनगरी", "देवनगरी", "पशुनगरी", "पक्षीन्गरी"] },
+            { q: "कर्नाटक प्रदेश का श्रवणबेलगोल स्थान किसका प्रसिद्ध तीर्थस्थल है?", a: "जैनों का", o: ["बौद्धों का", "शैव मुनियों का", "वैष्णवों का", "जैनों का"] },
+            { q: "धारा नगरी का कौन शासक अपने विद्यानुराग के लिए इतिहास में प्रसिद्ध है?", a: "परमार शासक भोज", o: ["शिलाहार शासक केशिदेव", "राष्ट्रकूट शासक अमोघवर्ष", "परमार शासक भोज", "प्रतीहार शासक महेंद्रपाल"] },
+            { q: "मराठी, नेपाली और नेवारी भाषाओं की लिपि क्या है?", a: "देवनागरी", o: ["खरोष्ठी", "मागधी", "ब्राम्ही", "देवनागरी"] },
+            { q: "गुणाकर मुले ने मिडिल स्तर की पढ़ाई किस भाषा में की?", a: "मराठी भाषा में", o: ["मराठी भाषा में", "पंजाबी भाषा में", "बांग्ला भाषा में", "अंग्रेजी भाषा में"] },
+            { q: "मुले ने अंग्रेजी व हिन्दी की पढ़ाई कहाँ पर की?", a: "वर्धा में", o: ["दिल्ली में", "जौनपुर में", "वर्धा में", "इलाहाबाद में"] },
+            { q: "नेपाली भाषा किस लिपि में लिखी जाती है?", a: "देवनागरी लिपि में", o: ["गुरूमुखी लिपि में", "खरोष्ट लिपि में", "ब्राह्मणी लिपि में", "देवनागरी लिपि में"] },
+            { q: "‘ळ’ अक्षर का संबंध वर्तमान में किस भाषा से है?", a: "मराठी से", o: ["नेपाली से", "मराठी से", "तमिल से", "बांग्ला से"] },
+            { q: "बांग्ला लिपि प्राचीन नागरी लिपि की है:", a: "बहन", o: ["पुत्री", "बहन", "भगिनी", "बहू"] },
+            { q: "केरल के शासकों के द्वारा सिक्कों पर ‘वीर केरलस्य’ शब्द किस लिपि में लिखी गई है:", a: "नागर लिपि में", o: ["नागर लिपि में", "ब्राम्ही लिपि में", "नंदिनागरी लिपि में", "गुरूमुखी लिपि में"] },
+            { q: "पहले-पहल किन राजाओं के लेखों के लिपि को ही नंदिनागरी नाम दिया गया था?", a: "विजयनगर के राजाओं का", o: ["देवगिरि के राजाओं का", "विजयनगर के राजाओं का", "राष्ट्रकूट के राजाओं का", "चोल राजाओं का"] },
+            { q: "टकसाल का संबंध है:", a: "सिक्कों से", o: ["सिक्कों से", "अभिलेखों से", "लिपि से", "अनाज के ढेरों से"] },
+            { q: "श्रवणबेलगोला स्थान का संबंध है:", a: "जैन धर्म से", o: ["जैन धर्म से", "बौद्ध धर्म से", "सिक्ख धर्म से", "वैष्णव धर्म से"] },
+            { q: "‘नागरी लिपि’ शीर्षक निबंध के निबंधकार हैं:", a: "गुणाकर मुले", o: ["गुणाकर मुले", "रामचंद्र शुक्ल", "डॉ० भोलानाथ तिवारी", "बाबूराम सक्सेना"] },
+            { q: "‘नागरी लिपि’ शीर्षक पाठ किस पुस्तक से लिया गया है?", a: "भारतीय लिपियों की कहानी", o: ["अक्षरों की कहानी", "भारतीय लिपियों की कहानी", "अक्षर कथा", "इनमें कोई नहीं"] },
+            { q: "मराठी भाषा की लिपि कौन-सी है?", a: "देवनागरी", o: ["ब्राम्ही", "नंदिनागरी", "देवनागरी", "मराठी लिपि"] },
+            { q: "‘सिद्धम’ क्या है?", a: "एक प्रकार की लिपि", o: ["मंत्र", "सिद्ध योगी", "साधु", "एक प्रकार की लिपि"] },
+            { q: "किसे ‘देवनगरी’ की संज्ञा दी गई है?", a: "काशी", o: ["प्रयाग", "काशी", "मथुरा", "उज्जैन"] },
+            { q: "मालवा में नगर नागर लिपि का इस्तेमाल होता है ऐसा किसने कहा?", a: "अल्बेरूनी", o: ["अल्बेरूनी", "इब्नबतूता", "मार्कोपोलो", "देवराय प्रथम"] },
+            { q: "अमोघवर्ष कौन था?", a: "प्रख्यात राष्ट्रकूट राजा", o: ["एक विद्वान", "प्रख्यात राष्ट्रकूट राजा", "एक कवि", "राजवैद्य"] },
+            { q: "मिहिर भोज की ग्वालियर प्रशस्ति किस भाषा में है?", a: "संस्कृत", o: ["प्राकृत", "अपभ्रंश", "संस्कृत", "हिन्दी"] },
+            { q: "‘बेतमा’ कहाँ है?", a: "इंदौर के पास", o: ["इंदौर के पास", "इलाहाबाद के पास", "पुणे के पास", "पटना के पास"] },
+            { q: "ईसा की चौदहवीं-पंद्रहवी सदी के विजयनगर के शासकों ने अपने लेखों की लिपि को कहा है:", a: "नंदिनागरी", o: ["नंदिनागरी", "देवनागरी", "गुजराती", "ब्राम्ही"] },
+            { q: "हिन्दी लिखी जाती है:", a: "देवनागरी लिपि में", o: ["देवनागरी लिपि में", "खरोष्ठी लिपि में", "गुजराती लिपि में", "ब्राम्ही लिपि में"] },
+            { q: "विजयनगर के राजाओं के लेखों की लिपि को क्या नाम दिया गया है?", a: "नंदिनागरी लिपि", o: ["ब्राम्ही लिपि", "सिद्धम लिपि", "नंदिनागरी लिपि", "नागरी लिपि"] },
+            { q: "नागरी लिपि कब एक सार्वदेशिक लिपि थी?", a: "8वीं-11वीं सदी में", o: ["पन्द्रहवीं सदी में", "ईसा पूर्व काल में", "8वीं-11वीं सदी में", "कभी नहीं"] },
+            { q: "पहले दक्षिण भारत की नागरी लिपि क्या कहलाती थी?", a: "सिद्धम", o: ["नंदिनागरी", "कोंकणी", "ब्राम्ही", "सिद्धम"] },
+            { q: "गुणाकर मूले का जन्म कब हुआ?", a: "1935 ई० में", o: ["1935 ई० में", "1936 ई० में", "1937 ई० में", "1938 ई० में"] },
+            { q: "गुणाकर मूले का जन्म कहाँ हुआ था?", a: "महाराष्ट्र", o: ["केरल", "तमिलनाडु", "महाराष्ट्र", "उत्तर प्रदेश"] },
+            { q: "परमार शासक भोज कहाँ के रहने वाले थे?", a: "धारा नगरी के", o: ["धारा नगरी के", "मेवाड़ के", "कनौज के", "अजमेर के"] },
+            { q: "गुप्तों की राजधानी को क्या कहा जाता होगा?", a: "देवनगर", o: ["पाटलिपुत्र", "कुसुमपुर", "बिलासपुर", "देवनगर"] },
+            { q: "गुणाकर मूले ने विभिन्न विषयों पर कितने निबंध लिखें?", a: "2500 से अधिक", o: ["1500 से अधिक", "2500 से अधिक", "3500 से अधिक", "4500 से अधिक"] },
+            { q: "‘भारतीय लिपियों की कहानी’ किनकी प्रसिद्ध रचना है?", a: "गुणाकर मूले", o: ["गुणाकर मूले", "नलिन विलोचन शर्मा", "महादेवी वर्मा", "सुमित्रानन्दन पंत"] },
+            { q: "इस्लामी शासक का आरंभ काल है?", a: "13वीं सदी से", o: ["12वीं सदी से", "13वीं सदी से", "14वीं सदी से", "15वीं सदी से"] },
+            { q: "गुणाकर मूले की मृत्यु कब हुई?", a: "2009 ई० में", o: ["1995 ई० में", "1999 ई० में", "2005 ई० में", "2009 ई० में"] },
+            { q: "नागरी लिपि के आरंभिक लेख हमें कहाँ से मिलते हैं?", a: "दक्षिणी भारत", o: ["पूर्वी भारत", "पश्चिमी भारत", "दक्षिणी भारत", "उत्तरी भारत"] },
+            { q: "बेतमा दानपत्र किस समय का है?", a: "1020 ई०", o: ["1020 ई०", "1021 ई०", "1022 ई०", "1023 ई०"] },
+            { q: "उत्तर भारत से नागरी लिपि के लेख कब से मिलने लगते हैं?", a: "आठवीं सदी", o: ["आठवीं सदी", "छठी सदी", "नौवी सदी", "चौथी सदी"] },
+            { q: "निबंध के लेखक हैं:", a: "गुणाकर मुले", o: ["गुणाकर मुले", "अज्ञेय", "पंत", "प्रसाद"] },
+            { q: "तमिल, मलयालम, तेलुगू, कन्नड़ भाषाएँ हैं:", a: "दक्षिण भारत की", o: ["उत्तर भारत की", "पश्चिम भारत की", "पूर्वी भारत की", "दक्षिण भारत की"] },
+            { q: "‘रामायण’ की रचना किस भाषा में है?", a: "संस्कृत", o: ["संस्कृत", "हिन्दी", "उर्दू", "अंग्रेजी"] },
+            { q: "‘नागरी लिपि’ शीर्षक पाठ साहित्य की कौन विधा है?", a: "निबंध", o: ["साक्षात्कार", "निबंध", "भाषण", "कहानी"] },
+            { q: "दक्षिण भारत की नागरी लिपि क्या कहलाती है?", a: "नंदिनागरी", o: ["देवनागरी", "ब्रह्मनागरी", "नंदिनागरी", "विजयनागरी"] },
+            { q: "दसवीं-ग्यारहवीं सदी में किस रचना ने भारत-यूरोप के बीच व्यापार संबंध के बारे में बताया है?", a: "पद्मावत", o: ["अकबरनामा", "शाहनामा", "पद्मावत", "रामचरित मानस"] },
+            { q: "दक्षिण भारत में द्रविड़ भाषा परिवार की कौन-सी भाषा सबसे अधिक प्राचीन है?", a: "तमिल", o: ["तमिल", "तेलुगू", "मराठी", "कन्नड़"] },
+            { q: "सरहपाद की कृति है:", a: "दोहाकोश", o: ["दोहाकोश", "पृथ्वीराज रासो", "मृच्छकटिकम्", "मेघदूतम्"] },
+            { q: "‘दोहा-कोश’ किसकी रचना है?", a: "सरहपाद की", o: ["सरहपाद की", "रसखान की", "जीवनानंद दास की", "गुरु नानक की"] },
+            { q: "हिन्दी के आदि कवि है:", a: "सरहपाद", o: ["चंदबरदाई", "अमीर खुसरो", "बिहारी लाल", "सरहपाद"] },
+            { q: "‘सूर्य’ नामक पुस्तक किनकी रचना है?", a: "गुणाकर मुले", o: ["मैक्स मूलर ने", "बिरजू महाराज", "गुणाकर मुले", "महात्मा गाँधी"] },
+            { q: "नेवारी भाषाएँ किस लिपि में लिखी जाती हैं?", a: "देवनागरी", o: ["देवनागरी", "खरोष्ठी", "शौरसेनी", "ब्राम्ही"] },
+            { q: "दंति दुर्ग किस वंश का शासक था?", a: "राष्ट्रकूट", o: ["राष्ट्रकूट", "गंगवंश", "प्रतीहार वंश", "परमार वंश"] },
+            { q: "विद्यानुराग के लिए प्रसिद्ध है:", a: "भोज", o: ["भोज", "दंतिदुर्ग", "महेन्द्रपाल", "श्रीगंगराजा"] },
+            { q: "दंतिदुर्ग के चाचा का नाम क्या था?", a: "कृष्ण", o: ["श्याम", "भोज", "कृष्ण", "रामचन्द्र"] },
+            { q: "गोमटेश्वर का भव्य पुतला कहाँ है?", a: "श्रवणबेलगोल", o: ["श्रवणबेलगोल", "कन्नौज", "कलिंग", "बेतमा"] },
+            { q: "आठवीं सदी में शिलाहारों का राज्य कहाँ स्थापित हुआ?", a: "महाराष्ट्र", o: ["उड़िसा", "महाराष्ट्र", "आन्ध्र प्रदेश", "तमिलनाडु"] },
+            { q: "किस शासक का व्यक्तिगत नाम ‘देव’ था?", a: "विक्रमादित्य", o: ["विक्रमादित्य", "दंतिदुर्ग", "मिहिर भोज", "चन्द्रगुप्त प्रथम"] },
+            { q: "ऐलोरा का कैलाश मंदिर किस वंश के शासकों ने बनवाया था?", a: "राष्ट्रकूट", o: ["गुर्जर-प्रतिहार", "परमार", "गुप्त", "राष्ट्रकूट"] },
+            { q: "राष्ट्रकूट की नई राजधानी कहाँ थी?", a: "मान्यखेट", o: ["मान्यखेट", "धारा नगरी", "कन्नौज", "कलिंग"] },
+            { q: "गणित सार-संग्रह की रचना किसने किया था?", a: "महावीराचार्य", o: ["दंतिदुर्ग", "महावीराचार्य", "विक्रमादित्य", "महेन्द्रपाल"] },
+            { q: "गंगवंश के शासकों का संबंध वर्तमान के किस क्षेत्र से था?", a: "उड़ीसा", o: ["उड़ीसा", "आन्ध्र प्रदेश", "उत्तर प्रदेश", "महाराष्ट्र"] },
+            { q: "‘ब्राम्ही शैली’ का प्रचलन भी था:", a: "उड़ीसा में", o: ["उत्तर प्रदेश में", "महाराष्ट्र में", "उड़ीसा में", "तमिलनाडु में"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 2100; // 35 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-indigo-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

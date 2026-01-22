@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Science Quiz 2020 (A)</title>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5507614032634375" crossorigin="anonymous"></script>
+
+    <style>
+
+        :root {
+
+            --fb-blue: #1877F2;
+
+            --fb-bg: #F0F2F5;
+
+            --white: #ffffff;
+
+            --text-dark: #050505;
+
+            --text-light: #65676B;
+
+            --green: #42b72a;
+
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+
+            font-family: Helvetica, Arial, sans-serif;
+
+            background-color: var(--fb-bg);
+
+            margin: 0;
+
+            padding: 0;
+
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+
+            display: flex; flex-direction: column;
+
+            color: var(--text-dark);
+
+        }
+
+        /* ADS */
+
+        .ad-container {
+
+            height: 50px; background: #fff;
+
+            border-bottom: 1px solid #ddd;
+
+            display: flex; justify-content: center; align-items: center;
+
+            flex-shrink: 0; z-index: 50;
+
+        }
+
+        /* HEADER */
+
+        .header {
+
+            background-color: var(--fb-blue);
+
+            color: white;
+
+            padding: 10px 15px;
+
+            display: flex; justify-content: space-between; align-items: center;
+
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+            height: 55px; flex-shrink: 0; z-index: 40;
+
+        }
+
+        /* QUIZ AREA */
+
+        .quiz-area {
+
+            flex-grow: 1;
+
+            padding: 15px;
+
+            overflow-y: auto;
+
+            display: flex; flex-direction: column; align-items: center;
+
+            padding-bottom: 140px; 
+
+            -webkit-overflow-scrolling: touch;
+
+        }
+
+        .card {
+
+            background: white;
+
+            border-radius: 8px;
+
+            padding: 20px;
+
+            width: 100%; max-width: 500px;
+
+            box-shadow: var(--shadow);
+
+            margin-bottom: 15px;
+
+        }
+
+        .status-bar {
+
+            background: white;
+
+            width: 100%; max-width: 500px;
+
+            padding: 10px 15px;
+
+            border-radius: 8px;
+
+            margin-bottom: 15px;
+
+            box-shadow: var(--shadow);
+
+            display: flex; justify-content: space-between; align-items: center;
+
+            font-weight: bold; color: var(--text-light);
+
+            font-size: 14px;
+
+        }
+
+        #answered-count { color: var(--fb-blue); font-weight: 800; }
+
+        .q-text { font-size: 17px; margin-bottom: 20px; line-height: 1.4; color: var(--text-dark); font-weight: 500; }
+
+        
+
+        .options { list-style: none; padding: 0; margin: 0; }
+
+        .options li {
+
+            background: #f0f2f5;
+
+            border: 1px solid #ddd;
+
+            margin-bottom: 10px;
+
+            padding: 12px 15px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-size: 15px;
+
+            transition: all 0.2s;
+
+        }
+
+        .options li:active { background: #e4e6eb; }
+
+        .options li.selected {
+
+            background: #e7f3ff;
+
+            border-color: var(--fb-blue);
+
+            color: var(--fb-blue);
+
+            font-weight: 600;
+
+        }
+
+        /* FOOTER */
+
+        .footer {
+
+            position: fixed; bottom: 0; left: 0; width: 100%;
+
+            background: white;
+
+            padding: 12px 15px;
+
+            display: flex; justify-content: space-between; align-items: center;
+
+            border-top: 1px solid #ccc;
+
+            z-index: 100;
+
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+
+        }
+
+        
+
+        .nav-btn {
+
+            padding: 10px 20px;
+
+            border: none; border-radius: 6px;
+
+            font-weight: bold; font-size: 14px;
+
+            cursor: pointer;
+
+        }
+
+        .btn-back { background: #e4e6eb; color: #050505; }
+
+        .btn-next { background: var(--fb-blue); color: white; }
+
+        
+
+        .btn-submit-mid {
+
+            background: var(--green);
+
+            color: white;
+
+            padding: 10px 25px;
+
+            border: none; border-radius: 6px;
+
+            font-weight: bold; font-size: 14px;
+
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+
+        }
+
+        .result-box { text-align: center; display: none; }
+
+        .score-circle {
+
+            width: 100px; height: 100px;
+
+            background: var(--fb-blue); color: white;
+
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+
+            font-size: 28px; font-weight: bold; margin: 0 auto 20px auto;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="ad-container">
+
+        <ins class="adsbygoogle"
+
+             style="display:block; width: 320px; height: 50px;"
+
+             data-ad-client="ca-pub-5507614032634375"
+
+             data-ad-slot="YOUR_AD_UNIT_ID_HERE" 
+
+             data-full-width-responsive="true"></ins>
+
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+        <span style="position: absolute; font-size: 10px; color: #bbb; z-index:-1;">Advertisement</span>
+
+    </div>
+
+    <div class="header">
+
+        <div style="font-weight:bold; font-size:16px;">Science 2020 (A)</div>
+
+        <div style="font-size:12px; opacity:0.9;">Success Point</div>
+
+    </div>
+
+    <div class="quiz-area">
+
+        <div class="status-bar" id="status-bar">
+
+            <span id="q-index-text">Q: 1</span>
+
+            <span id="answered-count">Hal kiye: 0 / 48</span>
+
+        </div>
+
+        <div class="card" id="quiz-card">
+
+            <div class="q-text" id="q-text">Loading...</div>
+
+            <ul class="options" id="options-list"></ul>
+
+        </div>
+
+        <div class="card result-box" id="result-card">
+
+            <h2>🎉 Result</h2>
+
+            <div class="score-circle" id="score">0</div>
+
+            <p>Data saved to history.</p>
+
+            <p id="save-msg" style="color: green; font-size: 12px;"></p>
+
+            <button class="nav-btn btn-next" onclick="location.reload()" style="width:100%; margin-top:15px;">Test Again</button>
+
+        </div>
+
+    </div>
+
+    <div class="footer" id="footer-nav">
+
+        <button class="nav-btn btn-back" id="prev-btn" onclick="changeQ(-1)">Back</button>
+
+        <button class="btn-submit-mid" onclick="finishQuiz()">Submit Test</button>
+
+        <button class="nav-btn btn-next" id="next-btn" onclick="changeQ(1)">Next</button>
+
+    </div>
+
+    <script>
+
+        // --- 48 QUESTIONS (Science 2020 A) ---
+
+        const questions = [
+
+            { q: "1. समीकरण 2H₂ + O₂ → 2H₂O है एक-", opt: ["संयोजन अभिक्रिया", "वियोजन अभिक्रिया", "अवक्षेप अभिक्रिया", "उदासीनीकरण अभिक्रिया"], ans: 0 },
+
+            { q: "2. ग्लूकोज का रासायनिक सूत्र निम्नलिखित में कौन है?", opt: ["C₂H₅OH", "C₆H₆O₆", "C₆H₁₂O₆", "C₆H₆"], ans: 2 },
+
+            { q: "3. सोडियम की परमाणु संख्या है-", opt: ["11", "17", "17", "20"], ans: 0 },
+
+            { q: "4. अमीबा में अधिकांश पोषण कैसा होता है?", opt: ["शाकाहारी", "अंतर्ग्रहण", "सर्वाहारी", "स्वपोषी"], ans: 1 },
+
+            { q: "5. निम्नलिखित में किस धातु से सोलर सेल बना होता है?", opt: ["जस्ता", "सोना", "प्लेटिनम", "सिलिकन"], ans: 3 },
+
+            { q: "6. निम्नलिखित में कौन लवण है?", opt: ["HCl", "NaOH", "K₂SO₄", "NH₄OH"], ans: 2 },
+
+            { q: "7. निम्नलिखित में सबसे भारी धातु कौन है?", opt: ["लिथियम", "यूरेनियम", "सिजियम", "आयरन"], ans: 1 },
+
+            { q: "8. इथेन के एक अणु में कितने सह-संयोजक बंधन हैं?", opt: ["2", "4", "6", "7"], ans: 3 },
+
+            { q: "9. किसे रासायनिक दूत कहा जाता है?", opt: ["उद्दीपक", "पाचक रस", "हार्मोन", "आवेग"], ans: 2 },
+
+            { q: "10. 'द ओरिजिन ऑफ स्पीशीज' नामक पुस्तक किसने लिखी है?", opt: ["डार्विन", "लामार्क", "ओपैरिन", "वाईसमान"], ans: 0 },
+
+            { q: "11. निम्नलिखित में किस माध्यम में प्रकाश की चाल सबसे अधिक होती है?", opt: ["काँच", "पानी", "लोहा", "निर्वात"], ans: 3 },
+
+            { q: "12. विभवान्तर का S.I. मात्रक होता है-", opt: ["कुलम्ब", "वोल्ट", "एम्पीयर", "ओम"], ans: 1 },
+
+            { q: "13. किसकी उपस्थिति के कारण पौधे का रंग हरा होता है?", opt: ["क्लोरोफिल", "ल्यूकोप्लास्ट", "फाइटोक्रोम", "इनमें से कोई नहीं"], ans: 0 },
+
+            { q: "14. पौधे में उत्सर्जी पदार्थ है-", opt: ["गोंद", "टैनिन", "रेजिन", "इनमें से सभी"], ans: 3 },
+
+            { q: "15. टेहरी बाँध का निर्माण किस प्रदेश में किया गया है?", opt: ["उत्तर प्रदेश", "उत्तराखण्ड", "राजस्थान", "मध्य प्रदेश"], ans: 1 },
+
+            { q: "16. निम्नलिखित में किसके कारण अम्ल वर्षा होती है?", opt: ["CO₂", "SO₂", "CO", "Cl₂"], ans: 1 },
+
+            { q: "17. पौधों में गैसों का आदान-प्रदान किसके द्वारा होता है?", opt: ["रन्ध्र", "जड़", "तना", "टहनी"], ans: 0 },
+
+            { q: "18. निम्न में सबसे तेज हृदय धड़कन किसका होता है?", opt: ["व्हेल", "चूहा", "हाथी", "आदमी"], ans: 1 },
+
+            { q: "19. सजीव जीवधारियों द्वारा किस प्रकार की नाइट्रोजनी पदार्थ (कचरा) का उत्सर्जन होता है?", opt: ["अमोनिया", "यूरिक अम्ल", "यूरिया", "इनमें से सभी"], ans: 3 },
+
+            { q: "20. तंत्रिका तंत्र की रचनात्मक एवं क्रियात्मक इकाई को कहते हैं-", opt: ["नेफ्रॉन", "न्यूरॉन", "सेरीब्रम", "इनमें से कोई नहीं"], ans: 1 },
+
+            { q: "21. आमीटर से निम्नलिखित में किसे मापा जाता है?", opt: ["धारा", "आवेश", "विभव", "विद्युत शक्ति"], ans: 0 },
+
+            { q: "22. वह उपकरण जो विद्युत ऊर्जा को यांत्रिक ऊर्जा में बदलता है, होता है-", opt: ["जेनेरेटर", "विद्युत मोटर", "जेनेरेटर और विद्युत मोटर दोनों", "इनमें से कोई नहीं"], ans: 1 },
+
+            { q: "23. दर्पण का सूत्र है-", opt: ["1/v + 1/u = 1/f", "1/v - 1/u = 1/f", "1/f + 1/u = 1/v", "1/f + 1/v = 1/u"], ans: 0 },
+
+            { q: "24. निकट दृष्टि दोष को निम्नलिखित में किस लेंस के द्वारा हटाया जाता है?", opt: ["उत्तल", "अवतल", "बाइफोकल", "बेलनाकार"], ans: 1 },
+
+            { q: "25. रासायनिक अभिक्रिया में भाग लेने वाले पदार्थ को कहा जाता है-", opt: ["अभिकारक", "उत्पाद", "अभिकारक एवं उत्पाद दोनों", "इनमें से कोई नहीं"], ans: 0 },
+
+            { q: "26. टूथ पेस्ट कैसा होता है?", opt: ["अम्लीय", "क्षारीय", "उदासीन", "इनमें से सभी"], ans: 1 },
+
+            { q: "27. निम्नलिखित में कौन विद्युत का सुचालक है?", opt: ["सल्फर", "क्लोरीन", "ग्रेफाइट", "आयोडीन"], ans: 2 },
+
+            { q: "28. निम्नलिखित में कौन कार्बोक्सिल समूह है?", opt: ["-CHO", ">CO", "-COOH", "-O-"], ans: 2 },
+
+            { q: "29. प्रकाश की किरणें गमन करती हैं-", opt: ["सीधी रेखा में", "तिरछी रेखा में", "किसी भी दिशा में", "इनमें से कोई नहीं"], ans: 0 },
+
+            { q: "30. निम्नलिखित में कौन लेंस की क्षमता का मात्रक है?", opt: ["जूल", "वाट", "डाइऑप्टर", "अर्ग"], ans: 2 },
+
+            { q: "31. किस रंग का विचलन न्यूनतम होता है?", opt: ["लाल", "पीला", "नीला", "बैंगनी"], ans: 0 },
+
+            { q: "32. बैटरी से किस प्रकार की धारा प्राप्त होती है?", opt: ["प्रत्यावर्ती धारा", "दिष्ट धारा", "(A) और (B) दोनों", "इनमें से कोई नहीं"], ans: 1 },
+
+            { q: "33. पौधे में जनन अंग कहाँ पाये जाते हैं?", opt: ["तना में", "जड़ में", "पुष्प में", "फल में"], ans: 2 },
+
+            { q: "34. मेंडल ने अपने आनुवंशिकी प्रयोग हेतु किस पौधे का उपयोग किया था?", opt: ["नीम", "गुलाब", "मटर", "गुलदाऊदी"], ans: 2 },
+
+            { q: "35. पारिस्थितिकी तंत्र में ऊर्जा का प्रवाह किस दिशा में होता है?", opt: ["एकदिशीय", "द्विदिशीय", "बहुदिशीय", "किसी भी दिशा में नहीं"], ans: 0 },
+
+            { q: "36. ओजोन परत पाया जाता है-", opt: ["वायुमंडल की निचली सतह में", "वायुमंडल की ऊपरी सतह में", "वायुमंडल के मध्य सतह में", "इनमें से कोई नहीं"], ans: 1 },
+
+            { q: "37. सभी जीव-जन्तुओं के लिए ऊर्जा का अंतिम स्रोत है-", opt: ["ग्रह", "चन्द्रमा", "सूर्य", "कोयला"], ans: 2 },
+
+            { q: "38. तिलचट्टा में कितने जोड़े श्वास रंध्र पाये जाते हैं?", opt: ["2", "8", "10", "6"], ans: 2 },
+
+            { q: "39. प्रकाश संश्लेषण की क्रिया होती है-", opt: ["कवकों में", "जन्तुओं में", "हरे पौधों में", "परजीवियों में"], ans: 2 },
+
+            { q: "40. फ्लोएम ऊतकों द्वारा कार्बोहाइड्रेट का परिवहन होता है-", opt: ["ग्लूकोज के रूप में", "फ्रक्टोज के रूप में", "लैक्टोज के रूप में", "सुक्रोज के रूप में"], ans: 3 },
+
+            { q: "41. स्विच लगाये जाते हैं-", opt: ["ठंडे तार में", "गर्म तार में", "भू-योजित तार में", "इनमें से सभी"], ans: 1 },
+
+            { q: "42. निम्न में से कौन अनवीकरणीय ऊर्जा का स्रोत नहीं है?", opt: ["पेट्रोलियम", "कोयला", "बायोगैस", "प्राकृतिक गैस"], ans: 2 },
+
+            { q: "43. मनुष्य में वृक्क निम्न में किससे संबंधित है?", opt: ["पोषण", "श्वसन", "परिवहन", "उत्सर्जन"], ans: 3 },
+
+            { q: "44. हाइड्रा में क्या पाया जाता है?", opt: ["मस्तिष्क", "तंत्रिका", "मुख", "स्पर्शक"], ans: 3 },
+
+            { q: "45. आवर्त सारणी के प्रथम वर्ग के सदस्य होते हैं-", opt: ["अम्लीय धातु", "अक्रिय गैस", "क्षार धातु", "मिश्र धातु"], ans: 2 },
+
+            { q: "46. निम्नलिखित में कौन प्राकृतिक संसाधन नहीं है?", opt: ["वायु", "जल", "मिट्टी", "जीवधारी"], ans: 3 },
+
+            { q: "47. प्रकाश के परावर्तन के कितने नियम हैं?", opt: ["1", "2", "3", "4"], ans: 1 },
+
+            { q: "48. तरंगदैर्ध्य को सामान्यतः व्यक्त किया जाता है-", opt: ["कंडेला के रूप में", "जूल के रूप में", "एम्पियर के रूप में", "ऐंगस्ट्रम के रूप में"], ans: 3 }
+
+        ];
+
+        let currIndex = 0;
+
+        let answers = new Array(questions.length).fill(null);
+
+        function renderQ(direction) {
+
+            const q = questions[currIndex];
+
+            
+
+            let answeredCount = answers.filter(a => a !== null).length;
+
+            document.getElementById("q-index-text").innerText = `Q: ${currIndex + 1}`;
+
+            document.getElementById("answered-count").innerText = `Hal kiye: ${answeredCount} / 48`;
+
+            document.getElementById("q-text").innerText = q.q;
+
+            
+
+            const list = document.getElementById("options-list");
+
+            list.innerHTML = "";
+
+            q.opt.forEach((o, i) => {
+
+                const li = document.createElement("li");
+
+                li.innerText = o;
+
+                if(answers[currIndex] === i) li.classList.add("selected");
+
+                
+
+                li.onclick = function(e) {
+
+                    answers[currIndex] = i; 
+
+                    renderQ(0); 
+
+                };
+
+                list.appendChild(li);
+
+            });
+
+            document.getElementById("prev-btn").style.visibility = currIndex === 0 ? "hidden" : "visible";
+
+            
+
+            if (currIndex === questions.length - 1) {
+
+                document.getElementById("next-btn").style.display = "none";
+
+            } else {
+
+                document.getElementById("next-btn").style.display = "block";
+
+            }
+
+        }
+
+        window.changeQ = (dir) => {
+
+            currIndex += dir;
+
+            renderQ(dir);
+
+        };
+
+        window.finishQuiz = async () => {
+
+            let score = 0;
+
+            answers.forEach((a, i) => {
+
+                if(a !== null && a === questions[i].ans) score++;
+
+            });
+
+            document.getElementById("quiz-card").style.display = "none";
+
+            document.getElementById("status-bar").style.display = "none";
+
+            document.getElementById("footer-nav").style.display = "none";
+
+            
+
+            const resCard = document.getElementById("result-card");
+
+            resCard.style.display = "block";
+
+            document.getElementById("score").innerText = `${score}/${questions.length}`;
+
+            if(window.saveDataToFirebase) {
+
+                window.saveDataToFirebase(score, questions.length);
+
+            } else {
+
+                document.getElementById("save-msg").innerText = "⚠ Internet needed to save.";
+
+                document.getElementById("save-msg").style.color = "red";
+
+            }
+
+        };
+
+        renderQ(0);
+
+    </script>
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+
+            authDomain: "otpin-fb5e3.firebaseapp.com",
+
+            projectId: "otpin-fb5e3",
+
+            storageBucket: "otpin-fb5e3.firebasestorage.app",
+
+            messagingSenderId: "545063232950",
+
+            appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+
+            measurementId: "G-P3CM15D6VY"
+
+        };
+
+        const app = initializeApp(firebaseConfig);
+
+        const db = getFirestore(app);
+
+        const auth = getAuth(app);
+
+        let userUID = "guest"; 
+
+        // Get User ID
+
+        onAuthStateChanged(auth, (user) => {
+
+            if (user) {
+
+                userUID = user.uid;
+
+            }
+
+        });
+
+        window.saveDataToFirebase = async (score, total) => {
+
+            try {
+
+                // सेव करें History वाले Collection में
+
+                await addDoc(collection(db, "all_test_results"), {
+
+                    uid: userUID,
+
+                    testName: "Science 2020 (A)", // टेस्ट का नाम
+
+                    score: score,
+
+                    total: total,
+
+                    date: new Date().toLocaleDateString(),
+
+                    timestamp: new Date()
+
+                });
+
+                document.getElementById("save-msg").innerText = "✅ Result Saved to History!";
+
+                document.getElementById("save-msg").style.color = "green";
+
+            } catch (e) {
+
+                console.error("Error", e);
+
+                document.getElementById("save-msg").innerText = "Error: Login first to save history.";
+
+                document.getElementById("save-msg").style.color = "red";
+
+            }
+
+        };
+
+    </script>
+
+</body>
+
+</html>
+

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bharat Mata - Final Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        .header-bar {
+            background-color: #ea580c; /* Orange Header for Bharat Mata */
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fdba74; background-color: #9a3412; /* Orange selection */
+        }
+        
+        /* Review Mode Styles */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #ea580c; color: white; border: 1px solid #fdba74; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-orange-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Bharat Mata Test</h1>
+        <span id="q-indicator" class="bg-orange-900 text-orange-200 px-3 py-1 rounded-lg text-xs font-bold border border-orange-700">1/45</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">20:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-orange-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-orange-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका टेस्ट पूरा हो गया है</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-orange-600 text-white p-4 rounded-xl font-bold hover:bg-orange-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "सुमित्रानंदन पंत किस वाद के कवि हैं?", a: "छायावाद के", o: ["छायावाद के", "प्रयोगवाद के", "नकेनवाद के", "कैप्सूलवाद के"] },
+            { q: "सुमित्रानंदन पंत का जन्म किस राज्य में हुआ था?", a: "उत्तरांचल (उत्तराखंड) में", o: ["बिहार में", "मध्य प्रदेश में", "राजस्थान में", "उत्तरांचल (उत्तराखंड) में"] },
+            { q: "कवि सुमित्रानंदन पंत समाजवाद से किस दर्शन की ओर प्रवृत्त हुए?", a: "अरविन्द दर्शन", o: ["जैन दर्शन", "अरविन्द दर्शन", "चैतन्य दर्शन", "सांख्य दर्शन"] },
+            { q: "‘ग्राम्या’ किसकी रचना है?", a: "सुमित्रानंदन पंत", o: ["रामधारी सिंह ‘दिनकर’", "घनानंद", "प्रेमघन", "सुमित्रानंदन पंत"] },
+            { q: "सुमित्रानंदन पंत ने ‘मिट्टी की प्रतिमा उदासिनी’ किसे कहा है?", a: "भारतमाता को", o: ["मूर्ति को", "भारतमाता को", "बड़ी बहन को", "माता को"] },
+            { q: "‘युगपथ’ किस कवि की रचना है?", a: "सुमित्रानंदन पंत", o: ["अनामिका", "सुमित्रानंदन पंत", "वीरेन डंगवाल", "जीवनानंद दास"] },
+            { q: "‘तीस कोटि सन्तान नग्न तन,’—यह पंक्ति किस शीर्षक कविता की है?", a: "भारतमाता", o: ["भारतमाता", "स्वदेशी", "जनतंत्र का जन्म", "हिरोशिमा"] },
+            { q: "कवि सुमित्रानंदन पंत के अनुसार कौन अपने घर में प्रवासिनी बनी हुई है?", a: "भारतमाता", o: ["फ्रांसीसी", "अंग्रेज", "भारतमाता", "जापानी"] },
+            { q: "‘गुंजन’ किस कवि की रचना है?", a: "सुमित्रानंदन पंत", o: ["दिनकर", "सुमित्रानंदन पंत", "जीवनानंद दास", "रिल्के"] },
+            { q: "सुमित्रानंदन पंत किस युग के कवि हैं?", a: "छायावाद युग", o: ["द्विवेदीयुग", "भारतेन्दु युग", "छायावाद युग", "कोई नहीं"] },
+            { q: "पंत को किस रचना पर ज्ञानपीठ पुरस्कार प्राप्त हुआ है?", a: "चिदम्बरा", o: ["चिदम्बरा", "सत्यकाम", "लोकायतन", "स्वर्ण किरण"] },
+            { q: "‘भारतमाता’ शीर्षक प्रगीत पंत के किस काव्य संकलन से लिया गया है?", a: "ग्राम्या", o: ["गुंजन", "ग्राम्या", "युगवाणी", "युगांत"] },
+            { q: "‘ग्राम्या’ काव्य-संकलन की कविताओं पर किसका प्रभाव है?", a: "यथार्थवाद का", o: ["यथार्थवाद का", "अरविंद का", "गाँधी का", "अध्यात्मवाद का"] },
+            { q: "‘प्रकृति का सुकुमार कवि’ किसे कहा जाता है?", a: "पंत", o: ["निराला", "भारतेन्दु", "प्रसाद", "पंत"] },
+            { q: "भारतमाता के संबंध में क्या सही है?", a: "ग्रामवासिनी", o: ["शैलवासिनी", "नगरवासिनी", "ग्रामवासिनी", "विंध्यवासिनी"] },
+            { q: "‘शरदिंदुहासिनी’ कौन है?", a: "भारतमाता", o: ["जनता", "प्रजा", "माता", "भारतमाता"] },
+            { q: "‘गीता प्रकाशिनी’ किसके लिए प्रयुक्त है?", a: "भारतमाता", o: ["धरतीमाता", "पृथ्वीमाता", "सीतामाता", "भारतमाता"] },
+            { q: "‘शरतेन्दु’ का शाब्दिक अर्थ है:", a: "शरद ऋतु का चन्द्रमा", o: ["शरद ऋतु की वर्षा", "सूर्योदय", "सूर्यास्त", "शरद ऋतु का चन्द्रमा"] },
+            { q: "‘क्रंदन’ का अर्थ है:", a: "रोना", o: ["रोना", "हँसना", "गाना", "खाना"] },
+            { q: "‘तप-संयम’ कौन-सा समास है?", a: "द्वन्द्व", o: ["द्विगु", "तत्पुरुष", "कर्मधारय", "द्वन्द्व"] },
+            { q: "‘पंत’ का जन्म कब हुआ था?", a: "1900 ई० में", o: ["1900 ई० में", "1901 ई० में", "1902 ई० में", "1903 ई० में"] },
+            { q: "‘पंत’ की मृत्यु कब हुई?", a: "29 दिसम्बर, 1977 को", o: ["1975", "29 दिसम्बर, 1977 को", "1979", "1981"] },
+            { q: "‘पंत’ का जन्म कहाँ हुआ था?", a: "कौसानी, अल्मोड़ा", o: ["पटना", "कौसानी, अल्मोड़ा", "सारण", "राजस्थान"] },
+            { q: "‘पंत’ ने महाकाव्य लिखा:", a: "लोकायतन", o: ["उच्छवास", "बादल", "लोकायतन", "युगवाणी"] },
+            { q: "‘पंत’ के पिताजी का क्या नाम था?", a: "गंगादत्त पंत", o: ["रामानंद", "रामादत्त", "गणेश", "गंगादत्त पंत"] },
+            { q: "‘पंत’ के माताजी का क्या नाम था?", a: "सरस्वती देवी", o: ["वन्दना", "सरस्वती देवी", "राधा", "विद्यावती"] },
+            { q: "पंत ने 1916 में किस शीर्षक से कविता लिखी?", a: "गिरजे का घंटा", o: ["गिरजे का घंटा", "मंदिर की घंटी", "दरगाह की चादर", "कोई नहीं"] },
+            { q: "‘गंगा-यमुना’ को कवि ने किसके मानक के रूप में प्रस्तुत किया है?", a: "भारतमाता के दो आँखों", o: ["हाथों", "पैरों", "भारतमाता के दो आँखों", "सभी"] },
+            { q: "‘तरु-तल-निवासिनी’ के माध्यम से भारत के निवासियों का कैसा चित्रण है?", a: "दीनता का", o: ["दीनता का", "धर्मात्मा का", "कटुता का", "कोई नहीं"] },
+            { q: "भारत माँ के श्रेष्ठ मुख की तुलना कवि ने किससे की है?", a: "छाया युक्त चंद्र", o: ["सूर्य", "कंचन", "पुष्प", "छाया युक्त चंद्र"] },
+            { q: "भारतमाता कविता में भारत का कैसा चित्र प्रस्तुत किया गया है?", a: "यथातथ्य", o: ["आदर्श", "काल्पनिक", "यथातथ्य", "कोई नहीं"] },
+            { q: "जातीय अस्मिता की दृष्टि से इतिहास का प्रभाव कैसा है?", a: "अविच्छिन्न", o: ["विच्छिन्न", "अविच्छिन्न", "दोनों", "कोई नहीं"] },
+            { q: "कवि के अनुसार भारत माता की आँखें हैं:", a: "गंगा-यमुना", o: ["गंगा-यमुना", "ताप्ती-नर्मदा", "सतलज-सिंधु", "ब्यास-चिनाव"] },
+            { q: "‘युगवाणी’ किसकी काव्यकृति है?", a: "सुमित्रानंदन पंत की", o: ["दिनकर", "अज्ञेय", "सुमित्रानंदन पंत की", "कुँवर नारायण"] },
+            { q: "भारतमाता सारे जग की है:", a: "माँ", o: ["देवी", "माँ", "बहन", "सभी"] },
+            { q: "सुमित्रानंदन पंत को मानव सौंदर्य ने किस ओर आकृष्ट किया?", a: "समाजवाद की ओर", o: ["अध्यात्मवाद", "संकीर्णता", "अतिवादिता", "समाजवाद की ओर"] },
+            { q: "गीता उपदेश देता है:", a: "कर्म का", o: ["कर्म का", "धर्म का", "मोक्ष का", "अर्थ का"] },
+            { q: "भारत माता की आँखें झुकी हुई हैं:", a: "चिंता से", o: ["ईर्ष्या से", "घृणा से", "चिंता से", "अंधकार से"] },
+            { q: "‘ग्रामवासिनी’ कौन-सा समास है?", a: "बहुब्रीहि", o: ["बहुब्रीहि", "अव्ययीभाव", "कर्मधारय", "द्विगु"] },
+            { q: "गंगा-यमुना कौन-सा समास है?", a: "द्वंद्व", o: ["द्वंद्व", "द्विगु", "बहुब्रीहि", "कर्मधारय"] },
+            { q: "दैन्य जड़ित अपलक ..... चितवन:", a: "नत", o: ["चिर", "मन", "नत", "युग"] },
+            { q: "पंत के अनुसार, ‘भारतमाता’ की कितनी संतानें दरिद्रता से ग्रसित है?", a: "तीस करोड़", o: ["तीस करोड़", "दस करोड़", "बीस करोड़", "पच्चीस करोड़"] },
+            { q: "भारतमाता कहाँ निवास करती हैं?", a: "गाँव", o: ["शहर", "पहाड़", "गाँव", "नदी"] },
+            { q: "सुमित्रानंदन पंत के अनुसार भारतमाता किसकी मूर्ति हैं?", a: "उदाश माटी की", o: ["उदाश माटी की", "सुख समृद्धि की", "उदारता की", "त्याग की"] },
+            { q: "‘सफल आज उसका तप संयम...’—पंक्ति किस कविता की है?", a: "भारतमाता", o: ["स्वदेशी", "भारतमाता", "जनतंत्र का जन्म", "हिरोशिमा"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1200;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-orange-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

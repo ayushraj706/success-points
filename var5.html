@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>अध्याय 5: धरती कब तक घूमेगी - Quiz</title>
+
+    <style>
+
+        /* --- CONFIGURATION (इंडेक्स/कंट्रोल सेक्शन) --- */
+
+        :root {
+
+            --primary-color: #795548; /* यहाँ से थीम का रंग बदलें (Brown - धरती का रंग) */
+
+            --bg-color: #EFEBE9;
+
+            --correct-color: #388E3C;
+
+            --wrong-color: #D32F2F;
+
+            --text-dark: #3E2723;
+
+            --timer-bg: #ffffff;
+
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body { background-color: var(--bg-color); margin: 0; padding: 0; color: var(--text-dark); }
+
+        .header {
+
+            background: var(--primary-color);
+
+            color: white; padding: 15px; text-align: center;
+
+            font-size: 22px; font-weight: bold; position: sticky; top: 0; z-index: 1000;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+
+        }
+
+        .quiz-container { max-width: 600px; margin: 20px auto; padding: 15px; padding-bottom: 120px; }
+
+        
+
+        .timer-box { 
+
+            text-align: center; margin-bottom: 15px; font-weight: bold; 
+
+            color: var(--primary-color); font-size: 1.3rem; background: var(--timer-bg);
+
+            padding: 12px; border-radius: 12px; border: 2px solid var(--primary-color);
+
+        }
+
+        .card {
+
+            background: white; border-radius: 15px; padding: 20px;
+
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+
+        }
+
+        .q-text { font-size: 18px; font-weight: 600; margin-bottom: 15px; line-height: 1.6; }
+
+        .options { list-style: none; padding: 0; }
+
+        .options li {
+
+            background: #FAFAFA; border: 2px solid #D7CCC8;
+
+            margin-bottom: 12px; padding: 14px; border-radius: 10px;
+
+            cursor: pointer; transition: 0.2s; font-size: 16px;
+
+        }
+
+        .options li:hover { background: #F5F5F5; }
+
+        .options li.selected { border-color: var(--primary-color); background: #EFEBE9; font-weight: bold; }
+
+        
+
+        .footer {
+
+            position: fixed; bottom: 0; width: 100%; background: white;
+
+            display: flex; justify-content: space-between; padding: 15px;
+
+            border-top: 1px solid #D7CCC8; z-index: 1000;
+
+        }
+
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .btn-next { background: var(--primary-color); color: white; }
+
+        .btn-back { background: #D7CCC8; color: #5D4037; }
+
+        .btn-submit { background: #388E3C; color: white; }
+
+        .result-screen { display: none; text-align: center; animation: slideIn 0.5s ease; }
+
+        .score-circle {
+
+            width: 140px; height: 140px; background: var(--primary-color);
+
+            color: white; border-radius: 50%; display: flex;
+
+            align-items: center; justify-content: center;
+
+            font-size: 36px; font-weight: bold; margin: 25px auto;
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+        }
+
+        @keyframes slideIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">अध्याय 5: धरती कब तक घूमेगी</div>
+
+<div class="quiz-container" id="main-container">
+
+    <div class="timer-box" id="timer-display">समय: 20:00</div>
+
+    
+
+    <div id="quiz-box">
+
+        <div class="card">
+
+            <div id="q-counter" style="font-size: 14px; color: #8D6E63; margin-bottom: 10px; font-weight: bold;">प्रश्न 1/45</div>
+
+            <div class="q-text" id="q-text">Loading...</div>
+
+            <ul class="options" id="options-list"></ul>
+
+        </div>
+
+    </div>
+
+    <div class="result-screen" id="result-screen">
+
+        <div class="card">
+
+            <h2>आपका परिणाम</h2>
+
+            <div class="score-circle" id="final-score">0/45</div>
+
+            <p id="save-msg" style="font-weight: bold;"></p>
+
+            <button class="btn btn-next" onclick="location.reload()" style="width: 100%; margin-top: 15px;">पुनः प्रयास करें</button>
+
+            <div id="review-area" style="margin-top: 30px; text-align: left;">
+
+                <h3 style="border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; color: var(--primary-color);">उत्तरों की समीक्षा:</h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="footer" id="navigation">
+
+    <button class="btn btn-back" id="prev-btn" onclick="changeQ(-1)">पीछे</button>
+
+    <button class="btn btn-submit" onclick="finishQuiz()">सबमिट करें</button>
+
+    <button class="btn btn-next" id="next-btn" onclick="changeQ(1)">आगे</button>
+
+</div>
+
+<script>
+
+    /* --- डेटा सेट (अध्याय 5: धरती कब तक घूमेगी) --- */
+
+    const TIME_LIMIT_MINS = 20; 
+
+    const questions = [
+
+        { q: "1. 'धरती कब तक घूमेगी' शीर्षक कहानी का मुख्य पात्र कौन है?", opt: ["राधा", "नारायण", "लक्ष्मी", "सीता"], ans: 3 },
+
+        { q: "2. राजस्थानी भाषा के सफल कहानीकार कौन हैं?", opt: ["साँवर दइया", "श्रीनिवास", "सातकोड़ी होता", "सुजाता"], ans: 0 },
+
+        { q: "3. 'माँ को रखने का ठेका सिर्फ उसी ने तो नहीं ले रखा है'—यह किसने कहा?", opt: ["कैलाश ने", "नारायण ने", "बिज्जू ने", "इनमें से कोई नहीं"], ans: 0 },
+
+        { q: "4. सीता के पुत्रों के क्या नाम थे?", opt: ["कैलाश, नारायण एवं बिज्जू", "कैलाश, हरि एवं गोविंद", "हरि, गोपाल एवं बिज्जू", "इनमें से कोई नहीं"], ans: 0 },
+
+        { q: "5. राधा किसकी पत्नी थी?", opt: ["कैलाश की", "नारायण की", "बिज्जू की", "इनमें से कोई नहीं"], ans: 0 },
+
+        { q: "6. सीता जब नारायण के हिस्से से हटकर बिज्जू के पास गई, तब वह क्या करने लगी?", opt: ["रोने लगी", "बिज्जू को कोसने लगी", "लपसी बनाने लगी", "घर छोड़ने की तैयारी करने लगी"], ans: 2 },
+
+        { q: "7. किसे महसूस हुआ कि पृथ्वी और आकाश के बीच घुटन भरी हुई है?", opt: ["सीता को", "पुष्पा को", "राधा को", "भँवरी को"], ans: 0 },
+
+        { q: "8. कैलाश ने अपनी माँ (सीता) के लिए कितने रुपये प्रतिमाह देने का निर्णय लिया?", opt: ["50 रुपये", "60 रुपये", "70 रुपये", "100 रुपये"], ans: 0 },
+
+        { q: "9. 'धरती कब तक घूमेगी' कहानी किस लेखक द्वारा अनूदित है?", opt: ["गोपाल दास नागर", "सावर दइया", "के० एन० जमुना", "राजेन्द्र प्रसाद मिश्र"], ans: 1 },
+
+        { q: "10. सीता के कितने लड़के थे?", opt: ["तीन", "चार", "पाँच", "दो"], ans: 0 },
+
+        { q: "11. 'होली' किस महीने में होती है?", opt: ["चैत", "फागुन", "पौष", "माघ"], ans: 1 },
+
+        { q: "12. कैलाश की पत्नी का नाम क्या था?", opt: ["राधा", "रत्ना", "पुष्पा", "भँवरी"], ans: 0 },
+
+        { q: "13. सीता को अपने ही घर में कैसा महसूस होता है?", opt: ["घुटन", "आनन्द", "सुख", "शांति"], ans: 0 },
+
+        { q: "14. नारायण की पत्नी का क्या नाम था?", opt: ["राधा", "पुष्पा", "भँवरी", "विमला"], ans: 2 },
+
+        { q: "15. बिज्जू की पत्नी का क्या नाम था?", opt: ["राधा", "पुष्पा", "भँवरी", "विमला"], ans: 1 },
+
+        { q: "16. 'धरती कब तक घूमेगी' कैसी कहानी है?", opt: ["धार्मिक", "मनोवैज्ञानिक", "सामाजिक", "ऐतिहासिक"], ans: 2 },
+
+        { q: "17. अगले दिन सीता ने क्या किया?", opt: ["घर छोड़ दी", "रोने लगी", "काम करने लगी", "खाना नहीं खायी"], ans: 0 },
+
+        { q: "18. सीता के बड़े लड़के का नाम क्या था?", opt: ["कैलाश", "नारायण", "बिज्जू", "इनमें से कोई नहीं"], ans: 0 },
+
+        { q: "19. सावर दइया ....... भाषा के कहानीकार हैं।", opt: ["गुजराती", "मराठी", "राजस्थानी", "कन्नड़"], ans: 2 },
+
+        { q: "20. धरती कब तक घूमेगी के कहानीकार हैं :", opt: ["सावर दइया", "सुजाता", "श्रीनिवास", "सातकोड़ी होता"], ans: 0 },
+
+        { q: "21. सीता के अनुसार क्या सिकुड़ गया है?", opt: ["घर", "आकाश", "धरती", "मन"], ans: 0 },
+
+        { q: "22. कैलाश ने अपने भाइयों को कब बुलाया?", opt: ["सुबह में", "शाम में", "रात में", "दोपहर में"], ans: 0 },
+
+        { q: "23. 'धरती कब तक घूमेगी' संकलित है :", opt: ["समकालीन भारतीय साहित्य से", "आधुनिक कहानियों से", "वर्णिका से", "इनमें से कोई नहीं"], ans: 0 },
+
+        { q: "24. सीता को क्या खिलाया गया?", opt: ["खीर", "पुआ-पूरी", "लपसी", "भात-दाल"], ans: 2 },
+
+        { q: "25. तीन बेटे, दो वक्त की रोटी और एक माँ—किस कहानी की पंक्ति है?", opt: ["माँ", "नगर", "ढहते विश्वास", "धरती कब तक घूमेगी"], ans: 3 },
+
+        { q: "26. माँ के जन्मदिन पर किसने हलवा बनाया था?", opt: ["राधा ने", "पुष्पा ने", "भँवरी ने", "सीता ने खुद"], ans: 0 },
+
+        { q: "27. बिज्जू ने माँ के लिए क्या खाने को दिया था?", opt: ["रोटी", "चावल", "लपसी", "दलिया"], ans: 2 },
+
+        { q: "28. नारायण के लड़के के जन्मदिन पर क्या बनी थी?", opt: ["रसमलाई", "गुलाब जामुन", "बर्फी", "जलेबी"], ans: 0 },
+
+        { q: "29. राधा ने सीता के लिए क्या बनाया था?", opt: ["दाल का हलवा", "गाजर का हलवा", "मूंग का हलवा", "सूजी का हलवा"], ans: 0 },
+
+        { q: "30. सीता के छोटे लड़के का क्या नाम था?", opt: ["कैलाश", "नारायण", "बिज्जू", "इनमें से कोई नहीं"], ans: 2 },
+
+        { q: "31. सीता के पास रहने का नियम क्या था?", opt: ["एक-एक महीना प्रत्येक बेटे के पास", "दो-दो महीना प्रत्येक बेटे के पास", "हमेशा बड़े बेटे के पास", "हमेशा छोटे बेटे के पास"], ans: 0 },
+
+        { q: "32. सावर दइया की कहानी 'धरती कब तक घूमेगी' का विषय क्या है?", opt: ["नारी की विवशता", "पारिवारिक विघटन", "गरीबी", "राजस्थानी समाज"], ans: 1 },
+
+        { q: "33. घर छोड़ते समय सीता ने अपने पास क्या रखा?", opt: ["कुछ नहीं", "थोड़े पैसे", "पुराने कपड़े", "जेवर"], ans: 0 },
+
+        { q: "34. सीता की आँखें कब भर आती थीं?", opt: ["बच्चों को लड़ते देख", "अपनी बेबसी पर", "भूख लगने पर", "पुत्रों की डाँट सुनकर"], ans: 1 },
+
+        { q: "35. कैलाश ने भाइयों से क्या कहा?", opt: ["माँ को साथ रखेंगे", "माँ को अलग खाना देंगे", "माँ को 50-50 रुपये देंगे", "माँ को वृद्धाश्रम भेजेंगे"], ans: 2 },
+
+        { q: "36. नारायण की पत्नी ने सीता को क्या खाने को भेजा था?", opt: ["रसमलाई", "कढ़ी-चावल", "खीर", "हलवा"], ans: 0 },
+
+        { q: "37. 'भैया, यह बात तो अच्छी नहीं लगती कि माँ महीने भर इधर और महीने भर उधर रहे' - यह किसने कहा?", opt: ["नारायण ने", "बिज्जू ने", "राधा ने", "पुष्पा ने"], ans: 1 },
+
+        { q: "38. सीता को सबसे ज्यादा दुख किस बात का था?", opt: ["खाने का", "कपड़ों का", "अपमान का", "काम का"], ans: 2 },
+
+        { q: "39. सीता ने हाथ में क्या लिया और निकल पड़ी?", opt: ["लाठी", "लोटा", "कुछ नहीं", "झोला"], ans: 2 },
+
+        { q: "40. 'भँवरी' किसकी पत्नी थी?", opt: ["कैलाश की", "बिज्जू की", "नारायण की", "इनमें से कोई नहीं"], ans: 2 },
+
+        { q: "41. सीता के लिए घर कैसा हो गया था?", opt: ["मंदिर जैसा", "नरक जैसा", "जेल जैसा", "पराया"], ans: 1 },
+
+        { q: "42. बिज्जू की पत्नी पुष्पा ने माँ को क्या दिया?", opt: ["चाय", "रोटी", "लपसी", "मिठाई"], ans: 2 },
+
+        { q: "43. सीता ने अंधेरे में क्या देखा?", opt: ["अपना भविष्य", "आकाश", "धरती", "पुत्रों का चेहरा"], ans: 1 },
+
+        { q: "44. 'अरे, यह तो नाहक की फजीहत है' - यह किसका विचार था?", opt: ["कैलाश का", "नारायण का", "बिज्जू का", "सरपंच का"], ans: 0 },
+
+        { q: "45. कहानी के अंत में सीता क्या निर्णय लेती है?", opt: ["वह घर छोड़ देती है", "वह छोटे बेटे के पास रहने लगती है", "वह मंदिर चली जाती है", "वह काम पर चली जाती है"], ans: 0 }
+
+    ];
+
+    let currIdx = 0;
+
+    let userAns = new Array(questions.length).fill(null);
+
+    let timeLeft = TIME_LIMIT_MINS * 60;
+
+    const timerInterval = setInterval(() => {
+
+        let mins = Math.floor(timeLeft / 60);
+
+        let secs = timeLeft % 60;
+
+        document.getElementById("timer-display").innerText = `समय: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        if (timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
+
+        timeLeft--;
+
+    }, 1000);
+
+    function renderQuestion() {
+
+        const q = questions[currIdx];
+
+        document.getElementById("q-counter").innerText = `प्रश्न ${currIdx + 1}/${questions.length}`;
+
+        document.getElementById("q-text").innerText = q.q;
+
+        const list = document.getElementById("options-list");
+
+        list.innerHTML = "";
+
+        
+
+        q.opt.forEach((optText, i) => {
+
+            const li = document.createElement("li");
+
+            li.innerText = optText;
+
+            if (userAns[currIdx] === i) li.classList.add("selected");
+
+            li.onclick = () => { userAns[currIdx] = i; renderQuestion(); };
+
+            list.appendChild(li);
+
+        });
+
+        document.getElementById("prev-btn").style.visibility = currIdx === 0 ? "hidden" : "visible";
+
+        document.getElementById("next-btn").style.display = currIdx === questions.length - 1 ? "none" : "block";
+
+    }
+
+    function changeQ(dir) {
+
+        currIdx += dir;
+
+        renderQuestion();
+
+    }
+
+    function finishQuiz() {
+
+        clearInterval(timerInterval);
+
+        let score = 0;
+
+        let reviewHTML = "";
+
+        questions.forEach((q, i) => {
+
+            const isCorrect = userAns[i] === q.ans;
+
+            if (isCorrect) score++;
+
+            reviewHTML += `
+
+                <div class="card" style="border-left: 6px solid ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; padding: 15px;">
+
+                    <p><strong>प्र. ${i+1}: ${q.q}</strong></p>
+
+                    <p style="color: ${isCorrect ? 'var(--correct-color)' : 'var(--wrong-color)'}; font-weight: bold;">
+
+                        आपका उत्तर: ${userAns[i] !== null ? q.opt[userAns[i]] : 'नहीं दिया'}
+
+                    </p>
+
+                    ${!isCorrect ? `<p style="color: var(--correct-color);">सही उत्तर: ${q.opt[q.ans]}</p>` : ''}
+
+                </div>`;
+
+        });
+
+        document.getElementById("quiz-box").style.display = "none";
+
+        document.getElementById("navigation").style.display = "none";
+
+        document.getElementById("timer-display").style.display = "none";
+
+        document.getElementById("result-screen").style.display = "block";
+
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+
+        document.getElementById("review-area").innerHTML += reviewHTML;
+
+        if (window.saveDataToFirebase) window.saveDataToFirebase(score, questions.length);
+
+    }
+
+    renderQuestion();
+
+</script>
+
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyD59SydX2eGLoK7RIFQVQ-dEDZ08akoj9E",
+
+        authDomain: "otpin-fb5e3.firebaseapp.com",
+
+        projectId: "otpin-fb5e3",
+
+        storageBucket: "otpin-fb5e3.firebasestorage.app",
+
+        messagingSenderId: "545063232950",
+
+        appId: "1:545063232950:web:8d7676d8e6cf81de014d17",
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+
+    const db = getFirestore(app);
+
+    window.saveDataToFirebase = async (score, total) => {
+
+        try {
+
+            await addDoc(collection(db, "all_test_results"), {
+
+                testName: "Hindi: अध्याय 5 (धरती कब तक घूमेगी)",
+
+                score: score, total: total,
+
+                date: new Date().toLocaleDateString(),
+
+                timestamp: new Date()
+
+            });
+
+            document.getElementById("save-msg").innerText = "✅ रिजल्ट क्लाउड में सुरक्षित सेव हो गया है!";
+
+            document.getElementById("save-msg").style.color = "#388E3C";
+
+        } catch (e) {
+
+            document.getElementById("save-msg").innerText = "❌ त्रुटि: इंटरनेट कनेक्शन चेक करें!";
+
+            document.getElementById("save-msg").style.color = "#D32F2F";
+
+        }
+
+    };
+
+</script>
+
+</body>
+
+</html>

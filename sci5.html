@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Science Class 10 Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल
+                const userRef = doc(db, "users", user.uid, "test_results", "science_full"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "science_full_" + user.uid);
+                
+                // समय की गणना (2400 sec total - remaining)
+                const timeTakenSec = 2400 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Science Class 10 (Full)",
+                    chapterId: "science_full", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Slate/Blue-Grey Header */
+        .header-bar {
+            background-color: #334155; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(51, 65, 85, 0.4);
+            border-bottom: 1px solid #475569;
+        }
+
+        .q-card {
+            background-color: #1e293b; padding: 20px; border-radius: 16px;
+            border: 1px solid #334155; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #334155; border: 2px solid #475569; border-radius: 12px;
+            color: #e2e8f0; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #94a3b8; background-color: #475569; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #020617; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #1e293b; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #1e293b; color: white; border: 1px solid #334155; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #3b82f6; color: white; border: 1px solid #60a5fa; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #1e293b; padding: 5px 15px; 
+            border-radius: 20px; color: #94a3b8; font-weight: bold; font-size: 14px; border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Science Test</h1>
+        <span id="q-indicator" class="bg-slate-800 text-slate-200 px-3 py-1 rounded-lg text-xs font-bold border border-slate-600">1/79</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">40:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "इंधन है", a: "इनमें से सभी", o: ["CNG", "LPG", "लकड़ी", "इनमें से सभी"] },
+            { q: "जीवाश्म ईंधन का उदाहरण है", a: "पेट्रोलियम", o: ["पेट्रोलियम", "कोयला", "A और B दोनों", "इनमें से कोई नहीं"] },
+            { q: "अमोनियम क्लोराइड का जलीय विलयन होता है", a: "अम्लीय", o: ["अम्लीय", "उदासीन", "क्षारीय", "इनमें से कोई नहीं"] },
+            { q: "एथेन का आणविक सूत्र C2H6 है। इसमें सहसंयोजक बंध हैं", a: "7", o: ["6", "7", "8", "9"] },
+            { q: "शल्य चिकित्सा में टूटी हड्डियों को जोड़ने के लिए प्रयुक्त होनेवाला रासायनिक पदार्थ है", a: "प्लास्टर ऑफ पेरिस", o: ["धोने का सोडा", "जिप्सम", "प्लास्टर ऑफ पेरिस", "खाने का सोडा"] },
+            { q: "किस pH मान वाला विलयन सबसे अधिक अम्लीय होगा ?", a: "1", o: ["1", "2", "3", "4"] },
+            { q: "एथाइन में कार्बन-कार्बन परमाणुओं के बीच कितने सहसंयोजक बंधन होते हैं ?", a: "3", o: ["1", "2", "3", "4"] },
+            { q: "क्यूप्राइट निम्नांकित में किस धातु का अयस्क है ?", a: "Cu", o: ["Hg", "Zn", "Cu", "Al"] },
+            { q: "निम्न में किसे रासायनिक दूत कहा जाता है ?", a: "हॉर्मोन", o: ["पाचक रस", "उद्दीपक", "आवेग", "हॉर्मोन"] },
+            { q: "पौधे के उत्सर्जी पदार्थ निम्न में से कौन है ?", a: "इनमें से सभी", o: ["रेजिन", "गोंद", "टैनिन", "इनमें से सभी"] },
+            { q: "मानव हृदय में कोष्ठों की संख्या कितनी है ?", a: "4", o: ["5", "2", "3", "4"] },
+            { q: "निम्न में से कौन हेटेरोक्राइन ग्रंथि है ?", a: "वृषण", o: ["पिट्युटरी ग्रंथि", "यकृत", "वृषण", "थाइराइड ग्रंथि"] },
+            { q: "पौधों में गैसों का आदान-प्रदान होता है", a: "रंध्र से", o: ["वातरंध्र से", "रंध्र से", "जड़ की सतह से", "इनमें से सभी"] },
+            { q: "निम्नलिखित में कौन पुरुष हॉर्मोन है ?", a: "टेस्टोस्टेरॉन", o: ["एड्रीनेलिन", "इस्ट्रोजेन", "टेस्टोस्टेरॉन", "इन्सुलिन"] },
+            { q: "किण्वन क्रिया पायी जाती है", a: "यीस्ट में", o: ["अमीबा में", "यीस्ट में", "हाइड्रा में", "इनमें कोई नहीं"] },
+            { q: "प्रकाश संश्लेषण होता है", a: "दिन में", o: ["दिन में", "रात में", "दिन और रात दोनों में", "इनमें कोई नहीं"] },
+            { q: "आयोडीन को निम्नलिखित में किस द्रव में घोलने से टिक्चर आयोडीन बनता है ?", a: "एथिल ऐल्कोहॉल", o: ["क्लोरोफॉर्म", "ईथर", "कार्बन टेट्राक्लोराइड", "एथिल ऐल्कोहॉल"] },
+            { q: "डालडा में उपस्थित वसा अम्ल किस प्रकृति का होता है ?", a: "संतृप्त", o: ["संतृप्त", "असंतृप्त", "आंशिक संतृप्त", "अति संतृप्त"] },
+            { q: "प्रोपेनोन का क्रियाशील मूलक है", a: ">C=O", o: ["-OH", "-COOH", ">C=O", "-CHO"] },
+            { q: "इथिलीन है", a: "ओलिफीन", o: ["पैराफिन", "ओलिफीन", "एल्केन", "एल्काइन"] },
+            { q: "निम्नलिखित में कौन जीवाश्म ईंधन नहीं है ?", a: "बायोगैस", o: ["बायोगैस", "पेट्रोलियम", "प्राकृतिक गैस", "कोयला"] },
+            { q: "टिहरी बांध निर्माण का उद्देश्य क्या था ?", a: "इनमें से सभी", o: ["जल आपूर्ति", "भूमि सिंचाई", "बिजली उत्पादन", "इनमें से सभी"] },
+            { q: "निम्नलिखित में कौन-सा तत्त्व आसानी से इलेक्ट्रॉन का त्याग कर देता है ?", a: "Na", o: ["Na", "F", "Mg", "Fe"] },
+            { q: "निम्नलिखित में किस तत्त्व में संयोजी इलेक्ट्रॉनों की संख्या सबसे अधिक है ?", a: "P", o: ["Si", "Al", "P", "Na"] },
+            { q: "एक वयस्क मनुष्य के कितने दाँत होते हैं ?", a: "32", o: ["30", "32", "34", "28"] },
+            { q: "मस्तिष्क उत्तरदायी है", a: "इनमें से सभी", o: ["हृदय स्पंदन के लिए", "शारीरिक संतुलन के लिए", "सोचने के लिए", "इनमें से सभी"] },
+            { q: "ट्रैकिया किस जीव का श्वसन अंग है ?", a: "कॉकरोच", o: ["हाइड्रा", "स्टारफिश", "कॉकरोच", "पाइला"] },
+            { q: "शरीर में भोजन का पचना किस प्रकार की अभिक्रिया है ?", a: "उपचयन", o: ["संयोजन", "अपचयन", "उपचयन", "विस्थापन"] },
+            { q: "पूर्ण विकसित अंडाशय कहलाता है", a: "फल", o: ["बीजांड", "बीज", "फल", "इनमें कोई नहीं"] },
+            { q: "एक स्त्री में कौन-से लिंग गुणसूत्र मिलते हैं ?", a: "XX", o: ["XY", "XX", "XXX", "XXY"] },
+            { q: "मृतोपजीवी का उदाहरण है", a: "गोबरछत्ता", o: ["अमीबा", "गोबरछत्ता", "उड़हुल", "अमरबेल"] },
+            { q: "गार्ड कोशिका की कौन-सी भित्ति मोटी होती है ?", a: "भीतरी", o: ["भीतरी", "बाहरी", "पार्श्व", "इनमें कोई नहीं"] },
+            { q: "निम्नांकित में कौन-सी अधातु विद्युत का सुचालक है ?", a: "ग्रेफाइट", o: ["ग्रेफाइट", "सल्फर", "नाइट्रोजन", "क्लोरीन"] },
+            { q: "बैटरी का अम्ल है", a: "सान्द्र H2SO4", o: ["सान्द्र HCl", "सान्द्र HNO3", "सान्द्र H2SO4", "इनमें कोई नहीं"] },
+            { q: "कली चूना का रासायनिक सूत्र है", a: "CaO", o: ["Ca(OH)2", "CaCO3", "CaO", "Ca(HCO3)2"] },
+            { q: "आयोडीनयुक्त नमक है", a: "(A) और (B) दोनों", o: ["NaCl + KI", "NaCl + KIO3", "(A) और (B) दोनों", "इनमें कोई नहीं"] },
+            { q: "प्लास्टर ऑफ पेरिस का रासायनिक नाम है", a: "कैल्सियम सल्फेट अर्धहाइड्रेट", o: ["कैल्सियम सल्फेट", "कैल्सियम सल्फेट मोनोहाइड्रेट", "कैल्सियम क्लोराइड", "कैल्सियम सल्फेट अर्धहाइड्रेट"] },
+            { q: "लौंग तेल किस प्रकार सूचक है ?", a: "गंधीय", o: ["प्राकृतिक", "संश्लेषित", "गंधीय", "इनमें कोई नहीं"] },
+            { q: "घरेलू गैस (LPG) का प्रमुख अवयव है", a: "ब्युटेन", o: ["मेथेन", "संश्लेषित", "गंधी", "ब्युटेन"] },
+            { q: "C60 फुलेरीन की आकृति निम्नलिखित में से किसके जैसी होती है ?", a: "फुटबॉल", o: ["नााशपाती", "फुटबॉल", "डमरू", "चतुष्फलकीय"] },
+            { q: "लेंस की आवर्धन का S.I. मात्रक है", a: "मात्रकविहीन", o: ["मी", "मिमी", "मात्रकविहीन", "सेमी"] },
+            { q: "किसी अंतरिक्ष यात्री को आकाश कैसा प्रतीत होता है ?", a: "काला", o: ["नीला", "काला", "लाल", "इनमें कोई नहीं"] },
+            { q: "गोलीय दर्पण के परावर्तक पृष्ठ की वृत्ताकार सीमा रेखा का व्यास कहलाता है", a: "गोलीय दर्पण का द्वारक", o: ["वक्रता त्रिज्या", "प्रधान अक्ष", "गोलीय दर्पण का द्वारक", "मुख्य फोकस"] },
+            { q: "किस दर्पण में दूर की वस्तु का प्रतिबिंब सदैव सीधा होता है ?", a: "या तो समतल अथवा उत्तल", o: ["केवल अवतल", "केवल उत्तल", "गोलीय दर्पण का द्वारक", "या तो समतल अथवा उत्तल"] },
+            { q: "अवतल दर्पण की फोकस दूरी होती है", a: "ऋणात्मक", o: ["धनात्मक", "ऋणात्मक", "कभी ऋणात्मक तो कभी धनात्मक", "शून्य"] },
+            { q: "किस दर्पण से हमेशा वस्तु से छोटा प्रतिबिंब प्राप्त होता है ?", a: "उत्तल", o: ["उत्तल", "अवतल", "समतल", "इनमें कोई नहीं"] },
+            { q: "प्रकाश का प्राथमिक वर्ण है", a: "इनमें से सभी", o: ["नीला", "हरा", "लाल", "इनमें से सभी"] },
+            { q: "तारों का टिमटिमाना, प्रकाश की किस घटना को दर्शाता है ?", a: "प्रकाश के अपवर्तन", o: ["प्रकाश के अपवर्तन", "प्रकाश के वर्ण विक्षेपण", "प्रकाश के परावर्तन", "प्रकाश के प्रकीर्णन"] },
+            { q: "लेटेक्स सामान्यतः कहाँ पाया जाता है ?", a: "इनमें से सभी", o: ["पीपल में", "पीला कनेर में", "बरगद में", "इनमें से सभी"] },
+            { q: "मानव मूत्र में यूरिया की प्रतिशत मात्रा होती है", a: "2%", o: ["96%", "60%", "2%", "इनमें कोई नहीं"] },
+            { q: "भ्रूण का विकास होता है", a: "गर्भाशय में", o: ["अंडाशय में", "योनि में", "गर्भाशय में", "फैलोपियन ट्यूब में"] },
+            { q: "निकट-दृष्टि दोष में किस लेंस का प्रयोग किया जाता है ?", a: "अवतल", o: ["अवतल", "द्विफोकसी", "बेलनाकार", "उत्तल"] },
+            { q: "लेंस की क्षमता का मात्रक है", a: "डायोप्टर", o: ["जूल", "डायोप्टर", "अर्ग", "वाट"] },
+            { q: "एक किलोवाट-घंटा बराबर होता है", a: "3.6 × 10^6 जूल", o: ["3.6 × 10^6 जूल", "3.6 × 10^3 जूल", "3.6 × 10^9 जूल", "इनमें से कोई नहीं"] },
+            { q: "प्रकाश की चाल न्यूनतम होता है", a: "काँच में", o: ["निर्वात में", "जल में", "वायु में", "काँच में"] },
+            { q: "निम्न में किस लेंस की फोकस दूरी धनात्मक होती है ?", a: "उत्तल लेंस", o: ["उत्तल लेंस", "समतल-अवतल लेंस", "अवतल लेंस", "इनमें से कोई नहीं"] },
+            { q: "वायुमंडल में नाइट्रोजन की मात्रा है", a: "78%", o: ["20%", "50%", "78%", "0.3%"] },
+            { q: "प्रकृति में पृथ्वी पर ऊर्जा का मुख्य स्रोत क्या है ?", a: "सूर्यप्रकाश", o: ["कोयला", "पानी", "वायु", "सूर्यप्रकाश"] },
+            { q: "'The Origin of Species' नामक पुस्तक किसने लिखी है ?", a: "डार्विन ने", o: ["ऑपेरिन ने", "डार्विन ने", "लामार्क ने", "इनमें कोई नहीं"] },
+            { q: "ओजोन के अणु में ऑक्सीजन की परमाणु की संख्या होती है", a: "3", o: ["1", "2", "3", "4"] },
+            { q: "पौधे में प्रकाश संश्लेषण का स्थान है", a: "क्लोरोप्लास्ट", o: [" माइटोकॉन्ड्रिया", "क्लोरोप्लास्ट", "ल्युकोप्लास्ट", "इनमें से कोई नहीं"] },
+            { q: "परिशेषिका हिस्सा है", a: "आहार नाल का", o: ["आहार नाल का", "तंत्रिका तंत्र का", "संवहन तंत्र का", "जनन तंत्र का"] },
+            { q: "एक खाद्य श्रृंखला में, तीसरे पोषी स्तर पर हमेशा कौन रहता है ?", a: "मांसाहारी", o: ["शाकाहारी", "मांसाहारी", "अपघटक", "उत्पादक"] },
+            { q: "निम्न में कौन-से समूहों में केवल जैव निम्नीकरणीय पदार्थ है ?", a: "घास, पुष्प तथा चमड़ा", o: ["घास, पुष्प तथा चमड़ा", "घास, लकड़ी तथा प्लास्टिक", "फलों के छिलके, केक तथा स्टील", "केक, लकड़ी एवं शीशा"] },
+            { q: "किसी विद्युत बल्ब का अनुमतांक 220 V तथा 100 W है। जब इसे 110 V पर प्रचालित करते हैं तब इसके द्वारा उपयुक्त शक्ति होगी", a: "25 W", o: ["100 W", "75 W", "50 W", "25 W"] },
+            { q: "निम्नलिखित में से कौन किसी लम्बे विद्युत धारावाही तार के निकट चुम्बकीय क्षेत्र का सही वर्णन करता है ?", a: "चुम्बकीय क्षेत्र की संकेंद्रीय क्षेत्र रेखाओं का केन्द्र तार होता है", o: ["चुम्बकीय क्षेत्र की क्षेत्र रेखाएँ तार के लंबवत् होती हैं", "चुम्बकीय क्षेत्र की क्षेत्र रेखाएँ तार के समांतर होती हैं", "चुम्बकीय क्षेत्र की क्षेत्र रेखाएँ अरीय होती हैं", "चुम्बकीय क्षेत्र की संकेंद्रीय क्षेत्र रेखाओं का केन्द्र तार होता है"] },
+            { q: "प्रतिरोधकता का SI मात्रक है", a: "ओम-मीटर", o: ["ओम-मीटर", "ओम-प्रति मीटर", "ओम", "मीटर प्रति ओम"] },
+            { q: "जब एक से अधिक प्रतिरोधक श्रेणीक्रम में जुड़े रहते हैं तब कौन-सी भौतिक राशि उनमें से रहती है ?", a: "विद्युत धारा", o: ["प्रतिरोध", "विद्युत धारा", "विभवांतर", "इनमें से कोई नहीं"] },
+            { q: "अनवीकरणीय ऊर्जा है", a: "कोयला से प्राप्त ऊर्जा", o: ["महासागरीय ऊर्जा", "सौर ऊर्जा", "कोयला से प्राप्त ऊर्जा", "पवन ऊर्जा"] },
+            { q: "ऊर्जा के दो अनवीकरणीय स्रोत हैं", a: "कोयला तथा पेट्रोलियम", o: ["जैवमात्रा तथा पेट्रोलियम", "गोबर गैस तथा जैवमात्रा", "कोयला तथा पेट्रोलियम", "इनमें से कोई नहीं"] },
+            { q: "उत्तम ऊर्जा का स्रोत वह है", a: "जिसमें ये सभी गुण हों", o: ["जो सरलता से सुलभ हो सके", "जो प्रति एकांक आयतन अधिक कार्य करें", "जिसका भंडारण तथा परिवहन आसान हो", "जिसमें ये सभी गुण हों"] },
+            { q: "कमरे के ताप पर द्रव अवस्था में रहने वाली अधातु है", a: "ब्रोमीन", o: ["पारा", "ताँबा", "ब्रोमीन", "नाइट्रोजन"] },
+            { q: "निम्नांकित में कौन-सा युग्म एकल विस्थापन अभिक्रिया प्रदर्शित करता है ?", a: "AgNO3 एवं Cu", o: ["MgCl2 एवं Cu", "AgNO3 एवं Cu", "NaCl एवं Cu", "FeSO4 एवं Ag"] },
+            { q: "आवर्त सारणी में आवर्तों की संख्या होती है", a: "7", o: ["7", "9", "8", "10"] },
+            { q: "पेंटेन (C5H12) के कितने संरचना समावयवी संभव हैं ?", a: "3", o: ["2", "3", "4", "5"] },
+            { q: "दही में कौन-सा अम्ल है ?", a: "लैक्टिक अम्ल", o: ["टार्टरिक अम्ल", "फार्मिक अम्ल", "लैक्टिक अम्ल", "ऐसीटिक अम्ल"] },
+            { q: "निम्नांकित में से किस धातु को किरोसिन में डूबोकर रखते हैं ?", a: "सोडियम", o: ["पारा", "सोडियम", "ताँबा", "सोना"] },
+            { q: "Al4C3 के जल-अपघटन से निम्नांकित में कौन बनता है ?", a: "मेथेन", o: ["ऐथेन", "मेथेन", "एल्काइन", "एल्कीन"] },
+            { q: "वह धातु जो सिर्फ अम्लराज में घुलता है, है", a: "Au", o: ["Al", "Au", "Fe", "Cu"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 2400; // 40 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-blue-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

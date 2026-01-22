@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Swadeshi - Final Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        .header-bar {
+            background-color: #15803d; /* Green Header for Swadeshi */
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #4ade80; background-color: #14532d; /* Greenish selection */
+        }
+        
+        /* Review Mode Styles */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #15803d; color: white; border: 1px solid #4ade80; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-green-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Swadeshi Test</h1>
+        <span id="q-indicator" class="bg-green-900 text-green-200 px-3 py-1 rounded-lg text-xs font-bold border border-green-700">1/46</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">20:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-green-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका टेस्ट पूरा हो गया है</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-green-600 text-white p-4 rounded-xl font-bold hover:bg-green-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "'हाटक मैं देखहु भरा, बसे अंगरेजी माल'-पंक्ति के कवि हैं:", a: "प्रेमघन", o: ["रसखान", "प्रेमघन", "अज्ञेय", "दिनकर"] },
+            { q: "किसने 'जीर्ण जनपद' नामक एक काव्य लिखा, जिसमें ग्रामीण जीवन का यथार्थवादी चित्रण है?", a: "बदरीनारायण चौधरी 'प्रेमघन' ने", o: ["सुमित्रानंदन पंत ने", "घनानंद ने", "बदरीनारायण चौधरी 'प्रेमघन' ने", "रसखान ने"] },
+            { q: "'अंग्रेजी बाहन, बसन, वेष रीति औ नीति।' यह पंक्ति किस शीर्षक कविता की है?", a: "स्वदेशी", o: ["स्वदेशी", "मेरे बिना तुम प्रभु", "हिरोशिमा", "भारतमाता"] },
+            { q: "'मनुज भारती देखि कोउ, सकत नहीं पहिचान'-यह पंक्ति किस कविता से है?", a: "स्वदेशी", o: ["भारतमाता", "स्वदेशी", "अक्षर ज्ञान", "हमारी नींद"] },
+            { q: "भारतेन्दु युग के कवि कौन हैं?", a: "प्रेमघन", o: ["प्रेमघन", "गुरु नानक", "घनानंद", "अनामिका"] },
+            { q: "'बोली सकत हिंदी नहीं, अब मिलि हिंदू लोग...'-किस शीर्षक कविता की पंक्ति है?", a: "स्वदेशी", o: ["भारतमाता", "स्वदेशी", "हमारी नींद", "अक्षर ज्ञान"] },
+            { q: "बदरीनारायण चौधरी 'प्रेमघन' किस प्रकार के गद्य लिखते थे?", a: "कलात्मक एवं अलंकृत", o: ["आलोचना", "कलात्मक एवं अलंकृत", "उपन्यास", "यात्रावृत्तांत"] },
+            { q: "ग्रामीण जीवन का यथार्थवादी चित्रण 'प्रेमघन' रचित किस काव्य में है?", a: "जीर्ण जनपद में", o: ["प्रयाग रामागमन में", "भारत सौभाग्य में", "जीर्ण जनपद में", "कोई नहीं"] },
+            { q: "'सपनेहुँ जिनमें न कहूँ, भारतीयता लेस।'-यह पंक्ति किस शीर्षक कविता से है?", a: "स्वदेशी", o: ["भारतमाता", "अक्षर-ज्ञान", "जनतंत्र का जन्म", "स्वदेशी"] },
+            { q: "‘प्रेमघन’ किस युग के साहित्यकार थे?", a: "भारतेन्दुयुग", o: ["द्विवेदीयुग", "प्रसादयुग", "भारतेन्दुयुग", "कोई नहीं"] },
+            { q: "‘जीर्ण जनपद’ किसकी कृति है?", a: "प्रेमघन", o: ["प्रेमघन", "श्रीधर पाठक", "रामनरेश त्रिपाठी", "नागार्जुन"] },
+            { q: "'स्वदेशी' शीर्षक पाठ्यपुस्तक में संकलित कविता किस छंद में है?", a: "दोहा", o: ["चौपाई", "दोहा", "सोरठा", "छप्पय"] },
+            { q: "'बिदेसी' से कवि का क्या तात्पर्य है?", a: "ब्रिटेन", o: ["ब्रिटेन", "अमेरिका", "फ्रांस", "डेनमार्क"] },
+            { q: "'स्वदेशी' शीर्षक पाठ में दोहों का संकलन किस पुस्तक से लिया गया है?", a: "प्रेमधन सर्वस्व", o: ["प्रेमधन सर्वस्व", "भारत सौभाग्य", "प्रयाग रामागमन", "जीर्ण जनपद"] },
+            { q: "‘प्रेमघन’ ने किस समाज की रचना की?", a: "रसिक समाज", o: ["धनी समाज", "कलावंत समाज", "रसिक समाज", "भक्त समाज"] },
+            { q: "‘प्रेमघन’ का जन्म हुआ था:", a: "मिर्जापुर में", o: ["मिर्जापुर में", "लखनऊ में", "इलाहाबाद में", "बनारस में"] },
+            { q: "‘प्रेमघन’ की काव्य कृति है:", a: "इनमें सभी", o: ["आनंद अरुणोदय", "हार्दिक हर्षादर्श", "जीर्णजनपद", "इनमें सभी"] },
+            { q: "'अब्र' नाम से इन्होंने किस भाषा में कविता की रचना की?", a: "उर्दू", o: ["अरबी", "हिन्दी", "उर्दू", "मलयालम"] },
+            { q: "कवि के अनुसार भारतीय को क्या अच्छा लगने लगा था?", a: "इनमें सभी", o: ["विदेशी चाल-चलन", "विदेशी वेशभूषा", "विदेशी रहन-सहन", "इनमें सभी"] },
+            { q: "कवि समाज की किस वर्ग की आलोचना करता है?", a: "सुविधा भोगी", o: ["दुःख भोगी", "विलासिता भोगी", "सुविधा भोगी", "आलस भोगी"] },
+            { q: "‘प्रेमघन’ का जन्म कब हुआ?", a: "1855 ई० में", o: ["1853 ई० में", "1855 ई० में", "1857 ई० में", "1859 ई० में"] },
+            { q: "‘प्रेमघन’ की मृत्यु कब हुई?", a: "1922 ई० में", o: ["1918 ई० में", "1920 ई० में", "1922 ई० में", "1924 ई० में"] },
+            { q: "'स्वदेशी' के लेखक हैं:", a: "प्रेमघन", o: ["घनानंद", "प्रेमघन", "गुणाकर मूले", "कोई नहीं"] },
+            { q: "‘प्रेमघन’ ने साप्ताहिक किस पत्रिका का सम्पादन किया?", a: "नागरी नीरद", o: ["लालित्य-लहरी", "नागरी नीरद", "आनन्द अरुणोदय", "मयंक महिमा"] },
+            { q: "‘प्रेमघन’ की प्रसिद्ध नाट्यकृति कौन-सी है?", a: "प्रयाग रामागमन", o: ["हार्दिक हर्षादर्श", "जीर्णजनपद", "बृजचन्द पंचक", "प्रयाग रामागमन"] },
+            { q: "‘प्रेमघन’ ने इनमें से किस मासिक पत्रिका का सम्पादन किया?", a: "आनन्दकादम्बिनी", o: ["नागरी नीरद", "प्रयाग रामागमन", "आनन्दकादम्बिनी", "आनन्द अरुणोदय"] },
+            { q: "‘प्रेमघन’ ने मुख्य रूप से किस भाषा में काव्य रचना की?", a: "ब्रज", o: ["ब्रज", "देवनागरी", "भोजपुरी", "कन्नड़"] },
+            { q: "पराधीन भारत में चारों वर्णों में चाह थी:", a: "दासवृत्ति", o: ["कलावृत्ति", "दासवृत्ति", "दोनों", "कोई नहीं"] },
+            { q: "प्रेमघन साहित्य सम्मेलन के किस अधिवेशन के सभापति बने:", a: "कलकत्ता के", o: ["मिर्जापुर के", "कलकत्ता के", "काशी के", "दिल्ली के"] },
+            { q: "प्रेमधन के काव्य में प्राप्त होता है:", a: "इनमें सभी", o: ["भक्ति भावना", "समाजदशा", "देशप्रेम", "इनमें सभी"] },
+            { q: "'रीत' का अर्थ है:", a: "पद्धति", o: ["पद्धति", "स्वभाव", "लगाव", "कपड़ा"] },
+            { q: "'भारतीयता का सर्वथा लोप हो गया।' इस बात का किसे दुःख है?", a: "प्रेमधन को", o: ["प्रेमधन को", "गुरु नानक को", "घनानंद को", "सभी को"] },
+            { q: "भारत की अर्थव्यवस्था जर्जर हो गई, कैसे?", a: "अँग्रेजी नीति के कारण", o: ["अँग्रेजी नीति के कारण", "जलवायु", "मजदूर की कमी", "भूकम्प"] },
+            { q: "भारतीयों में ..... के प्रति कोई आस्था नहीं रह गई है:", a: "अपनी संस्कृति", o: ["अपनी संस्कृति", "अपना घर", "अपनी जाति", "अपना वंश"] },
+            { q: "सबै बिदेसी ..... नर गति रति रीत लखात:", a: "वस्तु", o: ["वस्तु", "शरीर", "बुद्धि", "कपड़ा"] },
+            { q: "भारतीय किस तरह से अंग्रेजी के दास हो गए हैं?", a: "(a) एवं (b) दोनों से", o: ["तन से", "मन से", "धन से", "(a) एवं (b) दोनों से"] },
+            { q: "बदरीनारायण चौधरी 'प्रेमघन' की रचनाएँ किस नाम से संगृहीत हैं?", a: "प्रेमधन सर्वस्व", o: ["भारत सौभाग्य", "प्रेमधन सर्वस्व", "प्रयाग रामागमन", "जीर्ण जनपद"] },
+            { q: "दास-वृत्ति की चाह चहूँ ..... चारहु बरन बढ़ाली:", a: "दिसि", o: ["झूठ", "मानहु", "दिसि", "खाम"] },
+            { q: "कवि ने समाज के किस वर्ग की आलोचना की है?", a: "सुविधा भोगी वर्ग की", o: ["निम्न वर्ग", "मध्यवर्ग", "सुविधा भोगी वर्ग की", "सभी की"] },
+            { q: "‘प्रेमघन’ अपना आदर्श किसे मानते हैं?", a: "भारतेन्दु हरिश्चन्द्र", o: ["महात्मा गाँधी", "विवेकानन्द", "रवीन्द्रनाथ टैगोर", "भारतेन्दु हरिश्चन्द्र"] },
+            { q: "'हिन्दुस्तानी नाम सुनि, अब ये सकुचि लजात'-पंक्ति किस कविता से है?", a: "स्वदेशी", o: ["भारतमाता", "जनतंत्र का जन्म", "अक्षर ज्ञान", "स्वदेशी"] },
+            { q: "'स्वदेशी' शीर्षक पाठ के रचनाकार हैं:", a: "प्रेमधन", o: ["रामधन", "मालधनी", "श्यामधन", "प्रेमधन"] },
+            { q: "'स्वदेशी' पाठ के अनुसार अब हिंदू लोग आपस में किस भाषा में बात नहीं करते?", a: "हिन्दी", o: ["अंग्रेजी", "बंगला", "हिन्दी", "तमिल"] },
+            { q: "'प्रयाग रामागमन' शीर्षक नाटक किसकी रचना है?", a: "बदरीनारायण चौधरी 'प्रेमघन'", o: ["घनानंद", "अनामिका", "वीरेन डंगवाल", "बदरीनारायण चौधरी 'प्रेमघन'"] },
+            { q: "'भारत सौभाग्य' किनका प्रसिद्ध नाटक है?", a: "प्रेमघन का", o: ["कुँवर नारायण", "प्रेमघन का", "अनामिका का", "जीवनानंद दास का"] },
+            { q: "कौन-सी विद्या पढ़कर लोगों की बुद्धि विदेशी हो गई है?", a: "विदेशी विद्या", o: ["छल विद्या", "कपट विद्या", "विदेशी विद्या", "तकनीकी विद्या"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1200;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-green-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

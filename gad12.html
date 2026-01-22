@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shiksha aur Sanskriti Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_shiksha"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_shiksha_" + user.uid);
+                
+                // समय की गणना (1500 sec total - remaining)
+                const timeTakenSec = 1500 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Shiksha aur Sanskriti",
+                    chapterId: "ch_shiksha", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #451a03; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Amber/Gold Header */
+        .header-bar {
+            background-color: #d97706; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+        }
+
+        .q-card {
+            background-color: #78350f; padding: 20px; border-radius: 16px;
+            border: 1px solid #92400e; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #92400e; border: 2px solid #b45309; border-radius: 12px;
+            color: #fcd34d; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fde68a; background-color: #d97706; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #d97706; color: white; border: 1px solid #fde68a; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #78350f; padding: 5px 15px; 
+            border-radius: 20px; color: #fcd34d; font-weight: bold; font-size: 14px; border: 1px solid #d97706;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-amber-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Gandhi Test</h1>
+        <span id="q-indicator" class="bg-amber-900 text-amber-100 px-3 py-1 rounded-lg text-xs font-bold border border-amber-500">1/47</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-amber-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-amber-600 text-white p-4 rounded-xl font-bold hover:bg-amber-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘उदात्त’ शब्द का अर्थ है :", a: "उन्नत", o: ["अविकसित", "उन्नत", "कौशल", "विनाशक"] },
+            { q: "महात्मा गाँधी का निधन कब हुआ था?", a: "30 जनवरी, 1948 ई० में", o: ["30 जनवरी, 1948 ई० में", "20 फरवरी, 1948 ई० में", "19 जनवरी, 1948 ई० में", "28 फरवरी, 1948 ई० में"] },
+            { q: "‘कोई संस्कृति इतने रत्न-भण्डार से भरी हुई नहीं है जितनी हमारी अपनी संस्कृति है।’ यह कथन किसका है?", a: "महात्मा गाँधी", o: ["भीमराव अंबेडकर", "डॉ० राजेन्द्र प्रसाद", "महात्मा गाँधी", "इनमें से कोई नहीं"] },
+            { q: "“प्रारंभिक शिक्षा में सफाई, तन्दुरुस्ती, भोजनशास्त्र, अपना काम आप करने और घर पर माता-पिता को मदद देने वगैरह के मूल सिद्धांत शामिल हों”—ये विचार किसका है?", a: "महात्मा गाँधी का", o: ["जवाहरलाल नेहरू का", "वल्लभभाई पटेल का", "व्योमेशचन्द्र बनर्जी का", "महात्मा गाँधी का"] },
+            { q: "‘मैं चाहता हूँ कि सब देशों की संस्कृतियों की हवा मेरे घर के चारों ओर अधिक-से-अधिक स्वतंत्रता के साथ बहती रहे।’—यह किसने कहा है?", a: "महात्मा गाँधी ने", o: ["जवाहरलाल नेहरू ने", "सुभाषचन्द्र बोस ने", "वल्लभभाई पटेल ने", "महात्मा गाँधी ने"] },
+            { q: "कोई संस्कृति जिन्दा नहीं रह सकती, अगर वह दूसरों की संस्कृति का क्या करने की कोशिश करती है?", a: "बहिष्कार", o: ["बहिष्कार", "स्वीकार", "विचार", "सुरक्षित"] },
+            { q: "गाँधीजी को ‘महात्मा’ की उपाधि किसने दी?", a: "रविन्द्रनाथ ने", o: ["शेक्सपीयर ने", "रविन्द्रनाथ ने", "विवेकानन्द ने", "गोपाल कृष्ण गोखले ने"] },
+            { q: "आर्य कहाँ रहते थे?", a: "भारत में", o: ["चीन में", "भारत में", "फ्रांस में", "स्वीडेन में"] },
+            { q: "फिनिक्स था :", a: "आश्रम", o: ["आश्रम", "विद्यालय", "चिड़ियाँ घर", "कैद खाना"] },
+            { q: "अन्तर्राष्ट्रीय अहिंसा दिवस के रूप में मनाया जाता है :", a: "2 अक्टूबर को", o: ["2 अक्टूबर को", "5 अक्टूबर को", "छह अक्टूबर को", "सात अक्टूबर को"] },
+            { q: "गाँधी जी अफ्रीका से लौटकर कब आए थे?", a: "1915 ई० में", o: ["1916 ई० में", "1915 ई० में", "1917 ई० में", "1914 ई० में"] },
+            { q: "सर्वोदय का कार्यक्रम किसने चलाया?", a: "महात्मा गाँधी ने", o: ["गोपाल कृष्ण गोखले ने", "नेहरू जी ने", "महात्मा गाँधी ने", "अबुल कलाम आजाद ने"] },
+            { q: "‘मेरा ख्याल है कि अगर व्यक्ति का चरित्र-निर्माण करने में हम सफल हो जाएँगे तो समाज काम आप सँभाल लेगा’ यह किसका विचार है?", a: "महात्मा गाँधी का", o: ["भीमराव अंबेडकर का", "रामधारी सिंह दिनकर का", "महात्मा गाँधी का", "सुमित्रानन्द पंत का"] },
+            { q: "‘सत्य के साथ मेरे प्रयोग’ किसकी पुस्तक है?", a: "महात्मा गाँधी", o: ["डॉ० राजेन्द्र प्रसाद", "डॉ० संपूर्णानंद", "महर्षि अरविंद", "महात्मा गाँधी"] },
+            { q: "‘हिंद स्वराज’ के रचनाकार हैं :", a: "महात्मा गाँधी", o: ["महात्मा गाँधी", "सुभाषचंद्र बोस", "प्रेमचंद", "राष्ट्रकवि ‘दिनकर’"] },
+            { q: "‘हरिजन’ के संपादक कौन थे?", a: "महात्मा गाँधी", o: ["माखनलाल चतुर्वेदी", "महात्मा गाँधी", "डॉ० विद्यानिवास मिश्र", "अज्ञेय"] },
+            { q: "गाँधीजी की स्मृति में पूरा राष्ट्र किस तारीख को उनकी जयंती मनाता है?", a: "2 अक्टूबर प्रतिवर्ष", o: ["4 नवम्बर प्रतिवर्ष", "2 अक्टूबर प्रतिवर्ष", "3 अक्टूबर प्रतिवर्ष", "6 अक्टूबर प्रतिवर्ष"] },
+            { q: "भारतीय संस्कृति किसकी प्रतीक है?", a: "भिन्न-भिन्न संस्कृतियों के सामंजस्य की", o: ["एकता की", "विविधता की", "मानवता की", "भिन्न-भिन्न संस्कृतियों के सामंजस्य की"] },
+            { q: "गाँधीजी के अनुसार शिक्षा सहायक होती है :", a: "शरीर, बुद्धि और आत्मा के विकास में", o: ["शरीर के विकास में", "बुद्धि के विकास में", "शरीर, बुद्धि और आत्मा के विकास में", "आत्मा के विकास में"] },
+            { q: "शेक्सपीयर किस भाषा के कवि हैं?", a: "अंग्रेजी", o: ["ग्रीक", "अंग्रेजी", "फ्रेंच", "संस्कृत"] },
+            { q: "टॉलस्टाय किस देश के साहित्यकार थे?", a: "रूस", o: ["अमेरिका", "इटली", "रूस", "दक्षिण अफ्रीका"] },
+            { q: "गाँधीजी की दृष्टि में उदात्त और बढ़िया शिक्षा क्या है?", a: "अहिंसक प्रतिरोध", o: ["अहिंसक प्रतिरोध", "अक्षर-ज्ञान", "अनुवाद", "अंग्रेजी की शिक्षा"] },
+            { q: "गाँधीजी शिक्षा का उद्देश्य क्या मानते थे?", a: "चरित्र-निर्माण", o: ["नौकरी पाना", "वैज्ञानिक बनना", "चरित्र-निर्माण", "यांत्रिक दक्षता"] },
+            { q: "टॉलस्टाय कौन थे?", a: "रूसी लेखक", o: ["रूसी लेखक", "चीनी लेखक", "अंग्रेजी लेखक", "फ्रेंच लेखक"] },
+            { q: "‘शिक्षा और संस्कृति’ के लेखक कौन है?", a: "महात्मा गाँधी", o: ["महात्मा गाँधी", "शेक्सपीयर", "टॉलस्टॉय", "इनमें कोई नहीं"] },
+            { q: "महात्मा गाँधी का जन्म हुआ?", a: "2 अक्टूबर, 1869 को", o: ["2 अक्टूबर, 1867 को", "2 अक्टूबर, 1869 को", "2 अक्टूबर, 1877 को", "2 अक्टूबर, 1879 को"] },
+            { q: "महात्मा गाँधी का जन्म कहाँ हुआ?", a: "पोरबंदर (गुजरात)", o: ["अहमदाबाद", "मध्यप्रदेश", "राजस्थान", "गुजरात"] },
+            { q: "‘यंग इंडिया’ क्या है?", a: "पत्रिका", o: ["पत्रिका", "नौजवानों का समूह", "संस्था", "पुरस्कार"] },
+            { q: "‘शेक्सपीयर’ को किस रूप में जाना जाता है?", a: "(a) और (b) दोनों", o: ["कवि", "नाटककार", "(a) और (b) दोनों", "इनमें से कोई नहीं"] },
+            { q: "गाँधी ने बच्चों को किस ढंग की तालीम देने की भरसक कोशिश की थी?", a: "अहिंसक प्रतिरोध", o: ["हिंसक प्रतिरोध", "अहिंसक प्रतिरोध", "सहनशील प्रतिरोध", "आक्रामक प्रतिरोध"] },
+            { q: "गाँधीजी वकालत की पढ़ाई के लिए कहाँ गए?", a: "लंदन", o: ["दक्षिण अफ्रीका", "अमेरिका", "लंदन", "श्रीलंका"] },
+            { q: "गाँधीजी दक्षिण अफ्रीका में कब-से-कब तक रहे?", a: "1893 से 1914 तक", o: ["1893 से 1914 तक", "1895 से 1916 तक", "1897 से 1918 तक", "1899 से 1920 तक"] },
+            { q: "गाँधी के दो हथियार थे :", a: "अहिंसा और सत्याग्रह", o: ["लाठी और हिंसा", "हिंसा और अहिंसा", "हिंसा और सत्याग्रह", "अहिंसा और सत्याग्रह"] },
+            { q: "गाँधीजी के अनुसार ‘शिक्षा’ का माध्यम होना चाहिए :", a: "हस्तकला", o: ["नाट्य-कला", "हस्तकला", "अहिंसा", "सत्याग्रह"] },
+            { q: "‘उदात्त’ का शाब्दिक अर्थ है :", a: "श्रेष्ठ", o: ["श्रेष्ठ", "जागरण", "व्यवहार", "पालन"] },
+            { q: "महात्मा गाँधी का निधन कब हुआ?", a: "30 जनवरी, 1948 को", o: ["30 जनवरी, 1947", "30 जनवरी, 1948 को", "30 जनवरी, 1947 को", "30 जनवरी, 1950 को"] },
+            { q: "आध्यात्मिक शिक्षा से गाँधीजी का क्या अभिप्राय है?", a: "हृदय की शिक्षा", o: ["पुस्तक की शिक्षा", "यंत्रों की शिक्षा", "बुद्धि की शिक्षा", "हृदय की शिक्षा"] },
+            { q: "महात्मा गाँधी के पिता का क्या नाम था?", a: "करमचंद गाँधी", o: ["धरमचंद गाँधी", "मीरचंद गाँधी", "हरचंद गाँधी", "करमचंद गाँधी"] },
+            { q: "कौन चाहते थे कि सभी देशों की संस्कृति की हवा उनके घर के पास बहती रहे?", a: "महात्मा गाँधी", o: ["राजेन्द्र प्रसाद", "नेहरू", "महात्मा गाँधी", "सरदार पटेल"] },
+            { q: "‘मेरा धर्म कैदखाने का धर्म नहीं है।’ यह पंक्ति किस शीर्षक पाठ की है?", a: "शिक्षा और संस्कृति", o: ["नौबतखाने में इबादत", "आविन्यों", "शिक्षा और संस्कृति", "जित-जित मैं निरखत हूँ"] },
+            { q: "किनके जन्म दिवस को अहिंसा दिवस के रूप में मनाया जाता है?", a: "महात्मा गाँधी", o: ["महात्मा गाँधी", "डॉ० राजेन्द्र प्रसाद", "जवाहरलाल नेहरू", "बाल गंगाधर तिलक"] },
+            { q: "गाँधी जी के माता का नाम क्या था?", a: "पुतलीबाई", o: ["कस्तूरबा गाँधी", "पुतलीबाई", "लक्ष्मी बाई", "यशोधरा"] },
+            { q: "कवायद का अर्थ क्या है?", a: "ड्रील", o: ["ड्रील", "भागदौड़", "निर्वाह", "दोनों"] },
+            { q: "“बच्चे और मनुष्य के शरीर, बुद्धि और आत्मा के सभी उत्तम गुणों को प्रगट किया जाए” ऐसा विचार किनका था?", a: "गाँधी जी का", o: ["गाँधी जी का", "रविन्द्रनाथ टैगोर का", "गोखले जी का", "इनमें सभी का"] },
+            { q: "‘वकालत’ की पढ़ाई के लिए गाँधीजी कहाँ गए थे?", a: "लंदन", o: ["दक्षिण अफ्रीका", "अमेरिका", "लंदन", "श्रीलंका"] },
+            { q: "‘घृणा’ को जीता जा सकता है :", a: "प्रेम से", o: ["प्रेम से", "असत्य से", "सत्य से", "कष्ट से"] },
+            { q: "अहिंसा और सत्याग्रह किनके सबसे बड़े हथियार थे?", a: "गाँधीजी के", o: ["नेहरूजी के", "गाँधीजी के", "अम्बेडकर के", "सुभाष बोस के"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-amber-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

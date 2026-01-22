@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Avinyo Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल (User Profile)
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_avinyo"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_avinyo_" + user.uid);
+                
+                // समय की गणना (1500 sec total - remaining)
+                const timeTakenSec = 1500 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Avinyo (Ashok Vajpeyi)",
+                    chapterId: "ch_avinyo", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully to both files!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #450a0a; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Red Header */
+        .header-bar {
+            background-color: #dc2626; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4);
+        }
+
+        .q-card {
+            background-color: #7f1d1d; padding: 20px; border-radius: 16px;
+            border: 1px solid #991b1b; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #991b1b; border: 2px solid #b91c1c; border-radius: 12px;
+            color: #fecaca; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fca5a5; background-color: #ef4444; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #dc2626; color: white; border: 1px solid #fca5a5; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #7f1d1d; padding: 5px 15px; 
+            border-radius: 20px; color: #fca5a5; font-weight: bold; font-size: 14px; border: 1px solid #dc2626;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-red-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Avinyo Test</h1>
+        <span id="q-indicator" class="bg-red-900 text-red-100 px-3 py-1 rounded-lg text-xs font-bold border border-red-500">1/48</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-red-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold hover:bg-red-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "आविन्यों में साथ रहकर लगभग तीस संयुक्त कविताएँ लिखी थीं:", a: "आन्द्रे ब्रेताँ, रेने शॉ और पाल एलुआार ने", o: ["निन्शे क्रो, दोनॉल और शॉ ने", "पिकासे, मेरी और त्रियाल ने", "आप्टे बूर्नों, सिम्पॉ और निमांसे ने", "आन्द्रे ब्रेताँ, रेने शॉ और पाल एलुआार ने"] },
+            { q: "अशोक वाजपेयी के माता-पिता का नाम क्या था?", a: "निर्मला देवी और परमानंद वाजपेयी", o: ["निर्मला देवी और परमानंद वाजपेयी", "सुमित्रा देवी और पूर्णानंद वाजपेयी", "आसरा देवी और शिव वाजपेयी", "कमला देवी और प्रफुल्ल वाजपेयी"] },
+            { q: "निम्नलिखित में से कौन-सी रचना अशोक वाजपेयी की है?", a: "कविता का जनपद", o: ["कविता का जनपद", "नौकर की कमीज", "सौर मंडल", "अक्षर कथा"] },
+            { q: "‘शहर अब भी संभावना है’ किसकी कृति है?", a: "अशोक वाजपेयी", o: ["अशोक वाजपेयी", "कुँवर नारायण", "अनामिका", "वीरेन डंगवाल"] },
+            { q: "‘बहुवचन’ नामक पत्रिका का संपादन निम्न में से किसने किया?", a: "अशोक वाजपेयी", o: ["गुणाकर मुले", "अशोक वाजपेयी", "रामविलास शर्मा", "महात्मा गाँधी"] },
+            { q: "आविन्यों एक है :", a: "ललित रचना", o: ["साक्षात्कार", "कहानी", "ललित रचना", "निबंध"] },
+            { q: "आविन्यों में था :", a: "पोप की राजधानी", o: ["रूस की राजधानी", "पोप की राजधानी", "फ्रांस की राजधानी", "इटली की राजधानी"] },
+            { q: "कार्थूसियन (ईसाई) सम्प्रदाय विश्वास करता है :", a: "मौन में", o: ["मार-पीट में", "झगड़ा में", "फंसाने में", "मौन में"] },
+            { q: "जीर्णोद्धार का अर्थ है :", a: "पुराने को नया करना", o: ["पुराने को नया करना", "पुराने को दबा देना", "नए को मिटाना", "पुराने को बेचना"] },
+            { q: "अशोक वाजपेयी के द्वारा कौन से पत्रिकाओं का सम्पादन किया गया था?", a: "इनमें सभी", o: ["समवेत", "पहचान", "पूर्वग्रह", "इनमें सभी"] },
+            { q: "अशोक वाजपेयी को किस सरकार के द्वारा ला शत्रूज में रहकर काम करने का न्योता मिला था?", a: "फ्रांस सरकार", o: ["इंग्लैण्ड सरकार", "जर्मन सरकार", "फ्रांस सरकार", "भारत सरकार"] },
+            { q: "फ्रांस और यूरोप का एक अत्यन्त प्रसिद्ध और लोकप्रिय रंग-समारोह हर वर्ष कहाँ होता है?", a: "आविन्यों में", o: ["पेरिस में", "मास्को में", "आविन्यों में", "रोम में"] },
+            { q: "आविन्यों में किस युग के ईसाई मठ हैं?", a: "मध्य युग", o: ["प्राचीन", "मध्य युग", "आधुनिक युग", "इनमें सभी"] },
+            { q: "‘आविन्यों’ कहाँ स्थित है?", a: "दक्षिणी फ्रांस", o: ["इटली", "जर्मनी", "रूस", "दक्षिणी फ्रांस"] },
+            { q: "रोन नदी कहाँ है?", a: "दक्षिण फ्रांस", o: ["दक्षिण फ्रांस", "भारत", "जापान", "अमेरिका"] },
+            { q: "‘आविन्यों’ के रचनाकार हैं :", a: "अशोक वाजपेयी", o: ["कैलाश वाजपेयी", "किशोरीदास वाजपेयी", "अटल बिहारी वाजपेयी", "अशोक वाजपेयी"] },
+            { q: "‘वीलनव्व ल आविन्यों’ का अर्थ होता है :", a: "आविन्यों का नया गाँव", o: ["आविन्यों का नया आदमी", "आविन्यों का नया गाँव", "आविन्यों की नदी", "आविन्यों का पर्वत"] },
+            { q: "‘ला शत्रूज’ क्या है?", a: "ईसाई मठ", o: ["इमारत", "पर्वत", "ईसाई मठ", "मेरा शत्रु"] },
+            { q: "आंद्र बेत्राँ क्या है?", a: "कवि", o: ["कवि", "कथाकार", "रंगकर्मी", "रंग-संगीतकार"] },
+            { q: "प्रगतिशील साहित्य का संबंध है :", a: "वेदान्त दर्शन से", o: ["बौद्ध दर्शन से", "वेदान्त दर्शन से", "मार्क्स के विचारों से", "इनमें से कोई नहीं"] },
+            { q: "वीलनव्व और आविन्यों के बीच में कौन नदी है?", a: "रोन नदी", o: ["रोन नदी", "सोन नदी", "लवार नदी", "चाई नदी"] },
+            { q: "आन्द्रे ब्रेताँ, रेने शॉ और पाल एलुआार ने आविन्यों में रहकर संयुक्त रूप से लगभग कितनी कविताओं की रचना की?", a: "30", o: ["20", "25", "30", "35"] },
+            { q: "अशोक वाजपेयी ला शत्रूज में कितने दिनों तक रहे?", a: "उन्नीस दिन", o: ["उन्नीस दिन", "सात दिन", "एक महीना", "बीस दिन"] },
+            { q: "‘आविन्यों’ पाठ गद्य की कौन-सी विधा है?", a: "यात्रा-वृत्तांत", o: ["कहानी", "यात्रा-वृत्तांत", "उपन्यास", "रेखा चित्र"] },
+            { q: "पिकासो क्या थे?", a: "चित्रकार", o: ["कवि", "चित्रकार", "नाटककार", "उपन्यासकार"] },
+            { q: "अशोक वाजपेयी का जन्म कब हुआ?", a: "16 जनवरी, 1941", o: ["26 जनवरी, 1944", "21 जनवरी, 1943", "16 जनवरी, 1941", "6 जनवरी, 1940"] },
+            { q: "अशोक वाजपेयी का जन्म कहाँ हुआ?", a: "दुर्ग, छत्तीसगढ़", o: ["दुर्ग, छत्तीसगढ़", "करमलीचक, बिहार", "इलाहाबाद, उत्तर प्रदेश", "इनमें से कोई नहीं"] },
+            { q: "अशोक वाजपेयी ने 24 अक्टूबर से 10 नवम्बर, 1994 तक कुल कितनी रचनाएँ की?", a: "35 कविता, 27 गद्य", o: ["5 कविता, 7 गद्य", "15 कविता, 17 गद्य", "25 कविता, 27 गद्य", "35 कविता, 27 गद्य"] },
+            { q: "‘ल मादादोजेल द आविन्यों’ किसकी कृति है?", a: "पिकासो", o: ["लियानार्दो द विंची", "पिकासो", "रवीन्द्रनाथ टैगोर", "विन्सेंट वैन गो"] },
+            { q: "‘ला शत्रूज’ का धार्मिक उपयोग कब से कब तक होता रहा?", a: "चौदहवीं सदी से फ्रेंच क्रांति तक", o: ["ग्यारहवीं सदी से फ्रेंच क्रांति तक", "बारहवीं सदी से फ्रेंच क्रांति तक", "तेरहवीं सदी से फ्रेंच क्रांति तक", "चौदहवीं सदी से फ्रेंच क्रांति तक"] },
+            { q: "आविन्यों में उन्नीस दिनों के प्रवास के दौरान लेखक ने कितने गद्य की रचना की?", a: "27", o: ["27", "28", "29", "30"] },
+            { q: "फ्रांस का प्रमुख कला केन्द्र रहा है :", a: "आविन्यों", o: ["एफिल टावर", "आविन्यों", "दोनों", "इनमें से कोई नहीं"] },
+            { q: "‘आविन्यों’ क्या है?", a: "ईसाई मठ", o: ["ईसाई मठ", "मस्जिद", "मंदिर", "गुरुद्वारा"] },
+            { q: "पिकासो की प्रसिद्ध रचना का शीर्षक है :", a: "ल मादा मोजेल द आविन्यों", o: ["ल मादा मोजेल द आविन्यों", "वीलनव्व ल आविन्यों", "नदी के किनारे भी नदी है", "ला शत्रूज"] },
+            { q: "कार्थूसियन सम्प्रदाय विश्वास करता है :", a: "मौन पर", o: ["पूजा पर", "पाठ पर", "मौन पर", "यज्ञ पर"] },
+            { q: "ला-शत्रूज के इमारत पर क्रांति के बाद किनका कब्जा हो गया था?", a: "साधारण लोगों का", o: ["राजा का", "व्यापारी का", "‘a’ एवं ‘b’", "साधारण लोगों का"] },
+            { q: "अशोक वाजपेयी के पिता का नाम था :", a: "परमानन्द वाजपेयी", o: ["रामानन्द वाजपेयी", "परमानन्द वाजपेयी", "कृष्णानन्दन वाजपेयी", "उज्जवलानन्द वाजपेयी"] },
+            { q: "अशोक वाजपेयी की ‘फ्रेंच सरकार द्वारा दिया जानेवाला पुरस्कार’ है :", a: "ऑफिसर आव् द ऑर्डर आव् क्रॉस", o: ["ऑफिसर आव् द ऑर्डर आव् क्रॉस", "साहित्य अकादमी पुरस्कार", "दयावती मोदी कवि शेखर सम्मान", "इनमें सभी"] },
+            { q: "‘आविन्यों’ किस नदी पर स्थित है?", a: "रोन नदी पर", o: ["रोन नदी पर", "सीन नदी पर", "टेम्स नदी पर", "टोन नदी पर"] },
+            { q: "‘वीलनव्व’ क्या है?", a: "एक छोटा-सा गाँव", o: ["एक शहर", "एक छोटा-सा गाँव", "एक नदी", "एक झील"] },
+            { q: "प्रत्येक वर्ष आविन्यों में कैसा समारोह आयोजित होता है?", a: "रंग-समारोह", o: ["रंग-समारोह", "धार्मिक", "विश्वकप", "राष्ट्रमंडल खेल"] },
+            { q: "‘रोन’ नदी के किनारे बसे शहर का नाम है :", a: "आविन्यों", o: ["लंदन", "लाहौर", "आविन्यों", "लखनऊ"] },
+            { q: "लेखक कितने वर्ष पहले पहली बार आविन्यों गए थे?", a: "10 वर्ष", o: ["15 वर्ष", "5 वर्ष", "10 वर्ष", "12 वर्ष"] },
+            { q: "लेखक आविन्यों क्या साथ लेकर गए थे?", a: "पुस्तक, टाइपराइटर और टेप्स", o: ["कुर्सी", "पुस्तक, टाइपराइटर और टेप्स", "मेज", "डंडा"] },
+            { q: "‘उगते हुए सूरज का देश’ किसे कहा जाता है?", a: "जापान को", o: ["जापान को", "नेपाल को", "भूटान को", "इरान को"] },
+            { q: "द्रुम का क्या अर्थ है?", a: "पेड़-पौधा", o: ["पेड़-पौधा", "गाँव", "शहर", "जानवर"] },
+            { q: "बियाबान का क्या अर्थ है?", a: "(a) एवं (b) दोनों", o: ["शहर", "सुनसान", "निर्जन", "(a) एवं (b) दोनों"] },
+            { q: "आविन्यों का किला फ्रेंच शासकों ने किसके गतिविधियों पर नजर रखने के लिए बनवाया था?", a: "पोप पर", o: ["पोप पर", "किसान पर", "लेखक पर", "मंत्रियों पर"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-red-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

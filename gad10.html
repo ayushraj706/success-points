@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Machhli Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_machhli"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_machhli_" + user.uid);
+                
+                // समय की गणना
+                const timeTakenSec = 1500 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Machhli (Vinod Kumar Shukla)",
+                    chapterId: "ch_machhli", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); 
+                    await setDoc(leaderboardRef, data); 
+                    console.log("Result Saved Successfully!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #083344; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Cyan Header */
+        .header-bar {
+            background-color: #0891b2; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(8, 145, 178, 0.4);
+        }
+
+        .q-card {
+            background-color: #164e63; padding: 20px; border-radius: 16px;
+            border: 1px solid #155e75; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #0e7490; border: 2px solid #22d3ee; border-radius: 12px;
+            color: #cffafe; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #67e8f9; background-color: #06b6d4; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #0891b2; color: white; border: 1px solid #67e8f9; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #164e63; padding: 5px 15px; 
+            border-radius: 20px; color: #67e8f9; font-weight: bold; font-size: 14px; border: 1px solid #0891b2;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-cyan-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Machhli Test</h1>
+        <span id="q-indicator" class="bg-cyan-900 text-cyan-100 px-3 py-1 rounded-lg text-xs font-bold border border-cyan-500">1/46</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">25:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-cyan-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-cyan-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-cyan-600 text-white p-4 rounded-xl font-bold hover:bg-cyan-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "विनोद कुमार शुक्ल के उपन्यास का नाम है :", a: "नौकर की कमीज", o: ["सबकुछ होना बचा रहेगा", "अतिरिक्त नहीं", "नौकर की कमीज", "महाविद्यालय"] },
+            { q: "‘मछली’ शीर्षक पाठ में कौन मछली को काटा करता था?", a: "भग्गू", o: ["संतु", "भग्गू", "नरेन", "लेखक"] },
+            { q: "‘दीवार में एक खिड़की रहती थी’ नामक उपन्यास किसका है?", a: "विनोद कुमार शुक्ल", o: ["रामविलास शर्मा", "रश्मि वाजपेयी", "विनोद कुमार शुक्ल", "हजारी प्रसाद द्विवेदी"] },
+            { q: "लेखक विनोद कुमार शुक्ल को साहित्य अकादमी पुरस्कार किस वर्ष प्राप्त हुआ?", a: "1990 ई० में", o: ["1991 ई० में", "1992 ई० में", "1990 ई० में", "1994 ई० में"] },
+            { q: "‘नौकर की कमीज’ नामक उपन्यास किसकी रचना है?", a: "विनोद कुमार शुक्ल की", o: ["कैलाश वाजपेयी की", "विनोद कुमार शुक्ल की", "अशोक वाजपेयी की", "अमरकांत की"] },
+            { q: "‘मछली’ है :", a: "कहानी", o: ["कहानी", "निबंध", "शिक्षाशास्त्र", "ललित निबंध"] },
+            { q: "झोले में कितनी मछलियाँ थीं :", a: "तीन", o: ["दो", "चार", "तीन", "पाँच"] },
+            { q: "संतु काँप रहा था :", a: "ठंड से", o: ["डर से", "ठंड से", "मछली देखने से", "मार पड़ने से"] },
+            { q: "जो मछली मर जाती है उसके आँखों में झाँकने से अपनी परछाई नहीं दिखती—ऐसा कौन कहता था :", a: "दीदी", o: ["दीदी", "मम्मी", "पापा", "दुकानदार"] },
+            { q: "‘मछली अभी कट जाएगी’ ऐसा किसने पूछा :", a: "संतु", o: ["संतु", "दीदी", "पापा", "मम्मी"] },
+            { q: "‘पेड़ पर कमरा’ किसकी रचना है?", a: "विनोद कुमार शुक्ल", o: ["विनोद कुमार शुक्ल", "अशोक वाजपेयी", "अमरकांत", "यतीन्द्र मिश्र"] },
+            { q: "मछली और गोश्त कौन खाता था :", a: "पिताजी", o: ["माँ", "पिताजी", "दादी", "इनमें से कोई नहीं"] },
+            { q: "‘मछली’ शीर्षक कहानी कहानीकार विनोद कुमार शुक्ल के किस कहानी-संग्रह से ली गई है?", a: "महाविद्यालय", o: ["पेड़ पर कमरा", "महाविद्यालय", "मानसरोवर", "कोठरी की बात"] },
+            { q: "पिताजी ने बाजार से कितनी मछलियाँ खरीदी थी?", a: "तीन", o: ["तीन", "चार", "दो", "पाँच"] },
+            { q: "परिवार के नौकर का क्या नाम था?", a: "भग्गू", o: ["संतू", "महंतू", "भग्गू", "नरेन"] },
+            { q: "नरेन कौन था?", a: "दीदी का प्रेमी", o: ["नौकर", "कथाकार का भाई", "कथाकार का दोस्त", "दीदी का प्रेमी"] },
+            { q: "‘मोहारा’ क्या है?", a: "नदी", o: ["इमारत", "जंगल", "पर्वत", "नदी"] },
+            { q: "कहानीकार के छोटे भाई का नाम क्या है?", a: "संतु", o: ["भग्गू", "जग्गू", "संतु", "दीनू"] },
+            { q: "किसको घर में मछली, गोश्त बनाना अच्छा नहीं लगता था?", a: "माँ को", o: ["माँ को", "पिताजी को", "संतु को", "भग्गू को"] },
+            { q: "“घर में घुसे तो साले के हाथ पैर तोड़कर बाहर फेंक देना।”— ऐसा किसने कहा था?", a: "पिताजी", o: ["भग्गू", "संतु", "माँ", "पिताजी"] },
+            { q: "संतु मछली लेकर क्यों भागा?", a: "कुएँ में डालने के लिए", o: ["बेचने के लिए", "खाने के लिए", "काटने के लिए", "कुएँ में डालने के लिए"] },
+            { q: "पिताजी ने किसको मारा था?", a: "दीदी को", o: ["दीदी को", "माँ को", "संतु को", "भग्गू को"] },
+            { q: "मछली छीनने की कोशिश कौन कर रहा था?", a: "भग्गू", o: ["पिताजी", "दीदी", "भग्गू", "संतु"] },
+            { q: "मछली कहानी में किस वर्ग का जीवन वर्णित है?", a: "निम्न मध्यम वर्ग का", o: ["उच्च वर्ग का", "मध्यम वर्ग का", "निम्न मध्यम वर्ग का", "निम्न वर्ग का"] },
+            { q: "संतु-नरेन आपस में कौन हैं?", a: "भाई-भाई", o: ["भाई-भाई", "चाचा-भतीजा", "भाई-बहन", "जीजा-साला"] },
+            { q: "विनोद कुमार शुक्ल कहानीकार, उपन्यासकार के अलावा और क्या थे?", a: "राजनेता", o: ["कवि", "नाटककार", "आलोचक", "राजनेता"] },
+            { q: "विनोद कुमार शुक्ल का जन्म कब हुआ?", a: "1 जनवरी, 1937 तक", o: ["1 जनवरी, 1936 तक", "1 जनवरी, 1937 तक", "1 जनवरी, 1938 तक", "1 जनवरी, 1939 तक"] },
+            { q: "विनोद कुमार शुक्ल का जन्म कहाँ हुआ?", a: "राजनंद, छत्तीसगढ़", o: ["राजनंद, छत्तीसगढ़", "दुर्ग, छत्तीसगढ़", "नेउरा, बिहार", "नालंदा, बिहार"] },
+            { q: "‘निराला सृजन पीठ’ में अतिथि साहित्यकार के रूप में कब-से-कब तक रहे?", a: "1994 से 1996", o: ["1988 से 1990", "1990 से 1992", "1992 से 1994", "1994 से 1996"] },
+            { q: "शुक्लजी की कहानी संग्रह है :", a: "पेड़ पर कमरा", o: ["नौकर की कमीज", "दीवार में एक खिड़की रहती थी", "खिलेगा तो देखेंगे", "पेड़ पर कमरा"] },
+            { q: "‘दयावती मोदी कवि शेखर सम्मान’ से कब सम्मानित किया गया?", a: "1997 ई० में", o: ["1993 ई० में", "1995 ई० में", "1997 ई० में", "1999 ई० में"] },
+            { q: "लेखक अपने पिता से क्या माँगना चाहता था?", a: "मछली", o: ["खिलौने", "किताब", "पैसे", "मछली"] },
+            { q: "लेखक को मछली खाने से किसने मना किया?", a: "माँ ने", o: ["पिता ने", "माँ ने", "भाई ने", "बहन ने"] },
+            { q: "मछली लेकर कौन भाग गया था?", a: "संतु", o: ["संतु", "बंतू", "भग्गू", "जग्गू"] },
+            { q: "‘मछली’ कहानी के लेखक कौन हैं?", a: "विनोद कुमार शुक्ल", o: ["विजय कुमार शुक्ल", "विनय कुमार शुक्ल", "विनोद कुमार शुक्ल", "विकास कुमार शुक्ल"] },
+            { q: "मछली के लिए मसाला कौन पीस रही थी?", a: "माँ", o: ["दादी", "नानी", "दीदी", "माँ"] },
+            { q: "विनोद कुमार शुक्ल किस कृषि विश्वविद्यालय में एसोसिएट प्रोफेसर थे?", a: "इंदिरा गाँधी", o: ["संजय गाँधी", "राजीव गाँधी", "इंदिरा गाँधी", "फिरोज गाँधी"] },
+            { q: "‘मछली’ शीर्षक कहानी में दीदी के प्रेमी का क्या नाम था?", a: "नरेन", o: ["संतु", "महेन्द्र", "भग्गू", "नरेन"] },
+            { q: "संतु भीगने से बचने के लिए कहाँ खड़ा हो गया?", a: "मकान के नीचे", o: ["झोपड़ी में", "पेड़ के नीचे", "मकान के नीचे", "मंदिर में"] },
+            { q: "संतु अचानक क्या लेकर भाग गया?", a: "मछली", o: ["मछली", "खिलौना", "रुमाल", "घड़ी"] },
+            { q: "‘मछली’ किस प्रकार की कहानी है?", a: "मनोवैज्ञानिक", o: ["मनोवैज्ञानिक", "सामाजिक", "ऐतिहासिक", "सांस्कृतिक"] },
+            { q: "‘मछली’ शीर्षक पाठ में खरीदी गई मछली में कितनी मछली जिन्दा थी?", a: "दो", o: ["दो", "तीन", "चार", "पाँच"] },
+            { q: "विनोद कुमार शुक्ल को रघुवीर सहाय स्मृति पुरस्कार कब मिला?", a: "1992", o: ["1992", "1993", "1990", "1994"] },
+            { q: "मछली काटने के लिए क्या निकाला जाता था?", a: "पाटा", o: ["चौकी", "बाल्टी", "पाटा", "बेन्च"] },
+            { q: "मछली कौन नहीं खाता था?", a: "माताजी", o: ["पिताजी", "माताजी", "संतु", "(a) एवं (b) दोनों"] },
+            { q: "भग्गू कौन था?", a: "नौकर", o: ["नौकर", "संतू के मामा", "संतू का भाई", "इनमें से सभी"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1500; // 25 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-cyan-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

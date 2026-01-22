@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Parampara Ka Mulyankan Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Your Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- FINAL SAVE FUNCTION (Public + Private) ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल (User Profile)
+                const userRef = doc(db, "users", user.uid, "test_results", "ch_parampara"); 
+
+                // 2. पब्लिक फाइल (Leaderboard Rank)
+                const leaderboardRef = doc(db, "leaderboard", "ch_parampara_" + user.uid);
+                
+                // समय की गणना (30 मिनट - बचा हुआ समय = लिया गया समय)
+                const timeTakenSec = 1800 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Parampara Ka Mulyankan",
+                    chapterId: "ch_parampara", // For filtering
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, // For Tie-Breaker
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved to DB");
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Amber Header */
+        .header-bar {
+            background-color: #b45309; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(180, 83, 9, 0.4);
+        }
+
+        .q-card {
+            background-color: #271c19; padding: 20px; border-radius: 16px;
+            border: 1px solid #451a03; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #3f2e27; border: 2px solid #573625; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #f59e0b; background-color: #78350f; 
+        }
+        
+        /* Review Mode */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #b45309; color: white; border: 1px solid #f59e0b; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #271c19; padding: 5px 15px; 
+            border-radius: 20px; color: #fbbf24; font-weight: bold; font-size: 14px; border: 1px solid #b45309;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-amber-900 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Parampara Test</h1>
+        <span id="q-indicator" class="bg-amber-900 text-amber-100 px-3 py-1 rounded-lg text-xs font-bold border border-amber-500">1/51</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">30:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-amber-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर सेव कर लिया गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-amber-600 text-white p-4 rounded-xl font-bold hover:bg-amber-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "‘परम्परा का मूल्यांकन’ शीर्षक पाठ के लेखक हैं :", a: "रामविलास शर्मा", o: ["रामविलास शर्मा", "नलिन विलोचन शर्मा", "हजारी प्रसाद द्विवेदी", "विनोद कुमार शुक्ल"] },
+            { q: "“एक भाषा बोलनेवाली जाति की तरह अनेक भाषाएँ बोलनेवाले राष्ट्र की भी अस्मिता होती है।” यह किस शीर्षक पाठ की पंक्ति है?", a: "परम्परा का मूल्यांकन", o: ["भारत से हम क्या सीखें", "नाखून क्यों बढ़ते है", "परम्परा का मूल्यांकन", "नागरी लिपि"] },
+            { q: "“यदि मनुष्य परिस्थितियों का नियामक नहीं है तो परिस्थितियाँ भी मनुष्य की नियामक नहीं हैं।” यह कथन किस लेखक का है?", a: "रामविलास शर्मा का", o: ["हजारी प्रसाद द्विवेदी का", "गुणाकर मुले का", "रामविलास शर्मा का", "मैक्स मूलर का"] },
+            { q: "‘बड़े भाई’ किस लेखक की रचना है?", a: "रामविलास शर्मा", o: ["बिरजू महाराज", "यतीन्द्र मिश्र", "रामविलास शर्मा", "महात्मा गाँधी"] },
+            { q: "निम्नलिखित में से कौन हिंदी आलोचना के महत्त्वपूर्ण हस्ताक्षर थे?", a: "रामविलास शर्मा", o: ["भीमराव अंबेडकर", "बिरजू महाराज", "मैक्स मूलर", "रामविलास शर्मा"] },
+            { q: "कौन मनुष्य के सम्पूर्ण जीवन से संबद्ध है?", a: "साहित्य", o: ["धन", "साहित्य", "ऐश्वर्य", "अपव्यय"] },
+            { q: "वह विचारधारा जो चेतना या भाव को मूल पदार्थ मानती हो, कहते है :", a: "भौतिकवाद", o: ["मार्क्सवाद", "निर्विवाद", "समाजवाद", "भौतिकवाद"] },
+            { q: "सारे यूरोप के लोग किस सभ्यता से प्रभावित थे :", a: "एथेन्स की सभ्यता से", o: ["क्रीट की सभ्यता से", "मिस्र की सभ्यता से", "एथेन्स की सभ्यता से", "इनमें से सभी"] },
+            { q: "शेली और बायरन कहाँ के थे?", a: "यूनान के", o: ["अमेरिका के", "यूनान के", "अफ्रीका के", "भारत के"] },
+            { q: "जारशाही ...... में थी।", a: "सोवियत रूस", o: ["मिस्र", "सोवियत रूस", "इटली", "इजराइल"] },
+            { q: "रूस की क्रांति कब हुई थी?", a: "1917 ई० में", o: ["1916 ई० में", "1917 ई० में", "1921 ई० में", "1920 ई० में"] },
+            { q: "व्यास जी और वाल्मीकि जी की रचना है क्रमशः", a: "गीता-रामायण", o: ["गीता-रामायण", "उपनिषद-महाभारत", "रामायण-महाभारत", "महाभारत-रामायण"] },
+            { q: "परम्परा का मूल्यांकन किसकी पुस्तक है?", a: "रामविलास शर्मा", o: ["रामविलास शर्मा", "नामवर सिंह", "जगदीश गुप्त", "डॉ० नगेंद्र"] },
+            { q: "प्रगतिशील आलोचना का विकास होता है :", a: "साहित्य की परम्परा के ज्ञान से", o: ["धर्म के ज्ञान से", "साहित्य की परम्परा के ज्ञान से", "कला के ज्ञान से", "इतिहास के ज्ञान से"] },
+            { q: "लेखक रामविलास शर्मा कब से कब तक भारतीय प्रगतिशील लेखक संघ के महामंत्री रहे?", a: "1949 से 1953 ई० तक", o: ["1948 से 1952 ई० तक", "1949 से 1953 ई० तक", "1950 से 1951 ई० तक", "1947 से 1952 ई० तक"] },
+            { q: "साहित्य सापेक्ष रूप में क्या होता है?", a: "स्वाधीन", o: ["पराधीन", "जड़", "परतंत्र", "स्वाधीन"] },
+            { q: "एथेंस किस महादेश में है?", a: "यूरोप", o: ["यूरोप", "एशिया", "अमेरिका", "ऑस्ट्रेलिया"] },
+            { q: "बायरन किस भाषा के कवि हैं?", a: "अँगरेजी", o: ["हिन्दी", "संस्कृत", "अँगरेजी", "फ्रेंच"] },
+            { q: "‘निराला की साहित्य साधना’ किसकी कृति है?", a: "रामविलास शर्मा", o: ["दूधनाथ सिंह", "रघुवीर सहाय", "रामविलास शर्मा", "मुक्तिबोध"] },
+            { q: "“द्वन्द्वात्मक भौतिकवाद मनुष्य की चेतना को आर्थिक सम्बन्धों से प्रभावित मानते हुए उसकी स्वाधीनता स्वीकार करता है।” यह पंक्ति किस शीर्षक पाठ की है?", a: "परम्परा का मूल्यांकन", o: ["शिक्षा और संस्कृति", "आविन्यो", "परम्परा का मूल्यांकन", "नौबतखाने में इबादत"] },
+            { q: "दूसरों की नकल कर लिखा गया साहित्य कैसा होता है?", a: "अधम", o: ["उत्तम", "मध्यम", "अधम", "व्यंग्य"] },
+            { q: "रफाल, लियोनार्दो दा विंची और एंजलो किसकी देन हैं?", a: "इटली की", o: ["इंग्लैंड की", "फ्रांस की", "इटली की", "यूनान की"] },
+            { q: "शेक्सपीयर कौन थे?", a: "नाटककार", o: ["नाटककार", "कहानीकार", "उपन्यासकार", "निबन्धकार"] },
+            { q: "‘निराला की साहित्य साधना’ कितने खण्डों में रचित की गई है?", a: "3 खण्डों में", o: ["2 खण्डों में", "3 खण्डों में", "4 खण्डों में", "5 खण्डों में"] },
+            { q: "लेखक रामविलास शर्मा का जन्म कब हुआ?", a: "10 अक्टूबर, 1912", o: ["10 अक्टूबर, 1912", "12 अक्टूबर, 1914", "14 अक्टूबर, 1916", "16 अक्टूबर, 1918"] },
+            { q: "लेखक रामविलास शर्मा का जन्म कहाँ हुआ?", a: "ऊँचगाँव, सानी", o: ["नन्दगाँव, मथुरा", "हरनौत, बिहार", "ऊँचगाँव, सानी", "इनमें से कोई नहीं"] },
+            { q: "‘प्रेमचन्द और उनका युग’ किनकी रचना है?", a: "डॉ० रामविलास शर्मा", o: ["प्रेमचन्द", "डॉ० रामविलास शर्मा", "दिनकर", "डॉ० मुरली मनोहर जोशी"] },
+            { q: "जारशाही रूप के सोवियत समाज में पढ़े जाने वाले लोकप्रिय साहित्यकार कौन हैं?", a: "तोल्सतोय", o: ["तोल्सतोय", "ऑलीवर", "थॉमस हार्डी", "वाल्टर स्कॉट"] },
+            { q: "सामाजिक विकास-क्रम में सामन्ती सभ्यता की अपेक्षा किस सभ्यता को अधिक प्रगतिशील कहा जा सकता है?", a: "पूँजीवादी सभ्यता को", o: ["नैश्वरवादी सभ्यता को", "एकेश्वरवादी सभ्यता को", "पूँजीवादी सभ्यता को", "इनमें से कोई नहीं"] },
+            { q: "लेटिन कवि कौन हैं?", a: "वर्जिल", o: ["वर्जिल", "वायरन", "शेक्सपियर", "रेनर मारिया रिल्के"] },
+            { q: "‘तारसप्तक’ में कितने कवियों की कविताएँ संगृहीत हैं?", a: "सात", o: ["चार", "पाँच", "छह", "सात"] },
+            { q: "अज्ञेय ने ‘तारसप्तक’ कब सम्पादित किया?", a: "1943 ई० में", o: ["1941 ई० में", "1943 ई० में", "1945 ई० में", "1947 ई० में"] },
+            { q: "रामविलास शर्मा को किस कृति के लिए साहित्य अकादमी पुरस्कार प्राप्त हुआ है?", a: "निराला की साहित्य साधना", o: ["प्रेमचंद और उनका युग", "नयी कविता और अस्तित्ववाद", "निराला की साहित्य साधना", "भारतेन्दु हरिश्चन्द्र"] },
+            { q: "मनुष्य और परिस्थिति का सम्बन्ध है :", a: "द्वन्द्वात्मक", o: ["सापेक्ष", "मित्रवत", "निरपेक्ष", "द्वन्द्वात्मक"] },
+            { q: "‘भारतेन्दु हरिश्चन्द्र’ किसकी रचना है?", a: "डॉ० रामविलास शर्मा की", o: ["हरिश्चन्द्र की", "गुणाकर मूले की", "नलिन विलोचन शर्मा की", "डॉ० रामविलास शर्मा की"] },
+            { q: "डॉ० रामविलास शर्मा की मृत्यु कब और कहाँ हुई?", a: "2000, दिल्ली", o: ["1999, महाराष्ट्र", "2000, दिल्ली", "2001, मालदा", "2002, कानपुर"] },
+            { q: "साहित्य की परम्परा का पूर्ण ज्ञान किस व्यवस्था में सम्भव है?", a: "समाजवादी व्यवस्था", o: ["सामन्तवादी व्यवस्था", "पूँजीवादी व्यवस्था", "समाजवादी व्यवस्था", "इनमें सभी"] },
+            { q: "परम्परा का ज्ञान किनके लिए आवश्यक है?", a: "जो लकीर के फकीर न होकर क्रांतिकारी साहित्य की रचना करें", o: ["जो लकीर के फकीर हैं", "जो उपयोगी साहित्य की रचना न करे", "जो लकीर के फकीर न होकर क्रांतिकारी साहित्य की रचना करें", "जो उपयोगी साहित्य की रचना न करे"] },
+            { q: "भारत की राष्ट्रीय क्षमता का पूर्ण विकास किस व्यवस्था में संभव है?", a: "समाजवादी व्यवस्था", o: ["सामन्तवादी व्यवस्था", "पूँजीवादी व्यवस्था", "समाजवादी व्यवस्था", "इनमें से कोई नहीं"] },
+            { q: "लेखक रामविलास शर्मा के गाँव का क्या नाम था?", a: "ऊँचगाँव सानी", o: ["ऊँचगा सानी", "ऊँचगाँव सानी", "उचकागाँव सैनी", "ऊँचगाँव सैनी"] },
+            { q: "‘भौतिकवाद का अर्थ भाग्यवाद नहीं है’—किस निबंध की पंक्ति है?", a: "परम्परा का मूल्यांकन", o: ["नागरी लिपि", "परम्परा का मूल्यांकन", "श्रम विभाजन और जाति प्रथा", "नाखून क्यों बढ़ते हैं"] },
+            { q: "‘परम्परा का मूल्यांकन’ शीर्षक पाठ साहित्य की कौन विधा है?", a: "निबंध", o: ["कहानी", "निबंध", "व्यंग्य", "संस्मरण"] },
+            { q: "रामविलास शर्मा एम० ए० पास करने के बाद 1938 ई० तब कहाँ व्यस्त रहे?", a: "शोधकार्य में", o: ["अध्यापन में", "शोधकार्य में", "लेखन में", "इनमें से कोई नहीं"] },
+            { q: "रामविलास शर्मा का लेखन है :", a: "इनमें से सभी", o: ["भाषा और समाज", "भारत की भाषा समस्या", "विराम चिह्न", "इनमें से सभी"] },
+            { q: "सामन्ती दुनिया में महान कविता के दो ही केन्द्र कौन-कौन से थे?", a: "भारत-ईरान", o: ["भारत-ईरान", "भारत-अमेरिका", "भारत-अफ्रीका", "भारत-इजराइल"] },
+            { q: "शर्माजी ने पुरस्कार की राशि किसे दानस्वरूप दिया?", a: "भारत सरकार को", o: ["गरीबों को", "बेरोजगारों को", "भारत सरकार को", "राज्य सरकार को"] },
+            { q: "रामविलास शर्मा ने बी. ए. कब पास किया?", a: "1932 ई० में", o: ["1932 ई० में", "1934 ई० में", "1933 ई० में", "1931 ई० में"] },
+            { q: "आदिम का शाब्दिक अर्थ है :", a: "अति प्राचीन", o: ["अति प्राचीन", "अति सुखदायी", "अति सुन्दर", "अति कुरूप"] },
+            { q: "हमारी राष्ट्रीय आवश्यकता है :", a: "समाजवाद", o: ["समाजवाद", "पूंजीवाद", "जातिवाद", "परिवारवाद"] },
+            { q: "पुरानी संस्कृति से कौन नाता नहीं तोड़ती है?", a: "समाजवादी संस्कृति", o: ["समाजवादी संस्कृति", "पूंजीवादी संस्कृति", "जातिवादी संस्कृति", "इनमें से सभी"] },
+            { q: "‘अस्मिता’ का अर्थ है:", a: "पहचान", o: ["बनावट", "खिलना", "पहचान", "भूलना"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1800; // 30 Minutes
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-amber-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

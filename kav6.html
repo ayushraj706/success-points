@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Janatantra Ka Janm - Final Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        .header-bar {
+            background-color: #b45309; /* Amber/Gold Header */
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .q-card {
+            background-color: #1e1e1e; padding: 20px; border-radius: 16px;
+            border: 1px solid #333; margin-top: 10px;
+        }
+
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #2d2d2d; border: 2px solid #404040; border-radius: 12px;
+            color: #e5e5e5; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #fcd34d; background-color: #78350f; /* Gold selection */
+        }
+        
+        /* Review Mode Styles */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #000000; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #333; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #333; color: white; border: 1px solid #555; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #b45309; color: white; border: 1px solid #fcd34d; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #333; padding: 5px 15px; 
+            border-radius: 20px; color: #ef4444; font-weight: bold; font-size: 14px; border: 1px solid #555;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-yellow-800 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">Janatantra Test</h1>
+        <span id="q-indicator" class="bg-yellow-900 text-yellow-200 px-3 py-1 rounded-lg text-xs font-bold border border-yellow-700">1/41</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">20:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-yellow-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-yellow-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका टेस्ट पूरा हो गया है</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-yellow-600 text-white p-4 rounded-xl font-bold hover:bg-yellow-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const rawData = [
+            { q: "रामधारी सिंह 'दिनकर' का जन्म कहाँ हुआ था?", a: "सिमरिया, बेगूसराय (बिहार) में", o: ["सिमरिया, बेगूसराय (बिहार) में", "राजापुर, बक्सर में", "शाहपुर, भोजपुर में", "नौबतपुर, पटना में"] },
+            { q: "रामधारी सिंह 'दिनकर' किस वाद के प्रमुख कवि हैं?", a: "उत्तर छायावाद", o: ["प्रयोगवाद", "कैप्सूलवाद", "उत्तर छायावाद", "नकेनवाद"] },
+            { q: "निम्न में कौन 'राष्ट्रकवि' हैं?", a: "रामधारी सिंह 'दिनकर'", o: ["अज्ञेय", "कुँवर नारायण", "वीरेन डंगवाल", "रामधारी सिंह 'दिनकर'"] },
+            { q: "कौन सी कविता भारत में जनतंत्र के उदय का जयघोष है?", a: "जनतंत्र का जन्म", o: ["मेरे बिना तुम प्रभु", "अक्षर ज्ञान", "लौटकर आऊँगा फिर", "जनतंत्र का जन्म"] },
+            { q: "निम्न में से रामधारी सिंह दिनकर की रचना कौन है?", a: "हुंकार", o: ["पल्लव", "युगांत", "चिदंबरा", "हुंकार"] },
+            { q: "'उर्वशी' किसकी कृति है?", a: "दिनकर", o: ["निराला", "दिनकर", "महादेवी वर्मा", "पंत"] },
+            { q: "दिनकर को साहित्य अकादमी पुरस्कार किस कृति पर मिला?", a: "संस्कृति के चार अध्याय", o: ["सामधेनी", "द्वंद्वगीत", "उर्वशी", "संस्कृति के चार अध्याय"] },
+            { q: "दिनकर को ज्ञानपीठ पुरस्कार किस रचना पर प्राप्त हुआ?", a: "उर्वशी", o: ["रश्मिरथी", "उर्वशी", "परशुराम की प्रतीक्षा", "नीलकुसुम"] },
+            { q: "दिनकर ने कविता में 'दुधमुँही' शब्द का प्रयोग किसके लिए किया है?", a: "जनता के लिए", o: ["अपनी बेटी", "पड़ोस की बच्ची", "समाज की बालिका", "जनता के लिए"] },
+            { q: "दिनकर किस विश्वविद्यालय के कुलपति बनाये गये थे?", a: "भागलपुर विश्वविद्यालय", o: ["बिहार वि.वि.", "पटना वि.वि.", "भागलपुर विश्वविद्यालय", "मगध वि.वि."] },
+            { q: "जनतंत्र में, कवि के अनुसार राजदण्ड क्या होंगे?", a: "फावड़े और हल", o: ["ढाल और तलवार", "फूल और भौंरे", "फावड़े और हल", "बाघ और भालू"] },
+            { q: "कवि के अनुसार जनतंत्र के देवता कौन हैं?", a: "किसान-मजदूर", o: ["नेता", "शिक्षक", "किसान-मजदूर", "मंत्री"] },
+            { q: "भारत सरकार ने दिनकर को कौन-सा अलंकरण प्रदान किया?", a: "पद्म विभूषण", o: ["पद्म श्री", "भारतरत्न", "अशोक चक्र", "पद्म विभूषण"] },
+            { q: "'दिनकर' की प्रमुख काव्य-कृति है:", a: "इनमें सभी", o: ["रेणुका", "रसवंती", "कुरुक्षेत्र", "इनमें सभी"] },
+            { q: "'दिनकर' की गद्य-कृति है:", a: "इनमें सभी", o: ["अर्धनारीश्वर", "दिनकर की डायरी", "वट पीपल", "इनमें सभी"] },
+            { q: "दिनकर जी के पिता का नाम क्या था?", a: "रवि सिंह", o: ["रवि सिंह", "कैलाश सिंह", "मोहित सिंह", "राजा सिंह"] },
+            { q: "'दिनकर' ने अपनी पढ़ाई कहाँ तक की?", a: "बी० ए० ऑनर्स", o: ["इंटरमीडिएट", "बी० ए० ऑनर्स", "एम० ए० ऑनर्स", "पी-एच० डी०"] },
+            { q: "दिनकर किस कॉलेज के हिन्दी विभागाध्यक्ष रहे?", a: "लंगट सिंह कॉलेज, भागलपुर", o: ["कॉमर्स कॉलेज", "लंगट सिंह कॉलेज, भागलपुर", "पटना कॉलेज", "कोई नहीं"] },
+            { q: "'सिंहासन खाली करो कि जनता आती है'-किसकी पंक्ति है?", a: "जनतंत्र का जन्म", o: ["जनतंत्र का जन्म", "हिरोशिमा", "अक्षर-ज्ञान", "मेरे बिना तुम प्रभु"] },
+            { q: "'दिनकरजी' का निधन कब हुआ?", a: "24 अप्रैल, 1974", o: ["21 जनवरी 1971", "22 फरवरी 1972", "23 मार्च 1973", "24 अप्रैल, 1974"] },
+            { q: "'जनतंत्र का जन्म' के कवि कौन हैं?", a: "रामधारी सिंह 'दिनकर'", o: ["दिनकर", "प्रेमधन", "घनानंद", "अज्ञेय"] },
+            { q: "'दिनकर' का जन्म कब हुआ था?", a: "23 सितम्बर, 1908", o: ["21 अगस्त 1906", "23 सितम्बर, 1908", "25 अक्टूबर 1910", "27 नवम्बर 1912"] },
+            { q: "इनकी प्रारंभिक शिक्षा कहाँ से हुई थी?", a: "गाँव से", o: ["बंबई", "पटना", "गाँव से", "जिला स्कूल"] },
+            { q: "'दिनकर' की किस रचना में कर्ण को नायक बनाया गया है?", a: "रश्मिरथी", o: ["उर्वशी", "रश्मिरथी", "हुंकार", "हारे को हरिनाम"] },
+            { q: "'मिटटी की ओर' कृति है:", a: "गद्य", o: ["पद्य", "गद्य", "काव्य", "इनमें सभी"] },
+            { q: "मिट्टी की अबोध मूरतें कौन हैं?", a: "जनता", o: ["नेता", "जनता", "मंत्री", "अधिकारी"] },
+            { q: "दिनकर जी के माता का नाम क्या था?", a: "मनरूप देवी", o: ["यशोधरा", "अहिल्या", "मनरूप देवी", "पुतली बाई"] },
+            { q: "कवि के अनुसार देवता कहाँ मिलेंगे?", a: "खेतों में", o: ["मंदिरों में", "घरों में", "खेतों में", "शहरों में"] },
+            { q: "जो भगवान को मंदिरों में खोजते हैं उन्हें कवि ने क्या कहा?", a: "मूरख से", o: ["मूरख से", "विद्वान", "श्रेष्ठ", "दयावान"] },
+            { q: "कवि दिनकर किसके लिए 'सिंहासन' खाली करने की बात करते हैं?", a: "जनता के लिए", o: ["स्त्रियों", "नवयुवकों", "गरीबों", "जनता के लिए"] },
+            { q: "दिनकर के अनुसार कौन 'सोने का ताज' पहनकर इठला रही है?", a: "देश की मिट्टी", o: ["जनता", "नेता", "देश की मिट्टी", "देवी देवता"] },
+            { q: "दिनकर के काव्य का मूल स्वर क्या है?", a: "ओज एवं राष्ट्रीय चेतना", o: ["श्रृंगार", "रहस्यवाद", "प्रकृति", "ओज एवं राष्ट्रीय चेतना"] },
+            { q: "निम्न में से कौन राज्यसभा के सदस्य बने?", a: "रामधारी सिंह दिनकर", o: ["जीवनानंद दास", "कुँवर नारायण", "रामधारी सिंह दिनकर", "यतीन्द्र मिश्र"] },
+            { q: "रामधारी सिंह दिनकर रचित पाठ है:", a: "जनतंत्र का जन्म", o: ["हिरोशिमा", "जनतंत्र का जन्म", "भारत माता", "मछली"] },
+            { q: "'मिट्टी सोने का ताज पहन इठलाती है'। यह पंक्ति है:", a: "दिनकर की", o: ["दिनकर की", "निराला", "महादेवी", "अज्ञेय"] },
+            { q: "दिनकर किस काल के प्रमुख कवि हैं?", a: "उत्तर छायावाद", o: ["भारतेन्दु", "द्विवेदी", "छायावाद", "उत्तर छायावाद"] },
+            { q: "किसके हुंकारों से महलों की नींव उखड़ जाती है?", a: "जनता", o: ["शासक", "राजा", "विदेशी", "जनता"] },
+            { q: "दिनकर जी कवि के साथ-साथ क्या थे?", a: "गद्यकार भी थे", o: ["आलोचक", "गद्यकार भी थे", "उपन्यासकार", "संगीतकार"] },
+            { q: "रामधारी सिंह दिनकर कहाँ के रहने वाले थे?", a: "बिहार के", o: ["उत्तर प्रदेश", "मध्य प्रदेश", "राजस्थान", "बिहार के"] },
+            { q: "दिनकर का जन्म कहाँ हुआ था?", a: "सिमरिया, बेगूसराय", o: ["जहानाबाद", "वैशाली", "पटना", "सिमरिया, बेगूसराय"] },
+            { q: "राजतन्त्र का अंत और जनतंत्र का आगमन किस कविता का मूल है?", a: "जनतंत्र का जन्म", o: ["भारतमाता", "स्वदेशी", "हिरोशिमा", "जनतंत्र का जन्म"] }
+        ];
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 1200;
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-yellow-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

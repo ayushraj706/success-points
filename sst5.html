@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SST Model Set-3 (80 Q)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
+            authDomain: "success-points.firebaseapp.com",
+            projectId: "success-points",
+            storageBucket: "success-points.firebasestorage.app",
+            messagingSenderId: "51177935348",
+            appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- RESULT SAVING FUNCTION ---
+        window.saveResultToDB = async function(score, total) {
+            const user = auth.currentUser;
+            
+            if (user) {
+                // 1. बच्चे की पर्सनल फाइल (New ID: sst_set3)
+                const userRef = doc(db, "users", user.uid, "test_results", "sst_set3_80"); 
+
+                // 2. पब्लिक लीडरबोर्ड
+                const leaderboardRef = doc(db, "leaderboard", "sst_set3_80_" + user.uid);
+                
+                // समय की गणना
+                const timeTakenSec = 2400 - timeRemaining; 
+
+                const data = {
+                    studentName: user.displayName || "Unknown Student",
+                    photo: user.photoURL || "", 
+                    email: user.email,
+                    testName: "Social Science Set-3 (80 Q)",
+                    chapterId: "sst_set3_80", 
+                    score: score,
+                    totalQuestions: total,
+                    timeTaken: timeTakenSec, 
+                    submittedAt: serverTimestamp(),
+                    percentage: ((score/total)*100).toFixed(2) + "%"
+                };
+
+                try {
+                    await setDoc(userRef, data); // Save Private
+                    await setDoc(leaderboardRef, data); // Save Public
+                    console.log("Result Saved Successfully!");
+                } catch (e) {
+                    console.error("Error saving score: ", e);
+                }
+            } else {
+                console.log("Guest Mode - Result not saved");
+            }
+        }
+    </script>
+
+    <style>
+        /* --- THEME STYLES (Blue/Slate Dark Mode) --- */
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; user-select: none; padding-bottom: 80px; }
+        
+        /* Header */
+        .header-bar {
+            background-color: #1e293b; 
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            padding: 15px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.4);
+            border-bottom: 1px solid #334155;
+        }
+
+        /* Question Card */
+        .q-card {
+            background-color: #1e293b; padding: 20px; border-radius: 16px;
+            border: 1px solid #334155; margin-top: 10px;
+        }
+
+        /* Options */
+        .option-btn {
+            width: 100%; text-align: left; padding: 16px; margin-bottom: 12px;
+            background-color: #334155; border: 2px solid #475569; border-radius: 12px;
+            color: #e2e8f0; font-size: 15px; transition: all 0.2s; position: relative;
+        }
+        
+        .option-btn.selected {
+            border-color: #60a5fa; background-color: #2563eb; color: white;
+        }
+        
+        /* Review Mode Colors */
+        .option-btn.correct-ans {
+            border-color: #22c55e !important; background-color: #14532d !important; color: #dcfce7 !important;
+        }
+        .option-btn.correct-ans::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #22c55e;
+        }
+
+        .option-btn.wrong-ans {
+            border-color: #ef4444 !important; background-color: #450a0a !important; color: #fecaca !important;
+        }
+        .option-btn.wrong-ans::after {
+            content: '\f00d'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 20px; color: #ef4444;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #020617; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            border-top: 1px solid #1e293b; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        .btn-action {
+            padding: 12px; border-radius: 10px; font-weight: bold; flex: 1;
+            text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .btn-prev { background-color: #334155; color: white; border: 1px solid #475569; }
+        .btn-submit { background-color: #166534; color: #dcfce7; border: 1px solid #22c55e; flex: 1.5; }
+        .btn-next { background-color: #2563eb; color: white; border: 1px solid #60a5fa; }
+        .btn-disabled { opacity: 0.3; pointer-events: none; }
+
+        /* Timer */
+        .timer-box { margin-top: 80px; text-align: center; }
+        .timer-text { 
+            display: inline-block; background: #1e293b; padding: 5px 15px; 
+            border-radius: 20px; color: #94a3b8; font-weight: bold; font-size: 14px; border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-bar">
+        <button onclick="history.back()" class="w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-white"><i class="fa-solid fa-arrow-left"></i></button>
+        <h1 class="font-black text-base uppercase tracking-wider">SST Set-3 (80Q)</h1>
+        <span id="q-indicator" class="bg-slate-800 text-slate-200 px-3 py-1 rounded-lg text-xs font-bold border border-slate-600">0/80</span>
+    </header>
+
+    <div class="timer-box">
+        <div class="timer-text"><i class="fa-regular fa-clock mr-2"></i><span id="timer">40:00</span></div>
+    </div>
+
+    <main class="p-5 max-w-lg mx-auto">
+        <div id="question-box"></div>
+    </main>
+
+    <nav class="bottom-nav" id="nav-bar">
+        <button onclick="prevQuestion()" id="prev-btn" class="btn-action btn-prev btn-disabled"><i class="fa-solid fa-chevron-left"></i> पीछे</button>
+        <button onclick="submitTest()" id="submit-btn" class="btn-action btn-submit">सबमिट (Submit)</button>
+        <button onclick="nextQuestion()" id="next-btn" class="btn-action btn-next">आगे <i class="fa-solid fa-chevron-right"></i></button>
+    </nav>
+
+    <div id="result-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-[#1e1e1e] p-8 rounded-[30px] border border-gray-700 text-center shadow-2xl">
+            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg shadow-blue-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-2 text-white">परिणाम (Result)</h2>
+            <p class="text-gray-400 text-sm mb-6 font-medium">आपका स्कोर लीडरबोर्ड में सेव हो गया है!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-green-900/30 p-4 rounded-2xl border border-green-800">
+                    <span class="block text-3xl font-black text-green-400" id="score-right">0</span>
+                    <span class="text-[10px] font-bold uppercase text-green-600 tracking-widest">सही</span>
+                </div>
+                <div class="bg-red-900/30 p-4 rounded-2xl border border-red-800">
+                    <span class="block text-3xl font-black text-red-400" id="score-wrong">0</span>
+                    <span class="text-[10px] font-bold uppercase text-red-600 tracking-widest">गलत</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="reviewAnswers()" class="w-full bg-gray-700 text-white p-4 rounded-xl font-bold hover:bg-gray-600 transition border border-gray-500">उत्तर देखें (Review)</button>
+                <button onclick="location.reload()" class="w-full bg-blue-600 text-white p-4 rounded-xl font-bold hover:bg-blue-500 transition">फिर से टेस्ट दें</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        //  80 SOCIAL SCIENCE QUESTIONS (SET 3)
+        // ==========================================
+        
+        const rawData = [
+            { q: "अमृत बाजार पत्रिका के संपादक कौन थे?", a: "मोतीलाल घोष", o: ["मोतीलाल घोष", "भारतेंदु हरिश्चन्द्र", "राजा राममोहन राय", "सच्चिदानंद सिन्हा"] },
+            { q: "‘मराठा’ समाचार पत्र किस भाषा से सम्बन्धित था?", a: "अंग्रेजी", o: ["अंग्रेजी", "हिन्दी", "बांग्ला", "मराठी"] },
+            { q: "निम्न में से किस सिख गुरु का जन्म पटना में हुआ था?", a: "दसवें", o: ["पाँचवें", "चौथे", "पहले", "दसवें"] },
+            { q: "बिहार बंगाल से कब पृथक हुआ?", a: "1912", o: ["1912", "1936", "1928", "1940"] },
+            { q: "भारत आने वाले प्रथम व्यापारी कौन थे?", a: "पुर्तगाली", o: ["डच", "ब्रिटिश", "पुर्तगाली", "फ्रांसीसी"] },
+            { q: "उत्तरी एवं दक्षिणी वियतनाम का एकीकरण कब हुआ?", a: "1975", o: ["1965", "1968", "1970", "1975"] },
+            { q: "दिसंबर, 1929 में किस नदी के तट पर नेहरू जी द्वारा तिरंगा फहराया गया?", a: "रावी", o: ["गंगा", "यमुना", "रावी", "सिंधु"] },
+            { q: "क्रांतिकारी नेता सूर्य सेन का उपनाम क्या था?", a: "मास्टर दा", o: ["नेता जी", "मास्टर दा", "सरदार", "मुखिया"] },
+            { q: "राष्ट्रीय जलमार्ग-1 है", a: "इलाहाबाद से हल्दिया तक", o: ["सदिया से धुबरी तक", "इलाहाबाद से हल्दिया तक", "कोल्लम से कोट्टापुरम तक", "इनमें से कोई नहीं"] },
+            { q: "निम्न में से कौन उपभोक्ता उद्योग है?", a: "चीनी उद्योग", o: ["पेट्रो-रसायन", "लौह-इस्पात", "चीनी उद्योग", "चितरंजन लोकोमोटिव"] },
+            { q: "गिर राष्ट्रीय उद्यान कहाँ है?", a: "गुजरात", o: ["अरुणाचल प्रदेश", "बिहार", "असम", "गुजरात"] },
+            { q: "प्रथम पृथ्वी सम्मेलन कहाँ आयोजित हुआ?", a: "रियो डी जनेरियो", o: ["रियो डी जनेरियो", "जोहान्सबर्ग", "न्यूयार्क", "टोक्यो"] },
+            { q: "निम्न में से कौन खरीफ फसल है?", a: "कपास", o: ["गेहूँ", "चना", "मटर", "कपास"] },
+            { q: "बाँध को आधुनिक भारत का मन्दिर किसने कहा?", a: "पंडित नेहरू", o: ["महात्मा गाँधी", "पंडित नेहरू", "दादाभाई नौरोजी", "लाल बहादुर शास्त्री"] },
+            { q: "मरुस्थलीय मृदा कहाँ मिलती है?", a: "राजस्थान", o: ["उत्तर प्रदेश", "राजस्थान", "कर्नाटक", "महाराष्ट्र"] },
+            { q: "भारत का सबसे छोटा रेलवे क्षेत्र कौन है?", a: "उत्तर-पूर्वी रेलवे", o: ["उत्तर रेलवे", "पूर्व रेलवे", "मध्य रेलवे", "उत्तर-पूर्वी रेलवे"] },
+            { q: "निम्न में से कौन लोकतंत्र का प्राण है?", a: "राजनीतिक दल", o: ["सरकार", "न्यायपालिका", "राजनीतिक दल", "संविधान"] },
+            { q: "भारतीय कम्युनिस्ट पार्टी की स्थापना कब हुई?", a: "1925", o: ["1925", "1964", "1984", "1999"] },
+            { q: "किसने कहा “लोकतंत्र जनता का, जनता के लिए तथा जनता के द्वारा शासन है”?", a: "अब्राहम लिंकन", o: ["अरस्तू", "अब्राहम लिंकन", "रूसो", "हीगल"] },
+            { q: "भारत में कौन शासन प्रणाली है?", a: "संसदीय व्यवस्था", o: ["अध्यक्षीय व्यवस्था", "राजशाही व्यवस्था", "तानाशाही व्यवस्था", "संसदीय व्यवस्था"] },
+            { q: "भारत में वोट देने के लिए न्यूनतम आयु क्या है?", a: "18 वर्ष", o: ["16 वर्ष", "18 वर्ष", "21 वर्ष", "25 वर्ष"] },
+            { q: "लोकतंत्र की सफलता की चुनौती है", a: "इनमें से सभी", o: ["अफसरशाही", "अशिक्षा", "जातिवाद", "इनमें से सभी"] },
+            { q: "भारत में राष्ट्रीय आपातकाल की घोषणा कब हुई थी?", a: "1975", o: ["1975", "1980", "1985", "1990"] },
+            { q: "सुनामी प्रभावित क्षेत्र में मकानों का निर्माण कहाँ करना चाहिए?", a: "सागर तट से दूर", o: ["सागर तट के निकट", "सागर तट से दूर", "मैंग्रोव वन में", "इनमें से कोई नहीं"] },
+            { q: "समाजवादी अर्थव्यवस्था का गुण है", a: "सामाजिक कल्याण", o: ["निजी लाभ", "मूल्य तंत्र", "सामाजिक कल्याण", "साधनों का निजी स्वामित्व"] },
+            { q: "विकसित देशों की आय में वृद्धि के लिए किस पद का प्रयोग होता है?", a: "आर्थिक वृद्धि", o: ["आर्थिक विकास", "आर्थिक वृद्धि", "समावेशी विकास", "इनमें से कोई नहीं"] },
+            { q: "निम्न में से कौन प्लास्टिक मुद्रा है?", a: "डेबिट कार्ड", o: ["चेक", "बैंक ड्राफ्ट", "डेबिट कार्ड", "करेंसी नोट"] },
+            { q: "भारत में सकल घरेलू उत्पाद में किस क्षेत्र का योगदान सर्वाधिक है?", a: "सेवा क्षेत्र", o: ["कृषि क्षेत्र", "औद्योगिक क्षेत्र", "सेवा क्षेत्र", "इनमें से कोई नहीं"] },
+            { q: "छिपी बेरोजगारी पाई जाती है", a: "कृषि क्षेत्र में", o: ["सेवा क्षेत्र में", "कृषि क्षेत्र में", "औद्योगिक क्षेत्र में", "इनमें से कोई नहीं"] },
+            { q: "रूस की मुद्रा क्या है?", a: "रूबल", o: ["दीनार", "रियाल", "रूबल", "टका"] },
+            { q: "साख का आधार क्या है?", a: "विश्वास", o: ["विश्वास", "बचत", "निवेश", "उपभोग"] },
+            { q: "वस्तुओं और सेवाओं को अपने उपयोग के लिए कौन खरीदता है?", a: "उपभोक्ता", o: ["सेवा प्रदाता", "उत्पादक", "उपभोक्ता", "दुकानदार"] },
+            { q: "वायु परिवहन का राष्ट्रीयकरण कब किया गया?", a: "1953", o: ["1933", "1947", "1950", "1953"] },
+            { q: "विश्व का प्राचीनतम परिवहन साधन क्या है?", a: "जल परिवहन", o: ["जल परिवहन", "रेल परिवहन", "हवाई परिवहन", "इनमें से कोई नहीं"] },
+            { q: "मोरमुगाओ बंदरगाह कहाँ है?", a: "गोवा", o: ["कर्नाटक", "गोवा", "तमिलनाडु", "आंध्र प्रदेश"] },
+            { q: "कांडला विशेष आर्थिक क्षेत्र कहाँ है?", a: "गुजरात", o: ["महाराष्ट्र", "केरल", "पश्चिम बंगाल", "गुजरात"] },
+            { q: "कहलगाँव तापीय विद्युत परियोजना कहाँ है?", a: "भागलपुर", o: ["भागलपुर", "मुंगेर", "जमुई", "औरंगाबाद"] },
+            { q: "जल्वेरिन सम्बन्धित था", a: "व्यापारियों से", o: ["क्रांतिकारियों से", "व्यापारियों से", "विद्वानों से", "पादरियों से"] },
+            { q: "जर्मन राईन राज्य का निर्माण किसने किया था?", a: "नेपोलियन बोनापार्ट", o: ["लुई 18वाँ", "नेपोलियन बोनापार्ट", "नेपोलियन III", "बिस्मार्क"] },
+            { q: "वियना सम्मेलन हुआ था", a: "1815 में", o: ["1815 में", "1848 में", "1870 में", "1871 में"] },
+            { q: "निम्न में से कौन जीवाश्म ईंधन है?", a: "इनमें से सभी", o: ["कोयला", "पेट्रोलियम", "प्राकृतिक गैस", "इनमें से सभी"] },
+            { q: "भारत का प्रथम परमाणु विद्युत गृह कहाँ है?", a: "तारापुर", o: ["कल्पाक्कम", "कैगा", "नरोरा", "तारापुर"] },
+            { q: "मनीकरण भूतापीय ऊर्जा संयंत्र किस राज्य में है?", a: "हिमाचल प्रदेश", o: ["पंजाब", "उत्तराखण्ड", "हिमाचल प्रदेश", "मणिपुर"] },
+            { q: "सिंदरी किस उद्योग के लिए जाना जाता है?", a: "उर्वरक उद्योग", o: ["सीमेंट उद्योग", "उर्वरक उद्योग", "लौह उद्योग", "सूती वस्त्र उद्योग"] },
+            { q: "एशिया में सबसे पुराना रेलवे वर्कशॉप कौन है?", a: "जमालपुर रेलवे वर्कशॉप", o: ["चितरंजन लोकोमोटिव", "नागपुर रेलवे वर्कशॉप", "जमालपुर रेलवे वर्कशॉप", "अमृतसर रेलवे वर्कशॉप"] },
+            { q: "‘सिलिकॉन शहर’ के नाम से कौन प्रसिद्ध है?", a: "बेंगलुरु", o: ["हैदराबाद", "बेंगलुरु", "पूना", "अहमदाबाद"] },
+            { q: "मन्दार पहाड़ी किस जिले में है?", a: "बांका", o: ["मुंगेर", "भागलपुर", "बांका", "बक्सर"] },
+            { q: "सासाराम नगर का विकास हुआ था", a: "मध्य युग में", o: ["प्राचीन युग में", "मध्य युग में", "आधुनिक युग में", "इनमें से कोई नहीं"] },
+            { q: "इटली के एकीकरण में निम्न में किसने योगदान किया था?", a: "इनमें से सभी", o: ["मेजिनी", "गैरीबाल्डी", "काउंट कावूर", "इनमें से सभी"] },
+            { q: "भारत में एक रुपया का नोट कौन जारी करता है?", a: "वित्त विभाग", o: ["भारतीय रिजर्व बैंक", "सेन्ट्रल बैंक ऑफ इण्डिया", "वित्त विभाग", "स्टेट बैंक ऑफ इण्डिया"] },
+            { q: "प्राथमिक क्षेत्र में कौन-सी आर्थिक क्रिया शामिल है?", a: "इनमें से सभी", o: ["कृषि", "खनन", "पशुपालन", "इनमें से सभी"] },
+            { q: "निम्न में से कौन साख मुद्रा का उदाहरण है?", a: "बैंक ड्राफ्ट", o: ["करेंसी नोट", "बैंक ड्राफ्ट", "सिक्के", "इनमें से कोई नहीं"] },
+            { q: "विश्व व्यापार संगठन की स्थापना कब हुई?", a: "1995", o: ["1990", "1992", "1995", "1996"] },
+            { q: "2011 की जनगणना के अनुसार भारत की आबादी थी", a: "121 करोड़", o: ["90 करोड़", "121 करोड़", "140 करोड़", "150 करोड़"] },
+            { q: "कृषि उत्पादों की गुणवत्ता सुनिश्चित करने का मान्यता प्राप्त चिह्न है", a: "एगमार्क", o: ["आई० एस० आई० मार्क", "हॉल मार्क", "एगमार्क", "बुलमार्क"] },
+            { q: "केन्द्रीय सांख्यिकी संगठन की स्थापना कब हुई थी?", a: "1954", o: ["1950", "1954", "1956", "1960"] },
+            { q: "राबर्ट ओवेन कहाँ का निवासी था?", a: "ब्रिटेन", o: ["फ्रांस", "जर्मनी", "ब्रिटेन", "ऑस्ट्रिया"] },
+            { q: "बोल्शेविक क्रांति का नेतृत्व किसने किया?", a: "लेनिन", o: ["मेजिनी", "लेनिन", "बिस्मार्क", "गैरीबाल्डी"] },
+            { q: "कम्बोडिया की राजधानी है", a: "नोमपेन्ह", o: ["हनोई", "नोमपेन्ह", "बैंकॉक", "ओटावा"] },
+            { q: "किस कानून के विरोध में जलियाँवाला बाग में सभा का आयोजन हुआ था?", a: "रॉलेट एक्ट", o: ["वर्नाक्यूलर प्रेस एक्ट", "भारत सरकार अधिनियम 1858", "रॉलेट एक्ट", "इनमें से कोई नहीं"] },
+            { q: "किनके अनुरोध पर महात्मा गाँधी चम्पारण आए थे?", a: "राजकुमार शुक्ल", o: ["राजकुमार शुक्ल", "अनुग्रह नारायण सिन्हा", "जयप्रकाश नारायण", "डॉ० अनुग्रह प्रसाद"] },
+            { q: "वल्लभ भाई पटेल को ‘सरदार’ की उपाधि किस किसान आन्दोलन के दौरान दी गई थी?", a: "बारदोली", o: ["बारदोली", "अहमदाबाद", "खेड़ा", "चम्पारण"] },
+            { q: "फ्लाइंग शटल का आविष्कार किसने किया था?", a: "जॉन के", o: ["जेम्स वाट", "हम्फ्री डेवी", "जॉन के", "टॉमस बेल"] },
+            { q: "भारत में पहली जूट मिल कहाँ स्थापित की गई थी?", a: "कलकत्ता", o: ["कलकत्ता", "दिल्ली", "बम्बई", "पटना"] },
+            { q: "सुखाड़ का कारण है", a: "जल का अभाव", o: ["जल का अभाव", "मिट्टी की नमी का अभाव", "मिट्टी का क्षय", "मिट्टी की लवणता"] },
+            { q: "संचार का सबसे लोकप्रिय साधन है", a: "सार्वजनिक टेलीफोन", o: ["सार्वजनिक टेलीफोन", "वॉकी-टॉकी", "दूरदर्शन", "रेडियो"] },
+            { q: "बाढ़ का प्रमुख कारण है", a: "इनमें से सभी", o: ["जल की अधिकता", "नदी-तल पर मलबों का निक्षेपण", "वर्षा की अधिकता", "इनमें से सभी"] },
+            { q: "भूकम्प संभावित क्षेत्रों में भवनों की आकृति कैसी होनी चाहिए?", a: "आयताकार", o: ["अण्डाकार", "त्रिभुजाकार", "चौकोर", "आयताकार"] },
+            { q: "भारत में सबसे बड़ा लौह अयस्क उत्पादक राज्य है", a: "ओडिशा", o: ["कर्नाटक", "ओडिशा", "झारखण्ड", "महाराष्ट्र"] },
+            { q: "सीमेंट उद्योग का कच्चा माल क्या है?", a: "चूनापत्थर", o: ["चूनापत्थर", "बॉक्साइट", "ग्रेनाइट", "लौह अयस्क"] },
+            { q: "भारत में कितने सार्वजनिक क्षेत्र के तेल परिष्करण केन्द्र कार्य कर रहे हैं?", a: "18", o: ["15", "16", "18", "20"] },
+            { q: "हीराकुंड परियोजना किस नदी पर है?", a: "महानदी", o: ["महानदी", "गोदावरी", "दामोदर", "सतलज"] },
+            { q: "दक्षिण अफ्रीका के प्रथम अश्वेत राष्ट्रपति कौन थे?", a: "नेल्सन मंडेला", o: ["एनक्रमा", "जनरल पिनोशी", "नेल्सन मंडेला", "अब्राहम लिंकन"] },
+            { q: "श्रीलंका कब आजाद हुआ?", a: "1948", o: ["1947", "1948", "1949", "1950"] },
+            { q: "समता पार्टी का विलय किस राजनीतिक दल में हुआ?", a: "जनता दल यूनाइटेड", o: ["राष्ट्रीय जनता दल", "बहुजन समाज पार्टी", "जनता दल यूनाइटेड", "भारतीय जनता पार्टी"] },
+            { q: "निम्न में से कौन नगर निगम के आय का स्रोत नहीं है?", a: "आय कर", o: ["मकान कर", "आय कर", "जल कर", "शौचालय कर"] },
+            { q: "निम्न में से कौन पंचायत की व्यवस्थापिका सभा है?", a: "ग्राम सभा", o: ["ग्राम सभा", "ग्राम रक्षा दल", "ग्राम कचहरी", "इनमें से कोई नहीं"] },
+            { q: "राज्यपाल की नियुक्ति कौन करता है?", a: "राष्ट्रपति", o: ["प्रधानमंत्री", "मुख्यमंत्री", "राष्ट्रपति", "उपराष्ट्रपति"] },
+            { q: "स्थानीय स्वशासन राज्य के नीति निर्देशक सिद्धांत के किस अनुच्छेद में है?", a: "अनुच्छेद 40", o: ["अनुच्छेद 34", "अनुच्छेद 40", "अनुच्छेद 42", "अनुच्छेद 51"] },
+            { q: "ग्राम कचहरी में मुकदमे सुलझाए जाते हैं", a: "(A) और (B) दोनों", o: ["दिवानी मामले", "फौजदारी मामले", "(A) और (B) दोनों", "इनमें से कोई नहीं"] }
+        ];
+
+        // ==========================================
+        //  MAIN LOGIC (DO NOT TOUCH BELOW)
+        // ==========================================
+
+        let currentIdx = 0;
+        let userAnswers = new Array(rawData.length).fill(null);
+        let shuffledQuestions = [];
+        let timerInterval;
+        let timeRemaining = 2400; // 40 Minutes in seconds
+        let isReviewMode = false;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initQuiz() {
+            // Shuffle questions and options
+            shuffledQuestions = shuffle([...rawData]);
+            shuffledQuestions.forEach(q => { q.o = shuffle(q.o); });
+            renderQuestion(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                document.getElementById('timer').innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                if (timeRemaining <= 0) submitTest();
+            }, 1000);
+        }
+
+        function renderQuestion(idx) {
+            const container = document.getElementById('question-box');
+            const data = shuffledQuestions[idx];
+            document.getElementById('q-indicator').innerText = `${idx + 1}/${rawData.length}`;
+
+            let html = `
+                <div class="q-card shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-blue-400 text-xs font-bold tracking-widest uppercase">Question ${idx + 1}</span>
+                    </div>
+                    <h2 class="text-lg font-bold mb-6 leading-relaxed text-gray-100">${data.q}</h2>
+                    <div class="space-y-3">
+                        ${data.o.map(opt => {
+                            let extraClass = '';
+                            if (isReviewMode) {
+                                if (opt === data.a) extraClass = 'correct-ans';
+                                else if (userAnswers[idx] === opt && opt !== data.a) extraClass = 'wrong-ans';
+                            } else {
+                                if (userAnswers[idx] === opt) extraClass = 'selected';
+                            }
+                            return `
+                            <button onclick="selectOption(this, '${opt}')" 
+                                class="option-btn ${extraClass}" ${isReviewMode ? 'disabled' : ''}>
+                                ${opt}
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // Handle Buttons Visibility
+            if (idx === 0) prevBtn.classList.add('btn-disabled');
+            else prevBtn.classList.remove('btn-disabled');
+
+            if (idx === rawData.length - 1) {
+                nextBtn.style.display = 'none';
+                if(!isReviewMode) submitBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                if(!isReviewMode) submitBtn.style.display = 'flex'; 
+            }
+        }
+
+        function selectOption(btn, option) {
+            if(isReviewMode) return;
+            const allBtns = btn.parentElement.querySelectorAll('button');
+            allBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            userAnswers[currentIdx] = option;
+        }
+
+        function nextQuestion() {
+            if (currentIdx < shuffledQuestions.length - 1) {
+                currentIdx++;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function submitTest() {
+            if(!confirm("क्या आप सच में टेस्ट सबमिट करना चाहते हैं?")) return;
+            finishGame();
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            let score = 0;
+            let wrong = 0;
+            shuffledQuestions.forEach((q, i) => {
+                if (userAnswers[i] && userAnswers[i].trim() === q.a.trim()) score++;
+                else wrong++;
+            });
+            
+            // Update UI with Score
+            document.getElementById('score-right').innerText = score;
+            document.getElementById('score-wrong').innerText = wrong;
+            document.getElementById('result-modal').classList.remove('hidden');
+
+            // --- SAVE TO DATABASE ---
+            if(window.saveResultToDB) {
+                window.saveResultToDB(score, rawData.length);
+            }
+        }
+
+        function reviewAnswers() {
+            isReviewMode = true;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('timer').innerText = "Review Mode";
+            currentIdx = 0;
+            renderQuestion(0);
+        }
+
+        // Start Quiz
+        initQuiz();
+    </script>
+</body>
+</html>
