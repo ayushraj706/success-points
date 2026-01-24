@@ -3,271 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Success Point Hub - Topper's Squad</title>
+    <title>Success Point Hub</title>
     
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(function(OneSignal) {
-        OneSignal.init({ appId: "5883f1be-8f15-4555-a83b-36f3b0e83178" });
-      });
-    </script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <style>
-        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-        
-        /* HEADER */
-        .app-header { height: 60px; position: fixed; top: 0; width: 100%; z-index: 2000; background: #008069; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
-        /* SEARCH OVERLAY */
-        #search-overlay { transition: all 0.3s ease; }
-        
-        /* BOTTOM DOCK */
-        .app-dock { position: fixed; bottom: 0; width: 100%; height: 65px; z-index: 2000; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; align-items: center; padding-bottom: 5px; }
-        .dock-btn { display: flex; flex-direction: column; align-items: center; color: #6b7280; font-size: 10px; font-weight: 500; width: 25%; }
-        .dock-btn i { font-size: 20px; margin-bottom: 4px; transition: 0.2s; }
-        .dock-btn.active { color: #008069; }
-        .dock-btn.active i { transform: translateY(-3px); }
-
-        .main-view { height: 100vh; padding-top: 60px; padding-bottom: 80px; overflow-y: auto; scroll-behavior: smooth; }
-        
-        /* CARDS */
-        .subject-card { background: white; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; height: 120px; border-bottom: 4px solid; cursor: pointer; transition: transform 0.1s; }
-        .subject-card:active { transform: scale(0.98); }
-        
-        /* SKELETON LOADING ANIMATION */
-        .skeleton { background: linear-gradient(90deg, #e0e0e0 25%, #f5f5f5 50%, #e0e0e0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-        .user-card { background: white; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; margin-bottom: 6px; border-radius: 12px; }
-        .avatar-circle { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; }
-        
-        .hidden { display: none !important; }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-<body id="app-body">
+<body id="app-body" class="bg-gray-100 select-none">
 
-    <div id="auth-view" class="hidden fixed inset-0 bg-[#008069] z-[6000] flex flex-col items-center justify-center p-6 text-white">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-sm shadow-2xl text-center">
-            <img src="https://cdn-icons-png.flaticon.com/512/201/201614.png" class="w-20 h-20 mx-auto mb-4 animate-bounce">
-            <h1 class="text-2xl font-bold text-[#008069] mb-1">Success Point Hub</h1>
-            <p class="text-gray-400 text-xs mb-6">Class 10th Topper's Batch</p>
+    <div id="auth-view" class="fixed inset-0 bg-[#008069] z-[6000] flex flex-col items-center justify-center p-6 text-white hidden">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl text-center">
+            <img src="assets/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/201/201614.png'" class="w-20 h-20 mx-auto mb-4 animate-bounce">
+            <h1 class="text-2xl font-bold text-[#008069]">Success Point</h1>
+            <p class="text-gray-400 text-xs mb-6">Topper's Squad</p>
             
-            <button onclick="doGoogleLogin()" class="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition shadow-sm mb-4">
-                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" class="w-5 h-5"> Continue with Google
+            <button onclick="window.doGoogleLogin()" class="w-full bg-white border text-gray-700 py-3 rounded-lg font-bold flex items-center justify-center gap-3 mb-4 hover:bg-gray-50">
+                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" class="w-5 h-5"> Google Login
             </button>
-            
-            <p onclick="document.getElementById('manual-login').classList.toggle('hidden')" class="text-xs text-gray-400 cursor-pointer hover:text-[#008069]">Or use Email ID</p>
-            <div id="manual-login" class="hidden mt-4 pt-4 border-t">
-                 <input type="text" id="reg-name" class="w-full p-2 border rounded mb-2 text-black text-sm" placeholder="Your Name (For Signup)">
-                 <input type="email" id="auth-email" class="w-full p-2 border rounded mb-2 text-black text-sm" placeholder="Email">
-                 <input type="password" id="auth-pass" class="w-full p-2 border rounded mb-2 text-black text-sm" placeholder="Password">
-                 <button onclick="handleAuth()" class="w-full bg-[#008069] text-white py-2 rounded-lg font-bold">Login / Signup</button>
-            </div>
         </div>
     </div>
 
     <div id="app-view" class="hidden h-screen flex flex-col">
-        <header class="app-header">
+        <header class="app-header shadow-md">
             <div class="flex items-center gap-3">
-                <img id="head-av" onclick="toggleProfileMenu()" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-9 h-9 rounded-full bg-white border-2 border-white object-cover cursor-pointer">
-                <div><h1 class="font-bold text-lg leading-tight">Success Point</h1><p class="text-[10px] opacity-80">CLASS 10 HUB</p></div>
+                <img src="assets/logo.png" onerror="this.style.display='none'" class="w-8 h-8 rounded-full bg-white p-1">
+                <div><h1 class="font-bold text-lg">SUCCESS POINT</h1><p class="text-[10px] text-green-100">Class 10 Hub</p></div>
             </div>
-            <button onclick="toggleSearch()" class="p-2 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center"><i class="fa-solid fa-magnifying-glass"></i></button>
+            <button onclick="window.toggleSearch()" class="p-2 w-10 h-10 rounded-full bg-white/20"><i class="fa-solid fa-magnifying-glass"></i></button>
         </header>
 
         <div id="search-overlay" class="fixed top-[60px] left-0 w-full bg-white p-3 shadow-lg z-[1900] hidden">
-            <input type="text" id="global-search" onkeyup="runGlobalSearch()" placeholder="Search PDF, Notes, Friends..." class="w-full p-3 border rounded-xl bg-gray-100 outline-none text-sm">
+            <input type="text" id="global-search" onkeyup="window.runGlobalSearch()" placeholder="Search..." class="w-full p-2 border rounded bg-gray-100">
         </div>
 
-        <div id="profile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[3000] transform translate-x-full transition-transform duration-300 flex flex-col">
-            <div class="bg-[#008069] p-4 text-white flex justify-between items-center h-[60px]"><h2 class="font-bold text-lg">Menu</h2><button onclick="toggleProfileMenu()"><i class="fa-solid fa-xmark text-xl"></i></button></div>
-            <div class="overflow-y-auto flex-grow p-2 space-y-2">
-                <div class="p-3 border-b cursor-pointer hover:bg-gray-50" onclick="switchV('v-flash-menu');toggleProfileMenu()"><i class="fa-solid fa-bolt text-yellow-600 w-8"></i> VVI Flashcards</div>
-                <div class="p-3 border-b cursor-pointer hover:bg-gray-50" onclick="triggerEmailAPI()"><i class="fa-solid fa-envelope text-blue-600 w-8"></i> Test Email API</div>
-                <div id="adm-entry" class="hidden p-3 border-b cursor-pointer hover:bg-gray-50 text-red-600 font-bold" onclick="document.getElementById('adm-view').classList.remove('hidden');toggleProfileMenu()"><i class="fa-solid fa-lock w-8"></i> Admin Panel</div>
-                <div class="p-3 border-b cursor-pointer hover:bg-gray-50 text-red-500 font-bold" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket w-8"></i> Logout</div>
-            </div>
-        </div>
-
-        <div class="main-view px-4">
-            
+        <div class="main-view px-4 pb-24">
             <div id="v-home">
                 <div id="home-skeleton" class="space-y-4 mt-4">
-                    <div class="skeleton h-24 w-full"></div>
-                    <div class="grid grid-cols-2 gap-4"><div class="skeleton h-32"></div><div class="skeleton h-32"></div><div class="skeleton h-32"></div><div class="skeleton h-32"></div></div>
+                    <div class="skeleton h-24 w-full rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-4"><div class="skeleton h-32 rounded-lg"></div><div class="skeleton h-32 rounded-lg"></div></div>
                 </div>
 
                 <div id="home-content" class="hidden mt-4 space-y-4">
-                    <div id="countdown-box" class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg flex items-center justify-between">
-                        <div><h2 class="font-bold text-lg">Exam Countdown</h2><p id="days-left" class="text-xs opacity-90">Calculating...</p></div>
-                        <i class="fa-solid fa-calendar-days text-3xl opacity-50"></i>
+                    <div id="countdown-box" class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg flex justify-between items-center">
+                        <div><h2 class="font-bold">Exam Timer</h2><p id="days-left" class="text-xs">Loading...</p></div>
+                        <i class="fa-solid fa-hourglass-half text-2xl opacity-50"></i>
                     </div>
 
-                    <h3 class="font-bold text-gray-500 text-xs uppercase tracking-wider pl-1">Study Material Engines</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <div onclick="switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-3xl mb-2"></i><b>Hindi</b></div>
-                        <div onclick="openList('science', 'Science Q-Bank')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-3xl mb-2"></i><b>Science</b></div>
-                        <div onclick="openList('math', 'Math Q-Bank')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-3xl mb-2"></i><b>Math</b></div>
-                        <div onclick="openList('sst', 'SST Q-Bank')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-3xl mb-2"></i><b>SST</b></div>
-                        <div onclick="openList('sanskrit', 'Sanskrit')" class="col-span-2 subject-card border-yellow-500 text-yellow-600 flex-row gap-4 h-20"><i class="fa-solid fa-om text-3xl"></i><b>Sanskrit</b></div>
+                        <div onclick="window.switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-3xl mb-2"></i><b>Hindi</b></div>
+                        <div onclick="window.openList('science', 'Science Notes')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-3xl mb-2"></i><b>Science</b></div>
+                        <div onclick="window.openList('math', 'Math Notes')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-3xl mb-2"></i><b>Math</b></div>
+                        <div onclick="window.openList('sst', 'SST Notes')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-3xl mb-2"></i><b>SST</b></div>
                     </div>
                 </div>
             </div>
 
-            <div id="v-people" class="hidden pt-2">
-                <div id="people-list" class="space-y-2">Loading...</div>
+            <div id="v-people" class="hidden pt-2"><div id="people-list"></div></div>
+            <div id="v-chat" class="hidden pt-2"><div id="recent-chats" class="text-center mt-10 text-gray-400">Loading chats...</div></div>
+            <div id="v-list" class="hidden mt-4"><button onclick="window.switchV('v-home')" class="mb-2 font-bold text-[#008069]">⬅ Back</button><div id="list-container" class="space-y-3"></div></div>
+            
+            <div id="v-hindi-menu" class="hidden mt-4">
+                <button onclick="window.switchV('v-home')" class="mb-4 font-bold text-[#008069]">⬅ Back</button>
+                <div class="space-y-3">
+                    <div onclick="window.openList('gad', 'Gadya Khand')" class="p-4 bg-white rounded shadow font-bold">📖 Gadya Khand</div>
+                    <div onclick="window.openList('kav', 'Kavya Khand')" class="p-4 bg-white rounded shadow font-bold">🎼 Kavya Khand</div>
+                </div>
             </div>
             
-            <div id="v-chat" class="hidden pt-2">
-                <div id="recent-chats" class="text-center text-gray-400 mt-10">No chats yet.</div>
-            </div>
-
-            <div id="v-hindi-menu" class="hidden mt-4"><button onclick="switchV('v-home')" class="mb-4 bg-gray-200 px-3 py-1 rounded text-sm font-bold">⬅ Back</button><div class="space-y-3"><div onclick="openList('gad', 'Gadya Khand')" class="p-4 bg-white rounded-xl shadow-sm border font-bold">📖 गद्यखंड</div><div onclick="openList('kav', 'Kavya Khand')" class="p-4 bg-white rounded-xl shadow-sm border font-bold">🎼 काव्यखंड</div><div onclick="openList('var', 'Varnika')" class="p-4 bg-white rounded-xl shadow-sm border font-bold">📚 वर्णिका</div></div></div>
-            
-            <div id="v-list" class="hidden mt-4"><div class="flex items-center gap-3 mb-4"><button onclick="goBack()" class="bg-gray-200 px-3 py-1 rounded text-sm font-bold">⬅ Back</button><b id="list-title" class="text-[#008069] text-lg">List</b></div><div id="list-container" class="space-y-3"></div></div>
-            
-            <div id="v-flash-menu" class="hidden mt-4"><button onclick="switchV('v-home')" class="mb-4 bg-gray-200 px-3 py-1 rounded text-sm font-bold">⬅ Back</button><div class="grid grid-cols-2 gap-4"><div onclick="openFlash('Hindi')" class="bg-yellow-100 p-6 rounded-xl text-center font-bold text-yellow-800">Hindi Q/A</div><div onclick="openFlash('Science')" class="bg-blue-100 p-6 rounded-xl text-center font-bold text-blue-800">Science Q/A</div></div></div>
-            <div id="v-flash-play" class="hidden mt-4"><button onclick="switchV('v-flash-menu')" class="mb-4 bg-gray-200 px-3 py-1 rounded text-sm font-bold">⬅ Back</button><div id="flash-container" class="space-y-4"></div></div>
-
-            <div id="v-room" class="hidden h-full flex flex-col bg-[#e5ddd5] fixed inset-0 z-[2500]">
-                <div class="p-2 bg-[#008069] text-white flex gap-3 items-center h-[60px] shadow"><button onclick="switchV('v-chat')"><i class="fa-solid fa-arrow-left"></i></button><b id="rm-name">Chat</b></div>
+            <div id="v-room" class="hidden fixed inset-0 bg-[#e5ddd5] z-[3000] flex flex-col">
+                <div class="p-3 bg-[#008069] text-white flex gap-3 items-center h-[60px]"><button onclick="window.switchV('v-chat')"><i class="fa-solid fa-arrow-left"></i></button><b id="rm-name">Chat</b></div>
                 <div id="msg-log" class="flex-grow overflow-y-auto p-4 space-y-2"></div>
-                <div class="p-2 bg-white flex gap-2"><input id="m-in" class="flex-grow p-3 rounded-full bg-gray-100 outline-none" placeholder="Message..."><button onclick="sndMsg()" class="w-10 h-10 bg-[#008069] text-white rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button></div>
+                <div class="p-2 bg-white flex gap-2"><input id="m-in" class="flex-grow p-2 border rounded-full" placeholder="Message..."><button onclick="window.sndMsg()" class="text-[#008069] p-2"><i class="fa-solid fa-paper-plane text-xl"></i></button></div>
             </div>
 
             <div id="v-frame" class="hidden fixed inset-0 bg-white z-[5000] flex flex-col">
-                <div class="h-[60px] bg-gray-100 border-b flex items-center px-4 justify-between"><button onclick="closeFrame()" class="text-red-600 font-bold">⬅ Close</button><b id="file-title" class="truncate w-40">View</b></div>
-                <iframe id="main-frame" class="w-full h-full border-0 bg-white"></iframe>
+                <div class="h-[50px] bg-gray-100 flex items-center justify-between px-4 border-b"><button onclick="window.closeFrame()" class="text-red-500 font-bold">Close</button><b id="file-title">View</b></div>
+                <iframe id="main-frame" class="w-full h-full"></iframe>
             </div>
         </div>
 
         <nav class="app-dock">
-            <button onclick="switchV('v-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
-            <button onclick="switchV('v-people')" class="dock-btn"><i class="fa-solid fa-user-group"></i>People</button>
-            <button onclick="switchV('v-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
+            <button onclick="window.switchV('v-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
+            <button onclick="window.switchV('v-people')" class="dock-btn"><i class="fa-solid fa-users"></i>People</button>
+            <button onclick="window.switchV('v-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
         </nav>
     </div>
 
     <div id="loading-view" class="fixed inset-0 bg-gray-900 z-[9000] flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-gray-600 border-t-[#008069] rounded-full animate-spin mb-4"></div>
-        <h2 class="text-white font-bold tracking-widest animate-pulse">SUCCESS POINT</h2>
+        <div class="w-10 h-10 border-4 border-gray-500 border-t-[#008069] rounded-full animate-spin mb-4"></div>
+        <h2 class="text-white font-bold tracking-widest">LOADING...</h2>
     </div>
 
-    <div id="dl-toast" class="fixed bottom-20 left-5 right-5 bg-gray-800 text-white p-4 rounded-lg shadow-xl z-[4000] hidden flex items-center gap-3">
-        <i class="fa-solid fa-circle-arrow-down text-green-400 animate-bounce"></i>
-        <div><p class="text-sm font-bold">Downloading...</p><p id="dl-name" class="text-xs text-gray-400">File</p></div>
-    </div>
-
-    <div id="adm-view" class="hidden fixed inset-0 bg-gray-100 z-[9000] flex flex-col p-4">
-        <div class="flex justify-between items-center mb-4"><h2 class="font-bold text-xl">Admin Panel</h2><button onclick="document.getElementById('adm-view').classList.add('hidden')" class="text-red-500 font-bold">Close</button></div>
-        <div class="bg-white p-4 rounded shadow mb-4"><h3 class="font-bold">Users</h3><div id="adm-users" class="h-40 overflow-y-auto text-xs mt-2">Loading...</div></div>
-    </div>
-
-    <script type="module">
-        // 1. IMPORT FIREBASE (SINGLE ENGINE - NO CRASH)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, addDoc, onSnapshot, updateDoc, serverTimestamp, increment, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
-
-        // 2. CONFIGURATION
-        const firebaseConfig = { apiKey: "AIzaSyBT12SP0gvwssxp8vD3KEx3HajqDle46kk", authDomain: "success-points.firebaseapp.com", projectId: "success-points", storageBucket: "success-points.firebasestorage.app", messagingSenderId: "51177935348", appId: "1:51177935348:web:33fc4a6810790a3cbd29a1" };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); 
-        const db = getFirestore(app);
-        const messaging = getMessaging(app);
-        const vapidKey = "BEIRO6rVTzbuVuTpalFbvHsDQIZOlADkdcy2n3W-kfwScV_OHbslCNnni_3qnAhRkayYEL6ent8Gmbf3GBwBeUs";
-
-        let me=null, isSignup=true, curChat=null, allUsers=[];
-        const ADMIN_EMAIL = "ayushrajayushraj350@gmail.com";
-
-        // 3. AUTH LOGIC
-        onAuthStateChanged(auth, async(u)=>{
-            if(u && u.emailVerified){ 
-                me=u; 
-                document.getElementById('loading-view').classList.add('hidden'); 
-                document.getElementById('auth-view').classList.add('hidden');
-                document.getElementById('app-view').classList.remove('hidden');
-                
-                // Skeleton Effect Remove karo
-                setTimeout(()=>{ 
-                    document.getElementById('home-skeleton').classList.add('hidden'); 
-                    document.getElementById('home-content').classList.remove('hidden');
-                }, 1500);
-
-                const ref = doc(db,"users",u.uid); 
-                await updateDoc(ref,{lastActive: serverTimestamp(), status:'online'}).catch(async()=>{ await setDoc(ref,{email:u.email, name:u.displayName||'User', time:0, lastActive:serverTimestamp()}, {merge:true}); });
-                setInterval(()=>{ if(document.visibilityState==='visible') updateDoc(ref,{time:increment(1)}); }, 60000);
-                
-                if(u.email===ADMIN_EMAIL) { document.getElementById('adm-entry').classList.remove('hidden'); initAdmin(); }
-                
-                startListeners(); loadPeople(); loadMyChats(); initPush();
-            } else { 
-                document.getElementById('loading-view').classList.add('hidden'); 
-                document.getElementById('auth-view').classList.remove('hidden'); 
-            }
-        });
-
-        // 4. DATA STORE (Subjects)
-        window.ayu={ sst:[{name:"2020 Set A",file:"sst1.html"},{name:"2020 Set B",file:"sst2.html"},{name:"2024 Set A",file:"sst9.html"}], science:[{name:"2020 Set A",file:"sci1.html"},{name:"2024 Set A",file:"sci9.html"}], math:[{name:"2020 Set A",file:"mat1.html"},{name:"2024 Set A",file:"mat9.html"}], gad:[{name:"Ch 1",file:"gad1.html"}], kav:[{name:"Ch 1",file:"kav1.html"}], var:[{name:"Ch 1",file:"var1.html"}], sanskrit:[{name:"Ch 1",file:"san1.html"}] };
-        const flashData={'Hindi':[{q:"'विष के दाँत'?",a:"नलिन विलोचन"}],'Science':[{q:"Water in body?",a:"65%"}]};
-
-        // 5. FUNCTIONS (Engines)
-        function loadPeople(){ onSnapshot(collection(db,"users"), s=>{ allUsers=s.docs.map(d=>({uid:d.id, ...d.data()})); renderPeople(allUsers); }); }
-        function renderPeople(list){ document.getElementById('people-list').innerHTML=list.map(u=>`<div onclick="startChat('${u.uid}','${u.name}')" class="user-card cursor-pointer"><div class="avatar-circle" style="background:#008069">${u.name[0]}</div><div class="flex-grow"><h3 class="font-bold text-gray-800">${u.name}</h3><p class="text-xs text-gray-500">Student</p></div><i class="fa-solid fa-comment text-[#008069] text-xl"></i></div>`).join(''); }
-        
-        // Search Engine
-        window.toggleSearch = () => document.getElementById('search-overlay').classList.toggle('hidden');
-        window.runGlobalSearch = () => {
-            const term = document.getElementById('global-search').value.toLowerCase();
-            // Search logic here (Future update)
-        };
-
-        // Download Engine
-        window.downloadFile = (url, name) => {
-            document.getElementById('dl-toast').classList.remove('hidden');
-            document.getElementById('dl-name').innerText = name;
-            setTimeout(()=>document.getElementById('dl-toast').classList.add('hidden'), 3000);
-            // Real download logic here
-        };
-
-        // UI Switcher
-        window.switchV = (id) => { 
-            ['v-home','v-people','v-chat','v-room','v-hindi-menu','v-list','v-flash-menu','v-flash-play'].forEach(x=>document.getElementById(x)?.classList.add('hidden')); 
-            document.getElementById(id).classList.remove('hidden'); 
-            document.querySelectorAll('.dock-btn').forEach(b=>b.classList.remove('active'));
-            if(id==='v-home') document.querySelectorAll('.dock-btn')[0].classList.add('active');
-            if(id==='v-people') document.querySelectorAll('.dock-btn')[1].classList.add('active');
-            if(id==='v-chat') document.querySelectorAll('.dock-btn')[2].classList.add('active');
-        };
-
-        window.openList = (k,t) => { document.getElementById('list-title').innerText=t; const c=document.getElementById('list-container'); c.innerHTML=""; (window.ayu[k]||[]).forEach(i=>{ c.innerHTML+=`<div class="p-4 bg-white rounded-xl shadow-sm border flex justify-between items-center"><div onclick="openFile('${i.file}','${i.name}')" class="font-bold text-gray-700 cursor-pointer">${i.name}</div><button onclick="downloadFile('${i.file}','${i.name}')" class="text-[#008069]"><i class="fa-solid fa-download"></i></button></div>`; }); switchV('v-list'); };
-        window.openFile = (f,n) => { document.getElementById('file-title').innerText=n; document.getElementById('main-frame').src=f; document.getElementById('v-frame').classList.remove('hidden'); };
-        window.closeFrame = () => { document.getElementById('v-frame').classList.add('hidden'); document.getElementById('main-frame').src=""; };
-        window.goBack = () => document.getElementById('list-title').innerText.includes("Hindi") ? switchV('v-hindi-menu') : switchV('v-home');
-
-        window.triggerEmailAPI = async () => { alert("Backend Email Sending..."); await fetch('/api/send', {method:'POST'}); alert("Check Inbox!"); };
-
-        // Chat Logic
-        function loadMyChats() { onSnapshot(collection(db, "users", me.uid, "recent_chats"), s => { const list = s.docs.map(d => d.data()); document.getElementById('recent-chats').innerHTML = list.length ? list.map(c => `<div onclick="openChat('${c.chatId}', '${c.name}', '${c.uid}')" class="user-card cursor-pointer"><div class="avatar-circle" style="background:#555">${c.name[0]}</div><div class="flex-grow"><h3 class="font-bold text-gray-800">${c.name}</h3><p class="text-sm text-gray-500 truncate">${c.lastMsg || 'Tap to chat'}</p></div></div>`).join('') : '<p class="text-center mt-10 text-gray-400">No chats yet</p>'; }); }
-        window.startChat = (uid, name) => { if(uid === me.uid) return alert("Self chat not allowed"); const chatId = [me.uid, uid].sort().join('_'); openChat(chatId, name, uid); };
-        window.openChat = (cid, cname, otherUid) => { curChat = cid; document.getElementById('rm-name').innerText = cname; switchV('v-room'); onSnapshot(query(collection(db,"chats",cid,"msgs"), orderBy("t","asc")), s=>{ document.getElementById('msg-log').innerHTML=s.docs.map(x=>{ const m=x.data(); const isMe=m.u===me.uid; return `<div class="max-w-[75%] p-2 rounded-lg mb-2 text-sm ${isMe?'bg-[#dcf8c6] ml-auto rounded-tr-none':'bg-white mr-auto rounded-tl-none'} shadow-sm">${m.m}</div>`; }).join(''); document.getElementById('msg-log').scrollTop=99999; }); };
-        window.sndMsg = async () => { const m = document.getElementById('m-in'); const txt = m.value.trim(); if(txt){ await addDoc(collection(db,"chats",curChat,"msgs"), {m:txt, u:me.uid, t:serverTimestamp()}); m.value=''; }};
-
-        // Auth Helpers
-        window.doGoogleLogin = () => signInWithPopup(auth, new GoogleAuthProvider());
-        window.doLogout = () => signOut(auth).then(()=>location.reload());
-        window.handleAuth = async() => { const e=document.getElementById('auth-email').value, p=document.getElementById('auth-pass').value; try{ await signInWithEmailAndPassword(auth,e,p); }catch(x){ try{ await createUserWithEmailAndPassword(auth,e,p); }catch(y){ alert(y.message); } } };
-
-        // Push Init
-        function initPush(){ getToken(messaging, { vapidKey: vapidKey }).then((currentToken) => { if (currentToken) console.log('Push Token:', currentToken); }).catch((err) => console.log('Push Error:', err)); }
-        
-        function startListeners(){ setInterval(()=>{ const days = Math.floor((new Date("Feb 17, 2026").getTime() - new Date().getTime())/(1000*60*60*24)); document.getElementById('days-left').innerText = `${days} Days Left`; }, 1000); }
-        function initAdmin(){ onSnapshot(collection(db,"users"), s=>{ document.getElementById('adm-users').innerHTML = s.docs.map(d=>`<div class="flex justify-between border-b p-1"><span>${d.data().name}</span><span class="text-green-600">${Math.floor(d.data().time||0)}m</span></div>`).join(''); }); }
-    </script>
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/data.js"></script>
+    <script type="module" src="js/ui.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/chat.js"></script>
 </body>
 </html>
