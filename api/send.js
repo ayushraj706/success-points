@@ -1,9 +1,16 @@
 export default async function handler(req, res) {
-  // यह चाबी आपके Vercel Environment Variables से अपने आप जुड़ जाएगी
   const resendKey = process.env.RESEND_API_KEY;
 
   if (req.method === 'POST') {
     try {
+      // Frontend se data aa raha hai (body me)
+      const { to, subject, html } = req.body; 
+      
+      // Agar frontend se email nahi aaya, to default apna wala use karo
+      const recipient = to ? [to] : ['ayushrajayushhh@gmail.com']; 
+      const emailSubject = subject || 'Alert from Success Point';
+      const emailHtml = html || '<p>Default Test Message</p>';
+
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -11,14 +18,10 @@ export default async function handler(req, res) {
           'Authorization': `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from: 'Success Point <admin@ayus.fun>',
-          to: ['ayushraj@example.com'], // यहाँ अपना असली ईमेल डालें जहाँ मैसेज चाहिए
-          subject: 'Alert from Success Point Hub',
-          html: `
-            <h1>Naya Message Aaya Hai!</h1>
-            <p>Bhai, aapka backend setup ab kaam kar raha hai.</p>
-            <p><strong>Security Level:</strong> High (API Key Hidden)</p>
-          `,
+          from: 'Success Point <admin@ayus.fun>', 
+          to: recipient, 
+          subject: emailSubject,
+          html: emailHtml,
         }),
       });
 
@@ -32,9 +35,6 @@ export default async function handler(req, res) {
     } catch (error) {
       return res.status(500).json({ success: false, error: 'Server Error' });
     }
-  } else {
-    // अगर कोई सीधे इस URL को खोलेगा तो उसे यह दिखेगा
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-  }
+  return res.status(405).json({ message: 'Method not allowed' });
+}
