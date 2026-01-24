@@ -31,7 +31,8 @@ export default async function handler(req, res) {
         <p style="color: #555; font-size: 14px;">Hello User,<br>Complete your secure login using the code below.</p>
         
         <div style="margin: 30px 0; padding: 20px; border: 2px dashed #008069; border-radius: 12px; background-color: #f6fff9;">
-            <span style="font-size: 36px; font-weight: bold; color: #008069; letter-spacing: 8px;">{otp}</span>
+            <span style="font-size: 36px; font-weight: bold; color: #008069; letter-spacing: 8px;"<span ...>\${subject === 'Your Login OTP' ? html.replace(/[^0-9]/g, '') : '------'}</span>
+
         </div>
 
         <p style="color: #999; font-size: 12px;">Expires in 10 minutes.</p>
