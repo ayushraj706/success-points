@@ -1,18 +1,17 @@
 export default async function handler(req, res) {
-  // Vercel se API Key uthayega
   const resendKey = process.env.RESEND_API_KEY;
 
   if (req.method === 'POST') {
     try {
       const { to, subject, html } = req.body; 
       
-      // OTP nikalne ka logic (Jo number frontend se aaya, use nikal liya)
-      const otpCode = html ? html.replace(/[^0-9]/g, '') : '------';
+      // --- YAHAN GALTI THI, AB THEEK HAI ---
+      // Pehle ye sab number kha raha tha, ab sirf pehla 6-digit OTP uthayega
+      const otpMatch = html ? html.match(/\d{6}/) : null;
+      const otpCode = otpMatch ? otpMatch[0] : '------';
       
-      // Bharat ka time (IST)
       const requestTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-      // --- BASEKEY FINAL TEMPLATE (No Broken Lines) ---
       const emailHtml = `
         <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             
@@ -58,7 +57,6 @@ export default async function handler(req, res) {
         </div>
       `;
 
-      // Resend API ko call lagana
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -74,7 +72,6 @@ export default async function handler(req, res) {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         return res.status(200).json({ success: true, id: data.id });
       } else {
@@ -84,7 +81,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, error: 'Server Error' });
     }
   } else {
-    // Agar koi aur method (GET/PUT) use kare
     return res.status(405).json({ message: 'Method not allowed' });
   }
 }
