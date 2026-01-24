@@ -99,7 +99,7 @@ window.verifyOTP = async () => {
 };
 
 function startTimer() {
-    let timeLeft = 30;
+    let timeLeft = 60;
     const el = document.getElementById('otp-timer');
     timerInt = setInterval(() => {
         timeLeft--;
