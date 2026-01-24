@@ -11,7 +11,7 @@ export default async function handler(req, res) {
           'Authorization': `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from: 'Success Point <onboarding@resend.dev>', 
+          from: 'Success Point <admin@ayus.fun>',
           to: ['ayushraj@example.com'], // यहाँ अपना असली ईमेल डालें जहाँ मैसेज चाहिए
           subject: 'Alert from Success Point Hub',
           html: `
