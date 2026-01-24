@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBT12SP0gvwssxp8vD3KEx3HajqDle46kk", // Apni API Key yahan check karlena
+    apiKey: "AIzaSyBT12SP0gvwssxp8vD3KEx3HajqDle46kk",
     authDomain: "success-points.firebaseapp.com",
     projectId: "success-points",
     storageBucket: "success-points.firebasestorage.app",
@@ -11,14 +11,15 @@ const firebaseConfig = {
     appId: "1:51177935348:web:33fc4a6810790a3cbd29a1"
 };
 
+// Sirf YAHAN app initialize hoga
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// Global access ke liye window me daal rahe hain
+// Window object me daal rahe hain taaki baaki files use kar sakein
 window.auth = auth;
 window.db = db;
 window.provider = provider;
 
-console.log("Firebase Initialized");
+console.log("Firebase Connected Successfully");
