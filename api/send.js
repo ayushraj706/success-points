@@ -9,52 +9,45 @@ export default async function handler(req, res) {
       // HTML variable me jo OTP number aa raha hai use nikal kar sundar banayenge
       
       const emailHtml = html || `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <h1 style="color: #008069; margin: 0;">Success Point</h1>
-                <p style="color: #888; font-size: 12px;">Class 10th Hub</p>
-            </div>
-            
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; text-align: center;">
-                <p style="font-size: 16px; color: #333;">Login verification code:</p>
-                <h2 style="font-size: 32px; letter-spacing: 5px; color: #008069; margin: 10px 0;">${subject === 'Your Login OTP' ? html.replace(/[^0-9]/g, '') : '123456'}</h2>
-                <p style="font-size: 14px; color: #666;">Valid for 10 minutes only.</p>
-            </div>
-            
-            <div style="margin-top: 20px; text-align: center; color: #aaa; font-size: 12px;">
-                <p>If you didn't request this code, please ignore this email.</p>
-                <p>&copy; 2026 Success Point Hub | Ayush Raj Production</p>
-            </div>
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 550px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="padding: 30px 20px; text-align: center; border-bottom: 1px solid #f0f0f0;">
+        <h1 style="color: #008069; margin: 0; font-size: 28px; letter-spacing: 1px;">BaseKey</h1>
+        <p style="color: #666; font-size: 12px; margin-top: 5px; text-transform: uppercase;">Secure Authentication</p>
+    </div>
+
+    <div style="padding: 20px; text-align: center;">
+        <svg width="100" height="60" viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="30" r="8" fill="#008069" opacity="0.2"/>
+            <circle cx="20" cy="30" r="4" fill="#008069"/>
+            <circle cx="80" cy="30" r="8" fill="#008069" opacity="0.2"/>
+            <path d="M80 26V34M76 30H84" stroke="#008069" stroke-width="2" stroke-linecap="round"/>
+            <path d="M30 30H70" stroke="#008069" stroke-width="2" stroke-dasharray="4 4" opacity="0.5"/>
+            <path d="M45 25L55 35M55 25L45 35" stroke="#008069" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    <div style="padding: 0 40px 30px 40px; text-align: center;">
+        <h2 style="color: #333; font-size: 20px;">Verify Identity</h2>
+        <p style="color: #555; font-size: 14px;">Hello User,<br>Complete your secure login using the code below.</p>
+        
+        <div style="margin: 30px 0; padding: 20px; border: 2px dashed #008069; border-radius: 12px; background-color: #f6fff9;">
+            <span style="font-size: 36px; font-weight: bold; color: #008069; letter-spacing: 8px;">{otp}</span>
         </div>
-      `;
 
-      const recipient = to ? [to] : ['ayushrajayushhh@gmail.com']; 
-      const emailSubject = subject || 'Alert from Success Point';
+        <p style="color: #999; font-size: 12px;">Expires in 10 minutes.</p>
+        
+        <div style="background-color: #000000; color: #ffffff; padding: 15px; border-radius: 8px; font-size: 10px; font-weight: bold; letter-spacing: 2px; margin-top: 20px;">
+            END-TO-END ENCRYPTED ACCESS
+        </div>
 
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${resendKey}`,
-        },
-        body: JSON.stringify({
-          from: 'Success Point <admin@ayus.fun>', 
-          to: recipient, 
-          subject: emailSubject,
-          html: emailHtml,
-        }),
-      });
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #f0f0f0; text-align: left;">
+            <p style="color: #888; font-size: 11px; margin: 0;"><strong>Request Time:</strong> ${requestTime}</p>
+            <p style="color: #888; font-size: 11px; margin: 5px 0 0 0;"><strong>Location:</strong> Samastipur, Bihar (Success Point Hub)</p>
+        </div>
+    </div>
 
-      const data = await response.json();
-
-      if (response.ok) {
-        return res.status(200).json({ success: true, id: data.id });
-      } else {
-        return res.status(400).json({ success: false, error: data.message });
-      }
-    } catch (error) {
-      return res.status(500).json({ success: false, error: 'Server Error' });
-    }
-  }
-  return res.status(405).json({ message: 'Method not allowed' });
-}
+    <div style="background-color: #fafafa; padding: 20px; text-align: center; color: #aaa; font-size: 10px;">
+        <p style="margin: 0;">© 2026 BaseKey Protocol.</p>
+        <p style="margin: 5px 0 0 0;">Success Point Hub - Samastipur</p>
+    </div>
+</div>
