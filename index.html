@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Success Point Hub</title>
+    <title>Success Point Hub - Topper's Choice</title>
     
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,111 +11,107 @@
     
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body id="app-body">
+<body id="app-body" class="bg-gray-100 select-none">
 
-    <div id="auth-view" class="fixed inset-0 bg-[#008069] z-[6000] flex flex-col items-center justify-center p-6 text-white hidden">
+    <div id="auth-view" class="fixed inset-0 bg-[#008069] z-[6000] flex flex-col items-center justify-center p-6 text-white">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl text-center">
-            <img src="assets/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/201/201614.png'" class="w-20 h-20 mx-auto mb-4">
+            <img src="assets/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/201/201614.png'" class="w-24 h-24 mx-auto mb-4 animate-bounce">
+            <h1 class="text-2xl font-bold text-[#008069] mb-1">Success Point Hub</h1>
+            <p class="text-gray-400 text-xs mb-6">Class 10th Special Edition</p>
             
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-[#008069]">Success Point</h1>
-                <p class="text-gray-400 text-xs">Join the Topper's Squad</p>
-            </div>
-            
-            <button onclick="window.doGoogleLogin()" class="w-full bg-gray-100 text-black py-3 rounded-lg font-bold flex items-center justify-center gap-3 mb-4 border hover:bg-gray-200">
-                <i class="fa-brands fa-google text-xl"></i> Google Login
+            <button onclick="window.doGoogleLogin()" class="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition shadow-sm">
+                <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" class="w-5 h-5"> 
+                Continue with Google
             </button>
-            
-            <div id="email-login-section" class="w-full mt-4 border-t pt-4">
-    <p class="text-xs text-center text-gray-400 mb-2">Or continue with Email</p>
-    
-    <div id="signup-fields" class="hidden">
-        <input type="text" id="reg-name" class="w-full p-3 bg-gray-50 border rounded-lg mb-2 text-sm text-black" placeholder="Full Name">
-    </div>
 
-    <input type="email" id="auth-email" class="w-full p-3 bg-gray-50 border rounded-lg mb-2 text-sm text-black" placeholder="Email Address">
-    <input type="password" id="auth-pass" class="w-full p-3 bg-gray-50 border rounded-lg mb-2 text-sm text-black" placeholder="Password">
-    
-    <button onclick="window.handleAuth()" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-lg hover:bg-[#006a55] transition">
-        Login / Register
-    </button>
-    
-    <p onclick="document.getElementById('signup-fields').classList.toggle('hidden')" class="mt-3 text-xs text-center text-gray-500 cursor-pointer hover:text-[#008069]">
-        Naya Account banana hai? <span class="font-bold">Yahan Click Karein</span>
-    </p>
-            </div>
-            
-
-    <div id="app-view" class="hidden h-screen flex flex-col">
-        <header class="app-header">
-            <div class="flex items-center gap-2">
-                <img src="assets/logo.png" onerror="this.style.display='none'" class="w-8 h-8 rounded-full bg-white">
-                <div><h1 class="font-bold text-lg">SUCCESS POINT</h1><p class="text-[10px] opacity-80">CLASS 10 HUB</p></div>
-            </div>
-            <img id="head-av" onclick="window.toggleProfileMenu()" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="w-9 h-9 rounded-full bg-white border-2 border-white object-cover cursor-pointer">
-        </header>
-
-        <div id="profile-menu" class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-[3000] transform translate-x-full transition-transform duration-300 flex flex-col">
-            <div class="bg-[#008069] p-4 text-white flex justify-between items-center h-[60px]">
-                <h2 class="font-bold text-lg">Menu</h2>
-                <button onclick="window.toggleProfileMenu()"><i class="fa-solid fa-xmark text-xl"></i></button>
-            </div>
-            <div class="overflow-y-auto flex-grow p-2">
-                <div class="menu-item" onclick="window.switchV('v-flash-menu');window.toggleProfileMenu()"><i class="fa-solid fa-bolt text-yellow-600"></i> VVI Flashcards</div>
-                <div class="menu-item" onclick="window.triggerBackendEmail()"><i class="fa-solid fa-envelope text-blue-600"></i> Test Email API</div>
-                <div id="adm-entry" class="hidden menu-item text-yellow-600 font-bold" onclick="document.getElementById('adm-view').classList.remove('hidden');window.toggleProfileMenu()"><i class="fa-solid fa-lock"></i> Admin Panel</div>
-                <div class="menu-item text-red-500 font-bold" onclick="window.doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+            <div id="email-login-box" class="mt-4 border-t pt-4">
+                <input type="email" id="u-email" placeholder="Email ID" class="w-full p-2 border rounded mb-2 text-black text-sm">
+                <input type="password" id="u-pass" placeholder="Password" class="w-full p-2 border rounded mb-2 text-black text-sm">
+                <button onclick="window.handleEmailAuth()" class="w-full bg-[#008069] text-white py-2 rounded font-bold text-sm">Login</button>
             </div>
         </div>
+    </div>
 
-        <div class="main-view px-4">
+    <div id="app-view" class="hidden h-screen flex flex-col">
+        
+        <header class="app-header shadow-md">
+            <div class="flex items-center gap-3">
+                <img src="assets/logo.png" class="w-8 h-8 rounded-full bg-white p-1">
+                <div><h1 class="font-bold text-lg leading-tight">Success Point</h1><p class="text-[10px] text-green-100">Ayush Raj Production</p></div>
+            </div>
+            <button onclick="window.toggleSearch()" class="p-2"><i class="fa-solid fa-magnifying-glass text-xl"></i></button>
+        </header>
+
+        <div id="search-overlay" class="fixed top-[60px] left-0 w-full bg-white p-3 shadow-lg z-[1900] hidden">
+            <input type="text" id="global-search" onkeyup="window.runGlobalSearch()" placeholder="Search PDFs, Notes, Students..." class="w-full p-2 border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#008069]">
+        </div>
+
+        <div class="main-view px-4 pb-24">
+            
             <div id="v-home">
-                <div id="countdown-box" class="bg-[#008069] text-white p-3 rounded-lg text-center font-bold mb-4 shadow-lg flex items-center justify-center gap-2">Loading...</div>
-                
-                <div class="grid grid-cols-2 gap-4 mt-4">
-                    <div onclick="window.switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-3xl mb-2"></i><b>Hindi</b></div>
-                    <div onclick="window.openList('science', 'Science Q-Bank')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-3xl mb-2"></i><b>Science</b></div>
-                    <div onclick="window.openList('math', 'Math Q-Bank')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-3xl mb-2"></i><b>Math</b></div>
-                    <div onclick="window.openList('sst', 'SST Q-Bank')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-3xl mb-2"></i><b>SST</b></div>
+                <div id="home-skeleton" class="space-y-4 mt-4">
+                    <div class="skeleton h-20 w-full rounded-lg"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="skeleton h-32 rounded-lg"></div>
+                        <div class="skeleton h-32 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <div id="home-content" class="hidden mt-4">
+                    <div class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+                        <div>
+                            <h2 class="font-bold text-lg">Exam Countdown</h2>
+                            <p id="days-left" class="text-sm opacity-90">Calculating...</p>
+                        </div>
+                        <i class="fa-solid fa-calendar-days text-3xl opacity-50"></i>
+                    </div>
+
+                    <h3 class="font-bold text-gray-700 mb-3 border-l-4 border-[#008069] pl-2">Subject Engines</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div onclick="window.openList('math')" class="subject-card border-b-4 border-blue-500 hover:scale-105 transition"><i class="fa-solid fa-calculator text-3xl text-blue-500 mb-2"></i><b>Math</b></div>
+                        <div onclick="window.openList('science')" class="subject-card border-b-4 border-green-500 hover:scale-105 transition"><i class="fa-solid fa-flask text-3xl text-green-500 mb-2"></i><b>Science</b></div>
+                        <div onclick="window.openList('sst')" class="subject-card border-b-4 border-orange-500 hover:scale-105 transition"><i class="fa-solid fa-landmark text-3xl text-orange-500 mb-2"></i><b>SST</b></div>
+                        <div onclick="window.openList('hindi')" class="subject-card border-b-4 border-pink-500 hover:scale-105 transition"><i class="fa-solid fa-book text-3xl text-pink-500 mb-2"></i><b>Hindi</b></div>
+                    </div>
                 </div>
             </div>
 
-            <div id="v-people" class="hidden">
-                 <div class="bg-white p-2 sticky top-0"><input id="p-search" onkeyup="window.filterPeople()" class="w-full p-2 border rounded" placeholder="Search..."></div>
-                 <div id="people-list">Loading...</div>
-            </div>
-            
-            <div id="v-chat" class="hidden"><div id="recent-chats" class="space-y-2 text-center mt-10">Loading chats...</div></div>
-            
-            <div id="v-room" class="hidden h-full flex flex-col bg-[#e5ddd5] fixed inset-0 z-[2500]">
-                <div class="p-2 bg-[#008069] text-white flex gap-3 items-center h-[60px]">
-                    <button onclick="window.switchV('v-chat')"><i class="fa-solid fa-arrow-left"></i></button>
-                    <b id="rm-name">Chat</b>
+            <div id="v-people" class="hidden pt-2">
+                <div id="people-skeleton" class="space-y-3">
+                    <div class="flex gap-3"><div class="skeleton w-12 h-12 rounded-full"></div><div class="skeleton w-3/4 h-12 rounded"></div></div>
+                    <div class="flex gap-3"><div class="skeleton w-12 h-12 rounded-full"></div><div class="skeleton w-3/4 h-12 rounded"></div></div>
                 </div>
-                <div id="msg-log" class="flex-grow overflow-y-auto p-4"></div>
-                <div class="p-2 bg-white flex gap-2"><input id="m-in" class="flex-grow p-2 border rounded"><button onclick="window.sndMsg()" class="text-[#008069]"><i class="fa-solid fa-paper-plane text-2xl"></i></button></div>
+                <div id="people-list" class="space-y-2 hidden"></div>
             </div>
-            
-            <div id="v-list" class="hidden"><div id="list-container" class="space-y-3"></div></div>
-            <div id="v-frame" class="hidden fixed inset-0 bg-white z-[5000]"><iframe id="main-frame" class="w-full h-full"></iframe><button onclick="window.closeFrame()" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded">Close</button></div>
+
+            <div id="v-list" class="hidden">
+                <button onclick="window.switchV('v-home')" class="mb-4 text-[#008069] font-bold"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <h2 id="list-title" class="text-xl font-bold mb-4">Subject Material</h2>
+                <div id="pdf-list-container" class="space-y-3"></div>
+            </div>
+
+        </div>
+
+        <div id="download-toast" class="fixed bottom-20 left-4 right-4 bg-gray-800 text-white p-3 rounded-lg shadow-xl z-[4000] hidden flex items-center gap-3">
+            <i class="fa-solid fa-circle-down animate-bounce text-green-400"></i>
+            <div class="flex-grow">
+                <p class="text-xs font-bold">Downloading in background...</p>
+                <div class="w-full bg-gray-600 h-1 mt-1 rounded"><div class="bg-green-400 h-1 w-2/3 rounded"></div></div>
+            </div>
         </div>
 
         <nav class="app-dock">
             <button onclick="window.switchV('v-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
-            <button onclick="window.switchV('v-people')" class="dock-btn"><i class="fa-solid fa-user-group"></i>People</button>
-            <button onclick="window.switchV('v-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
+            <button onclick="window.switchV('v-people')" class="dock-btn"><i class="fa-solid fa-users"></i>People</button>
+            <button onclick="window.switchV('v-chat')" class="dock-btn"><i class="fa-solid fa-comments"></i>Chats</button>
+            <button onclick="window.openProfile()" class="dock-btn"><i class="fa-solid fa-user-gear"></i>Profile</button>
         </nav>
     </div>
 
-    <div id="loading-view" class="fixed inset-0 bg-[#1f2937] z-[9000] flex flex-col items-center justify-center">
-        <div class="w-10 h-10 border-4 border-gray-300 border-t-[#008069] rounded-full animate-spin mb-4"></div>
-        <h2 class="text-white font-bold">LOADING...</h2>
-    </div>
-
     <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/data.js"></script>
     <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/auth.js"></script>
     <script type="module" src="js/chat.js"></script>
 
 </body>
