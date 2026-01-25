@@ -57,4 +57,4 @@ window.flashData = [
     { q: "Social Science ka Janak kise kaha jata hai?", a: "Auguste Comte" },
     { q: "Science me total kitne chapters hain?", a: "Check your new 2026 syllabus" }
 ];
- PDF aur Chapter data yah
+ 
