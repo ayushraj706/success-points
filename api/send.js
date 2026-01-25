@@ -3,60 +3,61 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { to, subject, html, uid } = req.body; // uid (User ID) zaroori hai logout ke liye
+            const { to, subject, html, uid } = req.body;
 
-            // 1. User Details (Facebook Style)
-            const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
-            const userAgent = req.headers['user-agent'] || 'Unknown Device';
-            const deviceName = userAgent.includes('Android') ? 'Android Phone' : 
-                               userAgent.includes('iPhone') ? 'iPhone' : 'Desktop/PC';
+            // 🌐 IP Address nikalna
+            const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '152.59.145.88';
             
-            const requestTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            // 📱 Deep Device Detection (Facebook Style)
+            const userAgent = req.headers['user-agent'] || '';
+            let deviceDetail = "Android Device";
             
-            // 2. OTP Code nikalna
+            if (userAgent.includes('Android')) {
+                // Browser Agent se Model nikalna (Redmi/Vivo logic)
+                const parts = userAgent.match(/\(([^)]+)\)/);
+                if (parts && parts[1]) {
+                    const info = parts[1].split(';');
+                    deviceDetail = info[info.length - 1].split('Build')[0].trim();
+                }
+            } else if (userAgent.includes('iPhone')) {
+                deviceDetail = "Apple iPhone";
+            }
+
+            // 🔢 OTP Code aur Time nikalna
             const otpMatch = html ? html.match(/\d{6}/) : null;
             const otpCode = otpMatch ? otpMatch[0] : '------';
+            const requestTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
-            // 3. Google Maps Link (Location guessing based on Bihar Node)
-            const mapLink = `https://www.google.com/maps/search/?api=1&query=Bihar,India`;
-
-            // 4. "It wasn't me" Link (Ye link Firebase function ya Vercel api par jayega)
-            const secureLink = `https://ayus.fun/api/secure-account?uid=${uid || 'user'}&ip=${userIp}`;
+            // 📍 Live Google Maps Link
+            const mapUrl = `https://www.google.com/maps?q=${userIp}`;
+            
+            // 🔒 Logout Link (Path sahi kar diya hai)
+            const secureLink = `https://ayus.fun/api/secure-account?uid=${uid || 'user'}`;
 
             const emailHtml = `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 550px; margin: auto; border: 1px solid #e1e4e8; border-radius: 12px; overflow: hidden;">
-                    <div style="background-color: #008069; padding: 20px; text-align: center; color: white;">
-                        <h1 style="margin: 0; font-size: 24px;">BaseKey Security Alert</h1>
+                <div style="font-family: sans-serif; max-width: 500px; margin: auto; border: 1px solid #ddd; border-radius: 15px; overflow: hidden; background: #0d1117;">
+                    <div style="background: #008069; padding: 15px; text-align: center; color: white; font-weight: bold; font-size: 18px;">
+                        BaseKey Security Alert
                     </div>
                     
-                    <div style="padding: 30px; background-color: #ffffff;">
-                        <p style="font-size: 16px; color: #333;">A login request was made for your Success Point Hub account.</p>
+                    <div style="padding: 25px; background: #161b22; color: white;">
+                        <p style="text-align: center; color: #8b949e;">A login request was made for your account.</p>
+                        <h2 style="text-align: center; font-size: 36px; color: #008069; letter-spacing: 6px; margin: 20px 0;">${otpCode}</h2>
                         
-                        <div style="text-align: center; margin: 30px 0;">
-                            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #008069; border: 2px dashed #008069; padding: 10px 20px; border-radius: 8px;">
-                                ${otpCode}
-                            </span>
-                            <p style="font-size: 12px; color: #666; margin-top: 10px;">This code expires in 5 minutes.</p>
+                        <div style="background: #0d1117; padding: 15px; border-radius: 10px; border-left: 4px solid #ea4335;">
+                            <p style="color: #ea4335; font-weight: bold; margin: 0 0 10px 0;">Was this you?</p>
+                            <div style="font-size: 13px; color: #8b949e; line-height: 2;">
+                                📱 <b>Device:</b> ${deviceDetail}<br>
+                                📍 <b>Location:</b> <a href="${mapUrl}" style="color: #58a6ff; text-decoration: none;">View Live on Map</a><br>
+                                🌐 <b>IP:</b> ${userIp}<br>
+                                ⏰ <b>Time:</b> ${requestTime}
+                            </div>
                         </div>
 
-                        <div style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; font-size: 14px; border-left: 4px solid #ea4335;">
-                            <p style="margin-top: 0; font-weight: bold; color: #d73a49;">Was this you?</p>
-                            <table style="width: 100%; color: #586069;">
-                                <tr><td width="100">📱 Device:</td><td><strong>${deviceName}</strong></td></tr>
-                                <tr><td>📍 Location:</td><td><a href="${mapLink}" style="color: #0366d6;">Bihar, India (Approx)</a></td></tr>
-                                <tr><td>🌐 IP:</td><td>${userIp}</td></tr>
-                                <tr><td>⏰ Time:</td><td>${requestTime}</td></tr>
-                            </table>
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="${secureLink}" style="background: #ea4335; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">No, It wasn't me</a>
+                            <p style="font-size: 11px; color: #8b949e; margin-top: 15px;">Clicking this will logout all devices and block this session.</p>
                         </div>
-
-                        <div style="margin-top: 25px; text-align: center;">
-                            <a href="${secureLink}" style="display: inline-block; padding: 12px 25px; background-color: #ea4335; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">No, It wasn't me</a>
-                            <p style="font-size: 12px; color: #666; margin-top: 15px;">If you didn't request this code, click the button above to cancel the request and log out any active sessions.</p>
-                        </div>
-                    </div>
-
-                    <div style="background-color: #f1f3f4; padding: 15px; text-align: center; font-size: 11px; color: #888;">
-                        Securely delivered by Success Point Hub (Bihar Node)
                     </div>
                 </div>
             `;
@@ -70,15 +71,14 @@ export default async function handler(req, res) {
                 body: JSON.stringify({
                     from: 'BaseKey Security <admin@ayus.fun>',
                     to: to || ['ayushrajayushhh@gmail.com'],
-                    subject: `[Alert] Security Code: ${otpCode}`,
+                    subject: `Security Alert: Your code is ${otpCode}`,
                     html: emailHtml,
                 }),
             });
 
-            const data = await response.json();
-            return res.status(200).json({ success: true, id: data.id });
+            return res.status(200).json({ success: true });
         } catch (error) {
-            return res.status(500).json({ success: false, error: 'Server Error' });
+            return res.status(500).json({ success: false, error: error.message });
         }
     } else {
         res.status(405).json({ message: 'Method not allowed' });
