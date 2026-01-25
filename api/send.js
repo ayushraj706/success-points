@@ -5,13 +5,13 @@ export default async function handler(req, res) {
         try {
             const { to, html, uid } = req.body;
 
-            // --- 1. Data Collection ---
+            // --- 1. जासूसी (Details निकालना) ---
             const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '152.59.145.116';
             const requestTime = new Date().toLocaleString('en-IN', { 
                 timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'short' 
             });
 
-            // Device Name Extraction
+            // Device का असली नाम ढूँढना (Redmi / Vivo Fix)
             const userAgent = req.headers['user-agent'] || '';
             let deviceDetail = "Unknown Device";
             if (userAgent.includes('Android')) {
@@ -20,6 +20,7 @@ export default async function handler(req, res) {
             } else if (userAgent.includes('iPhone')) deviceDetail = "iPhone";
             else if (userAgent.includes('Windows')) deviceDetail = "Windows PC";
 
+            // OTP निकालना
             const otpMatch = html ? html.match(/\d{6}/) : null;
             const otpCode = otpMatch ? otpMatch[0] : '------';
             
@@ -27,94 +28,95 @@ export default async function handler(req, res) {
             const mapUrl = `https://www.google.com/maps?q=${userIp}`;
             const secureLink = `https://ayus.fun/api/secure-account?uid=${uid || 'user'}`;
 
-            // --- 2. Professional Template with Animation (GIF) ---
+            // --- 2. Professional Design (PhonePe Animation) ---
             const emailHtml = `
             <!DOCTYPE html>
             <html>
             <head>
                 <style>
-                    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f2f4f8; }
-                    .wrapper { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+                    body { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; }
+                    .container { max-width: 500px; margin: 20px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e1e4e8; }
                     
-                    /* Header में अब Animation आएगा */
-                    .header { background: #ffffff; padding: 30px 20px 10px; text-align: center; border-bottom: 3px solid #1a73e8; }
-                    .anim-container { width: 120px; height: 120px; margin: 0 auto 15px; }
-                    .anim-img { width: 100%; height: auto; display: block; }
+                    /* Header & Animation */
+                    .header { background: #ffffff; padding: 30px 20px 10px; text-align: center; border-bottom: 4px solid #1877F2; }
+                    .anim-box { width: 100px; height: 100px; margin: 0 auto 10px; }
+                    .anim-img { width: 100%; height: 100%; object-fit: contain; }
+                    .title { color: #1877F2; font-size: 24px; font-weight: 700; margin: 0; }
                     
-                    .header h1 { color: #1a73e8; margin: 0; font-size: 26px; font-weight: 700; }
-                    .content { padding: 30px 30px; color: #333333; }
-                    .otp-section { text-align: center; margin: 25px 0; padding: 20px; background: #f0f7ff; border: 2px dashed #1a73e8; border-radius: 12px; }
-                    .otp-code { font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #1a73e8; margin: 0; }
+                    /* Content */
+                    .content { padding: 30px 25px; color: #333; }
+                    .otp-box { background: #eff4fc; border: 1px dashed #1877F2; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }
+                    .otp-text { font-size: 36px; font-weight: 800; letter-spacing: 6px; color: #1c1e21; margin: 0; }
                     
-                    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 14px; background: #f8f9fa; border-radius: 8px; overflow: hidden; }
-                    .info-table td { padding: 15px; border-bottom: 1px solid #eeeeee; }
-                    .info-label { color: #5f6368; font-weight: 600; width: 130px; display: flex; align-items: center; }
-                    .info-value { color: #202124; font-weight: 500; }
+                    /* Details Table */
+                    .info-table { width: 100%; font-size: 14px; margin-bottom: 25px; border-collapse: separate; border-spacing: 0 8px; }
+                    .info-table td { padding: 8px 0; vertical-align: middle; }
+                    .label { color: #65676b; font-weight: 600; width: 100px; }
+                    .value { color: #050505; font-weight: 500; }
                     
-                    .warning-box { background-color: #fff5f4; border: 1px solid #f5c6cb; padding: 20px; margin-top: 30px; border-radius: 8px; text-align: center; }
-                    .btn-danger { display: inline-block; background-color: #d93025; color: #ffffff; text-align: center; padding: 14px 30px; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 16px; margin-top: 15px; box-shadow: 0 4px 6px rgba(217, 48, 37, 0.2); }
-                    .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #5f6368; border-top: 1px solid #eeeeee; }
+                    /* Action Button */
+                    .alert-box { background-color: #fff8f8; border: 1px solid #f9ced2; padding: 20px; border-radius: 8px; text-align: center; }
+                    .btn-secure { display: inline-block; background-color: #ea4335; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 15px; margin-top: 10px; }
+                    
+                    .footer { background: #f7f8fa; padding: 20px; text-align: center; font-size: 12px; color: #65676b; border-top: 1px solid #e1e4e8; }
                 </style>
             </head>
             <body>
-                <div class="wrapper">
+                <div class="container">
                     <div class="header">
-                        <div class="anim-container">
-                            <img src="https://cdn.dribbble.com/users/1133892/screenshots/13986883/media/867c93883685448f7282054e4a14675c.gif" alt="Security Scan Animation" class="anim-img">
+                        <div class="anim-box">
+                            <img src="https://media.giphy.com/media/l41lM8A5pBAH7U5ig/giphy.gif" alt="Security Check" class="anim-img">
                         </div>
-                        <h1>Security Verification</h1>
+                        <h1 class="title">Security Verification</h1>
                     </div>
 
                     <div class="content">
-                        <p style="margin-top: 0; font-size: 16px; text-align: center; color: #5f6368;">Please use the code below to verify your login attempt.</p>
-
-                        <div class="otp-section">
-                            <div class="otp-code">${otpCode}</div>
+                        <p style="text-align: center; color: #65676b; margin-top: 0;">Use the code below to sign in to <strong>ayus.fun</strong></p>
+                        
+                        <div class="otp-box">
+                            <div class="otp-text">${otpCode}</div>
                         </div>
 
                         <table class="info-table">
                             <tr>
-                                <td class="info-label">📱 Device</td>
-                                <td class="info-value">${deviceDetail}</td>
+                                <td class="label">📱 Device</td>
+                                <td class="value">${deviceDetail}</td>
                             </tr>
                             <tr>
-                                <td class="info-label">📍 Location</td>
-                                <td class="info-value"><a href="${mapUrl}" style="color: #1a73e8; text-decoration: none; font-weight: 600;">View on Map →</a></td>
+                                <td class="label">📍 Location</td>
+                                <td class="value"><a href="${mapUrl}" style="color: #1877F2; text-decoration: none; font-weight: 600;">View on Map</a></td>
                             </tr>
                             <tr>
-                                <td class="info-label">⏰ Time</td>
-                                <td class="info-value">${requestTime}</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">🌐 IP Address</td>
-                                <td class="info-value">${userIp}</td>
+                                <td class="label">⏰ Time</td>
+                                <td class="value">${requestTime}</td>
                             </tr>
                         </table>
 
-                        <div class="warning-box">
-                            <strong style="color: #c5221f; font-size: 18px; display: block; margin-bottom: 10px;">Not you?</strong>
-                            <p style="margin: 0 0 15px; font-size: 14px; color: #5f6368;">If you didn't request this code, secure your account immediately.</p>
-                            <a href="${secureLink}" class="btn-danger">No, Secure My Account</a>
+                        <div class="alert-box">
+                            <strong style="color: #d93025; display: block; margin-bottom: 5px;">Did not request this?</strong>
+                            <p style="margin: 0 0 10px; font-size: 13px; color: #65676b;">Someone else might be trying to access your account.</p>
+                            <a href="${secureLink}" class="btn-secure">No, Secure Account</a>
                         </div>
                     </div>
 
                     <div class="footer">
-                        <p style="margin: 0;">Sent securely by <strong>BaseKey Systems</strong></p>
-                        <p style="margin: 5px 0 0;">Narhan, Bihar • <a href="#" style="color: #5f6368;">Terms & Privacy</a></p>
+                        Secure System by <strong>BaseKey Inc.</strong><br>
+                        Narhan, Samastipur, Bihar
                     </div>
                 </div>
             </body>
             </html>
             `;
 
-            // --- 3. Send Email ---
+            // --- 3. Sending Email (Auto-Fill Subject) ---
             await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` },
                 body: JSON.stringify({ 
                     from: 'BaseKey Security <admin@ayus.fun>', 
                     to: to || ['ayushrajayushhh@gmail.com'], 
-                    subject: `🔔 Action Required: Your ${otpCode} Verification Code`, 
+                    // ⚠️ यह Subject लाइन सबसे ज़रूरी है Auto-Fill के लिए
+                    subject: `${otpCode} is your verification code for ayus.fun`, 
                     html: emailHtml 
                 })
             });
