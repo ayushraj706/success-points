@@ -1,86 +1,119 @@
 export default async function handler(req, res) {
+    // 1. Resend API Key उठाना
     const resendKey = process.env.RESEND_API_KEY;
 
     if (req.method === 'POST') {
         try {
-            const { to, subject, html, uid } = req.body;
+            const { to, html, uid } = req.body;
 
-            // 🌐 IP Address nikalna
-            const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '152.59.145.88';
-            
-            // 📱 Deep Device Detection (Facebook Style)
+            // 2. IP और Time का पता लगाना (Indian Time)
+            const userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
+            const requestTime = new Date().toLocaleString('en-IN', { 
+                timeZone: 'Asia/Kolkata',
+                hour12: true,
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+
+            // 3. User Agent से असली मोबाइल का नाम निकालना (Fixed Logic)
             const userAgent = req.headers['user-agent'] || '';
-            let deviceDetail = "Android Device";
+            let deviceDetail = "Unknown Device";
             
             if (userAgent.includes('Android')) {
-                // Browser Agent se Model nikalna (Redmi/Vivo logic)
-                const parts = userAgent.match(/\(([^)]+)\)/);
-                if (parts && parts[1]) {
-                    const info = parts[1].split(';');
-                    deviceDetail = info[info.length - 1].split('Build')[0].trim();
+                // Android का नाम ढूँढने का स्मार्ट तरीका
+                const match = userAgent.match(/;\s([^;]+)\sBuild/);
+                if (match && match[1]) {
+                    deviceDetail = match[1].trim(); // जैसे: Redmi 6A
+                } else {
+                    deviceDetail = "Android Phone";
                 }
             } else if (userAgent.includes('iPhone')) {
-                deviceDetail = "Apple iPhone";
+                deviceDetail = "iPhone";
+            } else if (userAgent.includes('Windows')) {
+                deviceDetail = "Windows PC";
             }
 
-            // 🔢 OTP Code aur Time nikalna
+            // 4. OTP और Links तैयार करना
             const otpMatch = html ? html.match(/\d{6}/) : null;
             const otpCode = otpMatch ? otpMatch[0] : '------';
-            const requestTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-
-            // 📍 Live Google Maps Link
-            const mapUrl = `https://www.google.com/maps?q=${userIp}`;
             
-            // 🔒 Logout Link (Path sahi kar diya hai)
+            // यह लिंक मैप खोलेगा
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${userIp}`;
+            // यह लिंक हैकर को लॉगआउट करेगा
             const secureLink = `https://ayus.fun/api/secure-account?uid=${uid || 'user'}`;
 
+            // 5. Meta Style सुंदर ईमेल टेम्पलेट (White & Blue)
             const emailHtml = `
-                <div style="font-family: sans-serif; max-width: 500px; margin: auto; border: 1px solid #ddd; border-radius: 15px; overflow: hidden; background: #0d1117;">
-                    <div style="background: #008069; padding: 15px; text-align: center; color: white; font-weight: bold; font-size: 18px;">
-                        BaseKey Security Alert
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+                    .container { max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+                    .header { background: #1877f2; padding: 20px; text-align: center; }
+                    .header h1 { color: white; margin: 0; font-size: 24px; font-weight: 600; }
+                    .content { padding: 30px 20px; text-align: center; color: #1c1e21; }
+                    .otp-box { background: #e7f3ff; border: 1px dashed #1877f2; padding: 15px; border-radius: 6px; margin: 20px 0; }
+                    .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1877f2; margin: 0; }
+                    .details { text-align: left; background: #f9f9f9; padding: 15px; border-radius: 8px; font-size: 14px; line-height: 1.6; margin-bottom: 25px; border-left: 4px solid #1877f2; }
+                    .details b { color: #444; }
+                    .btn-secure { display: block; width: 100%; background: #ea4335; color: white; padding: 14px 0; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; margin-top: 10px; }
+                    .footer { text-align: center; font-size: 12px; color: #65676b; margin-top: 20px; padding-bottom: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>BaseKey Security</h1>
                     </div>
                     
-                    <div style="padding: 25px; background: #161b22; color: white;">
-                        <p style="text-align: center; color: #8b949e;">A login request was made for your account.</p>
-                        <h2 style="text-align: center; font-size: 36px; color: #008069; letter-spacing: 6px; margin: 20px 0;">${otpCode}</h2>
+                    <div class="content">
+                        <p style="font-size: 16px; margin-bottom: 10px;">Login verification code</p>
                         
-                        <div style="background: #0d1117; padding: 15px; border-radius: 10px; border-left: 4px solid #ea4335;">
-                            <p style="color: #ea4335; font-weight: bold; margin: 0 0 10px 0;">Was this you?</p>
-                            <div style="font-size: 13px; color: #8b949e; line-height: 2;">
-                                📱 <b>Device:</b> ${deviceDetail}<br>
-                                📍 <b>Location:</b> <a href="${mapUrl}" style="color: #58a6ff; text-decoration: none;">View Live on Map</a><br>
-                                🌐 <b>IP:</b> ${userIp}<br>
-                                ⏰ <b>Time:</b> ${requestTime}
-                            </div>
+                        <div class="otp-box">
+                            <p class="otp-code">${otpCode}</p>
                         </div>
 
-                        <div style="text-align: center; margin-top: 30px;">
-                            <a href="${secureLink}" style="background: #ea4335; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">No, It wasn't me</a>
-                            <p style="font-size: 11px; color: #8b949e; margin-top: 15px;">Clicking this will logout all devices and block this session.</p>
+                        <p style="color: #65676b; font-size: 14px; margin-bottom: 20px;">Use this code to verify your login.</p>
+
+                        <div class="details">
+                            <b>📱 Device:</b> ${deviceDetail}<br>
+                            <b>📍 Location:</b> <a href="${mapUrl}" style="color: #1877f2; text-decoration: none;">View on Map</a><br>
+                            <b>⏰ Time:</b> ${requestTime}<br>
+                            <b>🌐 IP:</b> ${userIp}
                         </div>
+
+                        <p style="font-size: 13px; color: #65676b; margin-bottom: 10px;">Did not request this code?</p>
+                        <a href="${secureLink}" class="btn-secure">No, It wasn't me</a>
+                    </div>
+
+                    <div class="footer">
+                        From Meta Security • BaseKey Inc.<br>
+                        Narhan, Bihar
                     </div>
                 </div>
+            </body>
+            </html>
             `;
 
-            const response = await fetch('https://api.resend.com/emails', {
+            // Resend API को मेल भेजने का आदेश
+            await fetch('https://api.resend.com/emails', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${resendKey}`,
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${resendKey}` 
                 },
-                body: JSON.stringify({
-                    from: 'BaseKey Security <admin@ayus.fun>',
-                    to: to || ['ayushrajayushhh@gmail.com'],
-                    subject: `Security Alert: Your code is ${otpCode}`,
-                    html: emailHtml,
-                }),
+                body: JSON.stringify({ 
+                    from: 'BaseKey <admin@ayus.fun>', 
+                    to: to || ['ayushrajayushhh@gmail.com'], 
+                    subject: `${otpCode} is your verification code`, 
+                    html: emailHtml 
+                })
             });
 
             return res.status(200).json({ success: true });
-        } catch (error) {
-            return res.status(500).json({ success: false, error: error.message });
+        } catch (e) { 
+            return res.status(500).json({ error: e.message }); 
         }
-    } else {
-        res.status(405).json({ message: 'Method not allowed' });
     }
 }
