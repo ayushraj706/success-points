@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BSEB Social Science Mock Test</title>
+    <style>
+        :root {
+            --primary-color: #0064E0; /* Meta Blue */
+            --bg-color: #F0F2F5;
+            --card-bg: #FFFFFF;
+            --text-color: #050505;
+            --secondary-text: #65676B;
+            --success-color: #31A24C;
+            --error-color: #FA383E;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            margin: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            padding: 16px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .mode-switch {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            gap: 8px;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* Question Area */
+        .quiz-body {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #F0F2F5;
+            border: none;
+            padding: 14px 16px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-btn:hover {
+            background: #E4E6EB;
+        }
+
+        .option-btn.selected {
+            background: #E7F3FF;
+            color: var(--primary-color);
+            font-weight: 600;
+            border: 1px solid var(--primary-color);
+        }
+
+        .option-btn.correct {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .option-btn.wrong {
+            background: var(--error-color);
+            color: white;
+        }
+
+        /* Footer Navigation */
+        .footer {
+            padding: 16px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 6px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary {
+            background: #E4E6EB;
+            color: #050505;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Result Screen */
+        .result-screen {
+            display: none;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .score-card {
+            background: #E7F3FF;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .score-big {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .review-list {
+            text-align: left;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .review-item {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+        }
+        .review-q { font-weight: bold; margin-bottom: 5px; }
+        .review-ans { font-size: 14px; }
+        .ans-correct { color: var(--success-color); }
+        .ans-wrong { color: var(--error-color); }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .badge-wrong { background: #ffebeb; color: var(--error-color); }
+        .badge-correct { background: #e7f7e7; color: var(--success-color); }
+        .badge-skipped { background: #fff3cd; color: #856404; }
+
+    </style>
+</head>
+<body>
+
+<div class="container" id="quiz-app">
+    <div class="header">
+        <h2 id="progress-text">प्रश्न 1 / 80</h2>
+        <div class="mode-switch">
+            <span>तुरंत उत्तर देखें</span>
+            <label class="switch">
+                <input type="checkbox" id="mode-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="quiz-body" id="quiz-screen">
+        <div class="question-text" id="question-text">Loading...</div>
+        <div class="options-grid" id="options-container">
+            </div>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <div class="score-card">
+            <h3>आपका परिणाम</h3>
+            <div class="score-big" id="final-score">0/80</div>
+            <p id="score-msg">बहुत बढ़िया!</p>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <button class="btn btn-primary" onclick="location.reload()">फिर से टेस्ट दें</button>
+        </div>
+        <h3>विस्तृत समीक्षा (Review)</h3>
+        <div class="review-list" id="review-list">
+            </div>
+    </div>
+
+    <div class="footer" id="footer-nav">
+        <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()">पिछला</button>
+        <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">अगला</button>
+    </div>
+</div>
+
+<script>
+    // 80 Questions Data extracted from user text
+    // Note: Answer keys (0=A, 1=B, 2=C, 3=D) are based on standard BSEB Model Papers.
+    const questions = [
+        { q: "1. 'बिहार के विकास के बिना भारत का विकास संभव नहीं है।' यह कथन किसका है?", options: ["राजेन्द्र प्रसाद", "ए. पी. जे. अब्दुल कलाम", "महबूब-उल-हक", "महात्मा गांधी"], ans: 1 },
+        { q: "2. भारत में योजना आयोग का गठन कब हुआ?", options: ["15 मार्च, 1950", "15 मार्च, 1951", "15 अप्रैल, 1950", "15 अप्रैल, 1951"], ans: 0 },
+        { q: "3. कृषि का विकास करना किस पंचवर्षीय योजना का मुख्य उद्देश्य था?", options: ["पहली", "दूसरी", "तीसरी", "पाँचवीं"], ans: 0 },
+        { q: "4. मानव विकास रिपोर्ट का प्रकाशन निम्न में से किसके द्वारा किया जाता है?", options: ["WTO", "WHO", "UNDP", "ILO"], ans: 2 },
+        { q: "5. भारत का पहला मानव विकास रिपोर्ट किस प्रधानमंत्री द्वारा जारी किया गया था?", options: ["मनमोहन सिंह", "अटल बिहारी वाजपेयी", "इन्द्र कुमार गुजराल", "जवाहरलाल नेहरू"], ans: 1 },
+        { q: "6. गरीबी के कुचक्र की धारणा किसने दी?", options: ["साइमन कुजनेत्स", "कीन्स", "अल्फ्रेड मार्शल", "रैगनर नर्क्स"], ans: 3 },
+        { q: "7. भारत की सर्वाधिक प्रति व्यक्ति आय वाला राज्य कौन है?", options: ["पंजाब", "गोवा", "महाराष्ट्र", "कर्नाटक"], ans: 1 },
+        { q: "8. वर्ष भर में किसी देश में अर्जित आय की कुल मात्रा को क्या कहते हैं?", options: ["प्रति व्यक्ति आय", "औसत आय", "राष्ट्रीय आय", "इनमें कोई नहीं"], ans: 2 },
+        { q: "9. टका किस देश की मुद्रा है?", options: ["सिंगापुर", "इराक", "नेपाल", "बांग्लादेश"], ans: 3 },
+        { q: "10. बिहार में पहला क्षेत्रीय ग्रामीण बैंक कब स्थापित हुआ?", options: ["1974", "1975", "1976", "1977"], ans: 1 },
+        { q: "11. केन्द्रीय सहकारी बैंक किस स्तर पर काम करता है?", options: ["ग्राम स्तर", "जिला स्तर", "राज्य स्तर", "राष्ट्रीय स्तर"], ans: 1 },
+        { q: "12. प्राथमिक कृषि साख समिति कृषकों को किस प्रकार का ऋण प्रदान करती है?", options: ["अल्पकालीन", "मध्यकालीन", "दीर्घकालीन", "इनमें से सभी"], ans: 0 },
+        { q: "13. आर्थिक विकास का तीसरा क्षेत्र क्या है?", options: ["कृषि", "उद्योग", "विनिर्माण", "सेवा"], ans: 3 },
+        { q: "14. सरकार द्वारा लगाए गए अनावश्यक नियंत्रणों तथा प्रतिबन्धों को हटाना क्या कहलाता है?", options: ["निजीकरण", "उदारीकरण", "वैश्वीकरण", "इनमें कोई नहीं"], ans: 1 },
+        { q: "15. विश्व व्यापार संगठन का मुख्यालय कहाँ है?", options: ["न्यूयॉर्क", "वाशिंगटन डी० सी०", "जेनेवा", "रोम"], ans: 2 },
+        { q: "16. वर्तमान में उपभोक्ता संरक्षण हेतु कितने राज्य आयोग काम कर रहे हैं?", options: ["34", "35", "32", "36"], ans: 1 },
+        { q: "17. सहकारिता प्रांतीय सरकारों का हस्तांतरणयोग्य विषय कब बनी?", options: ["1929", "1919", "1918", "1914"], ans: 1 },
+        { q: "18. मैंगनीज उत्पादन में अग्रणी राज्य कौन है?", options: ["ओडिशा", "मध्य प्रदेश", "महाराष्ट्र", "कर्नाटक"], ans: 0 },
+        { q: "19. निम्न में से कौन लौह अयस्क का एक प्रकार है?", options: ["लिग्नाइट", "हेमाटाइट", "बिटुमिनस", "इनमें से सभी"], ans: 1 },
+        { q: "20. भाखड़ा-नंगल परियोजना किस नदी पर बनी है?", options: ["महानदी", "सतलज", "गोदावरी", "कृष्णा"], ans: 1 },
+        { q: "21. निम्न में से कौन भारत का पहला स्वदेशी प्रयास से बना परमाणु विद्युत केन्द्र है?", options: ["राणा प्रताप सागर", "नरौरा", "तारापुर", "कलपक्कम"], ans: 3 },
+        { q: "22. हिमाचल प्रदेश के मणिकरण में किस प्रकार का ऊर्जा संयंत्र है?", options: ["परमाणु ऊर्जा", "भूतापीय ऊर्जा", "ताप विद्युत", "जल विद्युत"], ans: 1 },
+        { q: "23. प्राकृतिक गैस किस खनिज के साथ पाया जाता है?", options: ["यूरेनियम", "पेट्रोलियम", "चूनापत्थर", "कोयला"], ans: 1 },
+        { q: "24. ब्रिटेन के सहयोग से कहाँ लौह इस्पात उद्योग बनाया गया?", options: ["बोकारो", "राउरकेला", "सेलम", "दुर्गापुर"], ans: 3 },
+        { q: "25. हुगली औद्योगिक प्रदेश का केन्द्र है:", options: ["कोलकाता-रिशरा", "कोलकाता-कोन्नगर", "कोलकाता-मेदिनीपुर", "कोलकाता-हावड़ा"], ans: 0 },
+        { q: "26. भारत का सबसे छोटा रेलवे जोन कौन है?", options: ["उत्तर रेलवे", "उत्तर-पूर्वी सीमांत रेलवे", "दक्षिण-पूर्व रेलवे", "पूर्वी तटवर्ती रेलवे"], ans: 1 },
+        { q: "27. फाल्टा विशेष आर्थिक क्षेत्र कहाँ स्थित है?", options: ["बिहार", "पश्चिम बंगाल", "केरल", "ओडिशा"], ans: 1 },
+        { q: "28. भारत का पहला सीमेंट संयंत्र कहाँ स्थापित हुआ?", options: ["दिल्ली", "कोलकाता", "मुम्बई", "चेन्नई"], ans: 3 },
+        { q: "29. भारत का बर्मिंघम किस शहर को कहा जाता है?", options: ["बोकारो", "जमशेदपुर", "भिलाई", "रेवाड़ी"], ans: 1 },
+        { q: "30. निम्न में से कौन जीवाश्म ईंधन है?", options: ["कोयला", "पेट्रोलियम", "प्राकृतिक गैस", "इनमें से सभी"], ans: 3 },
+        { q: "31. बाघ परियोजना की शुरूआत कब हुई?", options: ["1970", "1973", "1975", "1978"], ans: 1 },
+        { q: "32. काजीरंगा राष्ट्रीय उद्यान कहाँ स्थित है?", options: ["राजस्थान", "उत्तर प्रदेश", "उत्तराखण्ड", "असम"], ans: 3 },
+        { q: "33. भारतीय वन्य जीव बोर्ड का गठन कब हुआ?", options: ["1950", "1952", "1948", "1954"], ans: 1 },
+        { q: "34. आयुर्वेद के जनक कौन हैं?", options: ["चरक", "धन्वन्तरी", "पतंजलि", "सुश्रुत"], ans: 0 },
+        { q: "35. टेक्सोल का उपयोग होता है:", options: ["मलेरिया में", "एड्स में", "कैंसर में", "टी० बी० में"], ans: 2 },
+        { q: "36. निम्न में से कौन नवीकरणीय ऊर्जा का स्रोत है?", options: ["कोयला", "सौर ऊर्जा", "पेट्रोलियम", "प्राकृतिक गैस"], ans: 1 },
+        { q: "37. भारत का सबसे लंबा बाँध कौन-सा है?", options: ["हीराकुंड बाँध", "टिहरी बाँध", "रिहन्द बाँध", "भाखड़ा-नंगल बाँध"], ans: 0 },
+        { q: "38. कहलगाँव तापीय विद्युत परियोजना कहाँ है?", options: ["मुजफ्फरपुर", "बरौनी", "भागलपुर", "कटिहार"], ans: 2 },
+        { q: "39. भूकंप की सर्वाधिक विनाशकारी तरंग कौन है?", options: ["पी-तरंग", "एस-तरंग", "एल-तरंग", "टी-तरंग"], ans: 2 },
+        { q: "40. निम्न में से किस नदी को 'बिहार का शोक' कहा जाता है?", options: ["गंगा", "गण्डक", "कोसी", "सोन"], ans: 2 },
+        { q: "41. निम्न में से कौन प्राकृतिक आपदा नहीं है?", options: ["सुनामी", "बाढ़", "भूकंप", "महामारी"], ans: 3 },
+        { q: "42. वर्ष 1934 में बिहार ने किस प्राकृतिक आपदा का सामना किया था?", options: ["सुखाड़", "बाढ़", "भूकंप", "सुनामी"], ans: 2 },
+        { q: "43. कच्छ प्रदेश किस भूकंपीय पेटी से सम्बन्धित है?", options: ["जोन-2", "जोन-3", "जोन-4", "जोन-5"], ans: 3 },
+        { q: "44. महासागर तल में कम्पन को कहते हैं:", options: ["भूकंप", "चक्रवात", "सुनामी", "भूस्खलन"], ans: 2 },
+        { q: "45. मलवे के नीचे दबे हुए लोगों का पता लगाने के लिए किस यंत्र की मदद ली जाती है?", options: ["दूरबीन", "इंफ्रारेड कैमरा", "हेलीकॉप्टर", "सूक्ष्मदर्शी"], ans: 1 },
+        { q: "46. भारत की संविधान सभा का गठन कब हुआ?", options: ["1946", "1947", "1948", "1949"], ans: 0 },
+        { q: "47. एन्क्रूमा कहाँ के राष्ट्रपति चुने गए?", options: ["पोलैंड", "चिली", "घाना", "मेक्सिको"], ans: 2 },
+        { q: "48. राजनीतिक दलों की मान्यता और उसका चिह्न प्रदान किया जाता है:", options: ["राष्ट्रपति द्वारा", "प्रधानमंत्री द्वारा", "निर्वाचन आयोग द्वारा", "संसद द्वारा"], ans: 2 },
+        { q: "49. निम्न में से कौन क्षेत्रीय पार्टी है?", options: ["लोक जनशक्ति पार्टी", "बहुजन समाज पार्टी", "झारखंड मुक्ति मोर्चा", "भारतीय जनता पार्टी"], ans: 2 },
+        { q: "50. बंगला किस राजनीतिक दल का चुनाव चिह्न है?", options: ["समाजवादी पार्टी", "राष्ट्रीय जनता दल", "लोक जनशक्ति पार्टी", "भारतीय कम्युनिस्ट पार्टी"], ans: 2 },
+        { q: "51. नर्मदा घाटी परियोजना किन राज्यों से सम्बन्धित है?", options: ["बिहार, यूपी, एमपी", "तमिलनाडु, केरल, कर्नाटक", "पश्चिम बंगाल, यूपी, पंजाब", "गुजरात, महाराष्ट्र, एमपी"], ans: 3 },
+        { q: "52. निम्न में से कौन भारतीय किसान यूनियन के प्रमुख नेता थे?", options: ["जयप्रकाश नारायण", "चौधरी चरण सिंह", "महेन्द्र सिंह टिकैत", "मोरारजी देसाई"], ans: 2 },
+        { q: "53. जिला परिषद का कार्यकाल कितने वर्ष का होता है?", options: ["4 वर्ष", "5 वर्ष", "6 वर्ष", "2 वर्ष"], ans: 1 },
+        { q: "54. पंचायती राज प्रणाली की शुरूआत कहाँ हुई थी?", options: ["बिहार", "राजस्थान", "कर्नाटक", "महाराष्ट्र"], ans: 1 },
+        { q: "55. ग्राम पंचायत का प्रधान कौन होता है?", options: ["पार्षद", "महापौर", "आयुक्त", "मुखिया"], ans: 3 },
+        { q: "56. राज्यपाल की नियुक्ति कौन करता है?", options: ["राष्ट्रपति", "प्रधानमंत्री", "उप-राष्ट्रपति", "मुख्यमंत्री"], ans: 0 },
+        { q: "57. आंग सान सू की का सम्बन्ध किस देश से है?", options: ["दक्षिण अफ्रीका", "म्यांमार", "श्रीलंका", "भूटान"], ans: 1 },
+        { q: "58. भारतीय राष्ट्रीय कांग्रेस की स्थापना कब हुई?", options: ["1732", "1885", "1890", "1945"], ans: 1 },
+        { q: "59. बोलिविया में जनसंघर्ष का मुख्य कारण क्या था?", options: ["पानी की कीमत में वृद्धि", "खाद्यान्न की कीमत में वृद्धि", "पेट्रोल की कीमत में वृद्धि", "इनमें से कोई नहीं"], ans: 0 },
+        { q: "60. किस पत्र ने वर्नाक्यूलर प्रेस एक्ट से बचने के लिए भाषा बदल दी?", options: ["हरिजन", "अमृत बाजार पत्रिका", "मराठा", "यंग इंडिया"], ans: 1 },
+        { q: "61. विश्व में सर्वप्रथम मुद्रण की शुरूआत कहाँ हुई?", options: ["चीन", "भारत", "जापान", "ब्रिटेन"], ans: 0 },
+        { q: "62. किस सम्मेलन में जर्मनी की क्षतिपूर्ति राशि को कम किया गया?", options: ["क्योटो सम्मेलन", "वियना सम्मेलन", "रियो-डी-जेनेरो", "लौसने सम्मेलन"], ans: 3 },
+        { q: "63. अमेरिका में 'न्यू डील' किसने लागू की?", options: ["अब्राहम लिंकन", "फ्रैंकलिन डी रूजवेल्ट", "बराक ओबामा", "निक्सन"], ans: 1 },
+        { q: "64. जॉन के ने किस मशीन का आविष्कार किया?", options: ["स्पिनिंग जेनी", "पावरलूम", "फ्लाइंग शटल", "वाष्प इंजन"], ans: 2 },
+        { q: "65. वल्लभ भाई पटेल को सरदार की उपाधि किस आंदोलन में दी गई?", options: ["बारदोली", "अहमदाबाद", "खेड़ा", "चंपारण"], ans: 0 },
+        { q: "66. किन्हें सीमांत गांधी के नाम से भी जाना जाता है?", options: ["सी० राजगोपालाचारी", "मौलाना आजाद", "खान अब्दुल गफ्फार खान", "लाला हरदयाल"], ans: 2 },
+        { q: "67. भारत सरकार अधिनियम, 1919 को ..... के नाम से भी जानते हैं।", options: ["मॉन्टेग्यू-चेम्सफोर्ड", "साइमन कमीशन", "इंडियन स्टेट्यूटरी", "नेहरू रिपोर्ट"], ans: 0 },
+        { q: "68. अंकोरवाट मंदिर का निर्माण किसने कराया?", options: ["चन्द्रगुप्त मौर्य", "सूर्यवर्मा द्वितीय", "समुद्रगुप्त", "हर्षवर्धन"], ans: 1 },
+        { q: "69. बोल्शेविक दल का कार्यक्रम 'अप्रैल थीसिस' किसने लिखा है?", options: ["स्टालिन", "ट्रॉट्स्की", "लेनिन", "गैरीबाल्डी"], ans: 2 },
+        { q: "70. अन्तर्राष्ट्रीय मजदूर दिवस कब मनाया जाता है?", options: ["1 मई", "1 जून", "5 जून", "8 मार्च"], ans: 0 },
+        { q: "71. 'समाजवादियों की बाइबिल' किसे कहते हैं?", options: ["वार एण्ड पीस", "कम्युनिस्ट मेनिफेस्टो", "दास कैपिटल", "अप्रैल थीसिस"], ans: 2 },
+        { q: "72. 'रक्त और लौह' की नीति का अवलम्बन किसने किया?", options: ["गैरीबाल्डी", "मेजिनी", "बिस्मार्क", "नेपोलियन"], ans: 2 },
+        { q: "73. वर्नाक्यूलर प्रेस एक्ट को किसने रद्द किया?", options: ["लॉर्ड लिटन", "लॉर्ड रिपन", "लॉर्ड डलहौजी", "लॉर्ड इरविन"], ans: 1 },
+        { q: "74. रूस में अल्पमत वाला दल क्या कहलाया?", options: ["बोल्शेविक", "मेनशेविक", "सर्वहारा वर्ग", "कोई नहीं"], ans: 1 },
+        { q: "75. वाओदाई की सरकार कहाँ थी?", options: ["उत्तरी वियतनाम", "दक्षिणी वियतनाम", "कम्बोडिया", "हनोई"], ans: 1 },
+        { q: "76. उत्तरी और दक्षिणी वियतनाम का एकीकरण कब हुआ?", options: ["1960", "1965", "1975", "1976"], ans: 2 },
+        { q: "77. किसके योगदान से इटली का एकीकरण पूर्ण हुआ?", options: ["मेजिनी", "काउंट कावूर", "विक्टर इमैनुएल", "इनमें से सभी"], ans: 3 },
+        { q: "78. हीगेल किस देश का दार्शनिक था?", options: ["फ्रांस", "इटली", "जर्मनी", "ऑस्ट्रिया"], ans: 2 },
+        { q: "79. जर्मन राईन राज्य का निर्माण किसने किया था?", options: ["लुई XVIII", "नेपोलियन बोनापार्ट", "नेपोलियन III", "बिस्मार्क"], ans: 1 },
+        { q: "80. अन्तर्राष्ट्रीय महिला दिवस की घोषणा किस संस्था ने की?", options: ["महिला आयोग", "संयुक्त राष्ट्र संघ", "यूरोपीय संघ", "आसियान"], ans: 1 }
+    ];
+
+    let currentQIndex = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+    let instantMode = false;
+
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const footerNav = document.getElementById('footer-nav');
+    const progressText = document.getElementById('progress-text');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const modeToggle = document.getElementById('mode-toggle');
+
+    // Initialize
+    modeToggle.addEventListener('change', (e) => {
+        instantMode = e.target.checked;
+        renderQuestion();
+    });
+
+    function renderQuestion() {
+        const q = questions[currentQIndex];
+        progressText.innerText = `प्रश्न ${currentQIndex + 1} / ${questions.length}`;
+        questionText.innerText = q.q;
+        optionsContainer.innerHTML = '';
+
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = `(${String.fromCharCode(65 + idx)}) ${opt}`;
+            
+            // State handling
+            const userAns = userAnswers[currentQIndex];
+            
+            if (instantMode) {
+                // In Instant Mode, if answered:
+                if (userAns !== null) {
+                    if (idx === q.ans) btn.classList.add('correct');
+                    if (idx === userAns && idx !== q.ans) btn.classList.add('wrong');
+                    btn.disabled = true; // Disable clicks after answering
+                }
+                btn.onclick = () => handleAnswer(idx);
+            } else {
+                // In Exam Mode
+                if (userAns === idx) btn.classList.add('selected');
+                btn.onclick = () => handleAnswer(idx);
+            }
+
+            optionsContainer.appendChild(btn);
+        });
+
+        // Button States
+        prevBtn.disabled = currentQIndex === 0;
+        if (currentQIndex === questions.length - 1) {
+            nextBtn.innerText = "जमा करें (Submit)";
+            nextBtn.onclick = submitQuiz;
+        } else {
+            nextBtn.innerText = "अगला";
+            nextBtn.onclick = nextQuestion;
+        }
+    }
+
+    function handleAnswer(selectedIdx) {
+        userAnswers[currentQIndex] = selectedIdx;
+        
+        if (instantMode) {
+            // Re-render to show colors immediately
+            renderQuestion();
+        } else {
+            // Just update selection style
+            renderQuestion();
+        }
+    }
+
+    function nextQuestion() {
+        if (currentQIndex < questions.length - 1) {
+            currentQIndex++;
+            renderQuestion();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQIndex > 0) {
+            currentQIndex--;
+            renderQuestion();
+        }
+    }
+
+    function submitQuiz() {
+        quizScreen.style.display = 'none';
+        footerNav.style.display = 'none';
+        resultScreen.style.display = 'block';
+        document.querySelector('.header').style.display = 'none';
+
+        let score = 0;
+        const reviewList = document.getElementById('review-list');
+        reviewList.innerHTML = '';
+
+        questions.forEach((q, idx) => {
+            const uAns = userAnswers[idx];
+            const isCorrect = uAns === q.ans;
+            if (isCorrect) score++;
+
+            const div = document.createElement('div');
+            div.className = 'review-item';
+            
+            let statusBadge = '';
+            if (uAns === null) statusBadge = '<span class="badge badge-skipped">छोड़ा गया</span>';
+            else if (isCorrect) statusBadge = '<span class="badge badge-correct">सही</span>';
+            else statusBadge = '<span class="badge badge-wrong">गलत</span>';
+
+            div.innerHTML = `
+                ${statusBadge}
+                <div class="review-q">${q.q}</div>
+                <div class="review-ans">
+                    <span class="${uAns === q.ans ? 'ans-correct' : (uAns !== null ? 'ans-wrong' : '')}">
+                        आपका उत्तर: ${uAns !== null ? q.options[uAns] : 'कोई नहीं'}
+                    </span><br>
+                    <span class="ans-correct">सही उत्तर: ${q.options[q.ans]}</span>
+                </div>
+            `;
+            reviewList.appendChild(div);
+        });
+
+        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        const percent = (score / questions.length) * 100;
+        let msg = "अच्छा प्रयास!";
+        if (percent > 80) msg = "अद्भुत! बहुत बढ़िया तैयारी है।";
+        else if (percent < 40) msg = "थोड़ी और मेहनत की जरूरत है।";
+        document.getElementById('score-msg').innerText = msg;
+    }
+
+    // Start
+    renderQuestion();
+
+</script>
+
+</body>
+</html>
