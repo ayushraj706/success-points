@@ -8,12 +8,21 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* OTP Input Styling */
+        .otp-input {
+            width: 45px; height: 55px; border: 2px solid #e2e8f0;
+            border-radius: 12px; text-align: center; font-size: 1.5rem;
+            font-weight: bold; color: #008069; outline: none; transition: 0.3s;
+        }
+        .otp-input:focus { border-color: #008069; box-shadow: 0 0 10px rgba(0,128,105,0.2); }
+    </style>
 </head>
 <body id="app-body" class="bg-gray-100 select-none">
 
     <div id="auth-view" class="fixed inset-0 bg-[#008069] z-[6000] flex flex-col items-center justify-center p-6 text-white hidden">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl text-center">
-            <img src="assets/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/201/201614.png'" class="w-20 h-20 mx-auto mb-4 animate-bounce">
+            <img src="public/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/201/201614.png'" class="w-20 h-20 mx-auto mb-4 animate-bounce rounded-full">
             <h1 class="text-2xl font-bold text-[#008069] mb-1">Welcome Back</h1>
             <p class="text-gray-400 text-xs mb-6">Enter Email to Login</p>
             
@@ -25,8 +34,16 @@
             </div>
 
             <div id="step-otp" class="hidden">
-                <p class="text-gray-500 text-xs mb-2">Check your email for OTP</p>
-                <input type="number" id="u-otp" placeholder="Enter 6-digit OTP" class="w-full p-3 border rounded-lg mb-4 text-black text-center font-bold text-xl tracking-widest outline-none">
+                <p class="text-gray-500 text-xs mb-4">Check your email for OTP</p>
+                <div class="flex justify-between mb-6" id="otp-inputs">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric">
+                    <input type="number" class="otp-input" maxlength="1" inputmode="numeric">
+                </div>
+                <input type="hidden" id="u-otp">
                 
                 <button onclick="window.verifyOTP()" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-lg mb-2">
                     Verify & Login
@@ -43,74 +60,25 @@
         </div>
     </div>
 
-    <div id="app-view" class="hidden h-screen flex flex-col">
-        <header class="app-header shadow-md">
-            <div class="flex items-center gap-3">
-                <img src="assets/logo.png" onerror="this.style.display='none'" class="w-8 h-8 rounded-full bg-white p-1">
-                <div><h1 class="font-bold text-lg leading-tight">Success Point</h1><p class="text-[10px] text-green-100">Ayush Raj Production</p></div>
-            </div>
-            <div class="flex gap-2">
-                 <button onclick="window.toggleSearch()" class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><i class="fa-solid fa-magnifying-glass"></i></button>
-                <button onclick="window.doLogout()" class="w-8 h-8 rounded-full bg-red-500/80 flex items-center justify-center text-white"><i class="fa-solid fa-power-off"></i></button>
-            </div>
-        </header>
+    <script>
+        // ✅ JS to handle 6-box OTP movement
+        const inputs = document.querySelectorAll('.otp-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length > 1) e.target.value = e.target.value.slice(0, 1);
+                if (e.target.value && index < inputs.length - 1) inputs[index + 1].focus();
+                
+                // Combine all 6 values into your original hidden u-otp
+                let combined = "";
+                inputs.forEach(i => combined += i.value);
+                document.getElementById('u-otp').value = combined;
+            });
 
-        <div id="search-overlay" class="fixed top-[60px] left-0 w-full bg-white p-3 shadow-lg z-[1900] hidden">
-            <input type="text" id="global-search" onkeyup="window.runGlobalSearch()" placeholder="Search..." class="w-full p-2 border rounded-lg bg-gray-100">
-        </div>
-
-        <div class="main-view px-4 pb-24">
-            <div id="v-home">
-                <div id="home-skeleton" class="space-y-4 mt-4">
-                    <div class="skeleton h-24 w-full rounded-lg"></div>
-                    <div class="grid grid-cols-2 gap-4"><div class="skeleton h-32 rounded-lg"></div><div class="skeleton h-32 rounded-lg"></div></div>
-                </div>
-
-                <div id="home-content" class="hidden mt-4 space-y-4">
-                    <div id="countdown-box" class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg flex justify-between items-center">
-                        <div><h2 class="font-bold">Exam Timer</h2><p id="days-left" class="text-xs">Loading...</p></div>
-                        <i class="fa-solid fa-hourglass-half text-2xl opacity-50"></i>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div onclick="window.switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-3xl mb-2"></i><b>Hindi</b></div>
-                        <div onclick="window.openList('science', 'Science Notes')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-3xl mb-2"></i><b>Science</b></div>
-                        <div onclick="window.openList('math', 'Math Notes')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-3xl mb-2"></i><b>Math</b></div>
-                        <div onclick="window.openList('sst', 'SST Notes')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-3xl mb-2"></i><b>SST</b></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="v-people" class="hidden pt-2"><div id="people-list"></div></div>
-            <div id="v-chat" class="hidden pt-2"><div id="recent-chats">Loading...</div></div>
-            <div id="v-list" class="hidden mt-4"><div id="list-container"></div></div>
-            
-             <div id="v-hindi-menu" class="hidden mt-4">
-                <button onclick="window.switchV('v-home')" class="mb-4 font-bold text-[#008069]">⬅ Back</button>
-                <div class="space-y-3">
-                    <div onclick="window.openList('gad', 'Gadya Khand')" class="p-4 bg-white rounded shadow font-bold">📖 Gadya Khand</div>
-                    <div onclick="window.openList('kav', 'Kavya Khand')" class="p-4 bg-white rounded shadow font-bold">🎼 Kavya Khand</div>
-                </div>
-            </div>
-
-            <div id="v-frame" class="hidden fixed inset-0 bg-white z-[5000] flex flex-col">
-                <div class="h-[50px] bg-gray-100 flex items-center justify-between px-4 border-b"><button onclick="window.closeFrame()" class="text-red-500 font-bold">Close</button><b id="file-title">View</b></div>
-                <iframe id="main-frame" class="w-full h-full"></iframe>
-            </div>
-            
-            <div id="v-room" class="hidden fixed inset-0 bg-[#e5ddd5] z-[3000] flex flex-col">
-                <div class="p-3 bg-[#008069] text-white flex gap-3 items-center h-[60px]"><button onclick="window.switchV('v-chat')"><i class="fa-solid fa-arrow-left"></i></button><b id="rm-name">Chat</b></div>
-                <div id="msg-log" class="flex-grow overflow-y-auto p-4 space-y-2"></div>
-                <div class="p-2 bg-white flex gap-2"><input id="m-in" class="flex-grow p-2 border rounded-full" placeholder="Message..."><button onclick="window.sndMsg()" class="text-[#008069] p-2"><i class="fa-solid fa-paper-plane text-xl"></i></button></div>
-            </div>
-        </div>
-
-        <nav class="app-dock">
-            <button onclick="window.switchV('v-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
-            <button onclick="window.switchV('v-people')" class="dock-btn"><i class="fa-solid fa-users"></i>People</button>
-            <button onclick="window.switchV('v-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
-        </nav>
-    </div>
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) inputs[index - 1].focus();
+            });
+        });
+    </script>
     
     <script type="module" src="js/firebase-config.js"></script>
     <script type="module" src="js/data.js"></script>
