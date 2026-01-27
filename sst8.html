@@ -3,493 +3,347 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BSEB Social Science Mock Test</title>
+    <title>Social Science - Clean Quiz</title>
     <style>
-        :root {
-            --primary-color: #0064E0; /* Meta Blue */
-            --bg-color: #F0F2F5;
-            --card-bg: #FFFFFF;
-            --text-color: #050505;
-            --secondary-text: #65676B;
-            --success-color: #31A24C;
-            --error-color: #FA383E;
-            --border-radius: 12px;
-        }
-
+        /* --- साधारण और साफ डिजाइन (Light Mode) --- */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9; /* हल्का ग्रे बैकग्राउंड */
+            color: #000; /* काला टेक्स्ट */
             margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
-            color: var(--text-color);
         }
 
-        .container {
+        .quiz-container {
+            background: #ffffff; /* पूरा सफेद कार्ड */
             width: 100%;
             max-width: 600px;
-            background: var(--card-bg);
-            margin: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* हल्की परछाई */
+            border: 1px solid #ddd;
         }
 
-        /* Header */
+        /* हेडर (Score) */
         .header {
-            padding: 16px;
-            border-bottom: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: #fff;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
         }
 
-        .header h2 {
-            margin: 0;
-            font-size: 18px;
-            color: var(--primary-color);
+        /* प्रश्न */
+        .q-number {
+            color: #007bff; /* नीला रंग */
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .mode-switch {
-            display: flex;
-            align-items: center;
-            font-size: 14px;
-            gap: 8px;
-        }
-
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 24px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(16px); }
-
-        /* Question Area */
-        .quiz-body {
-            padding: 20px;
-            flex: 1;
-        }
-
-        .question-text {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 24px;
+        .q-text {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            font-weight: bold;
             line-height: 1.4;
         }
 
+        /* ऑप्शन बटन */
         .options-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .option-btn {
-            background: #F0F2F5;
-            border: none;
-            padding: 14px 16px;
+            background: #f8f9fa;
+            border: 1px solid #ccc;
+            color: #000;
+            padding: 15px;
             border-radius: 8px;
-            text-align: left;
-            font-size: 16px;
             cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
+            font-size: 1rem;
+            text-align: left;
+            transition: 0.2s;
         }
 
         .option-btn:hover {
-            background: #E4E6EB;
+            background: #e2e6ea;
         }
 
-        .option-btn.selected {
-            background: #E7F3FF;
-            color: var(--primary-color);
-            font-weight: 600;
-            border: 1px solid var(--primary-color);
-        }
-
+        /* सही/गलत का रंग */
         .option-btn.correct {
-            background: var(--success-color);
-            color: white;
-        }
-        
-        .option-btn.wrong {
-            background: var(--error-color);
-            color: white;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724; /* हरा */
+            font-weight: bold;
         }
 
-        /* Footer Navigation */
-        .footer {
-            padding: 16px;
-            border-top: 1px solid #ddd;
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24; /* लाल */
+        }
+
+        /* नेविगेशन बटन (Previous/Next) */
+        .nav-buttons {
             display: flex;
             justify-content: space-between;
-            background: #fff;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
         }
 
         .btn {
-            padding: 10px 24px;
-            border-radius: 6px;
+            padding: 10px 20px;
             border: none;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 5px;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-secondary {
-            background: #E4E6EB;
-            color: #050505;
-        }
-
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Result Screen */
-        .result-screen {
-            display: none;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .score-card {
-            background: #E7F3FF;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .score-big {
-            font-size: 48px;
+            font-size: 1rem;
             font-weight: bold;
-            color: var(--primary-color);
         }
 
-        .review-list {
-            text-align: left;
-            max-height: 60vh;
+        .btn-blue { background-color: #007bff; color: white; }
+        .btn-gray { background-color: #6c757d; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* उत्तर कुंजी (Answer Key) सेक्शन */
+        .toggle-key-btn {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        #answer-key {
+            display: none; /* पहले छुपा रहेगा */
+            margin-top: 20px;
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
             overflow-y: auto;
+            border: 1px solid #ccc;
         }
 
-        .review-item {
-            border-bottom: 1px solid #eee;
-            padding: 12px 0;
+        .key-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.9rem;
         }
-        .review-q { font-weight: bold; margin-bottom: 5px; }
-        .review-ans { font-size: 14px; }
-        .ans-correct { color: var(--success-color); }
-        .ans-wrong { color: var(--error-color); }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-        .badge-wrong { background: #ffebeb; color: var(--error-color); }
-        .badge-correct { background: #e7f7e7; color: var(--success-color); }
-        .badge-skipped { background: #fff3cd; color: #856404; }
-
     </style>
 </head>
 <body>
 
-<div class="container" id="quiz-app">
-    <div class="header">
-        <h2 id="progress-text">प्रश्न 1 / 80</h2>
-        <div class="mode-switch">
-            <span>तुरंत उत्तर देखें</span>
-            <label class="switch">
-                <input type="checkbox" id="mode-toggle">
-                <span class="slider"></span>
-            </label>
+    <div class="quiz-container">
+        <div class="header">
+            <span>Social Science Quiz</span>
+            <span>Score: <span id="score">0</span></span>
         </div>
-    </div>
 
-    <div class="quiz-body" id="quiz-screen">
-        <div class="question-text" id="question-text">Loading...</div>
+        <div>
+            <span class="q-number" id="q-number">Question 1</span>
+            <div class="q-text" id="q-text">Loading question...</div>
+        </div>
+
         <div class="options-grid" id="options-container">
             </div>
-    </div>
 
-    <div class="result-screen" id="result-screen">
-        <div class="score-card">
-            <h3>आपका परिणाम</h3>
-            <div class="score-big" id="final-score">0/80</div>
-            <p id="score-msg">बहुत बढ़िया!</p>
+        <div class="nav-buttons">
+            <button class="btn btn-gray" onclick="prevQuestion()" id="prev-btn" disabled>Previous</button>
+            <button class="btn btn-blue" onclick="nextQuestion()" id="next-btn">Next</button>
         </div>
-        <div style="margin-bottom: 20px;">
-            <button class="btn btn-primary" onclick="location.reload()">फिर से टेस्ट दें</button>
-        </div>
-        <h3>विस्तृत समीक्षा (Review)</h3>
-        <div class="review-list" id="review-list">
-            </div>
-    </div>
 
-    <div class="footer" id="footer-nav">
-        <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()">पिछला</button>
-        <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()">अगला</button>
-    </div>
-</div>
-
-<script>
-    // 80 Questions Data extracted from user text
-    // Note: Answer keys (0=A, 1=B, 2=C, 3=D) are based on standard BSEB Model Papers.
-    const questions = [
-        { q: "1. 'बिहार के विकास के बिना भारत का विकास संभव नहीं है।' यह कथन किसका है?", options: ["राजेन्द्र प्रसाद", "ए. पी. जे. अब्दुल कलाम", "महबूब-उल-हक", "महात्मा गांधी"], ans: 1 },
-        { q: "2. भारत में योजना आयोग का गठन कब हुआ?", options: ["15 मार्च, 1950", "15 मार्च, 1951", "15 अप्रैल, 1950", "15 अप्रैल, 1951"], ans: 0 },
-        { q: "3. कृषि का विकास करना किस पंचवर्षीय योजना का मुख्य उद्देश्य था?", options: ["पहली", "दूसरी", "तीसरी", "पाँचवीं"], ans: 0 },
-        { q: "4. मानव विकास रिपोर्ट का प्रकाशन निम्न में से किसके द्वारा किया जाता है?", options: ["WTO", "WHO", "UNDP", "ILO"], ans: 2 },
-        { q: "5. भारत का पहला मानव विकास रिपोर्ट किस प्रधानमंत्री द्वारा जारी किया गया था?", options: ["मनमोहन सिंह", "अटल बिहारी वाजपेयी", "इन्द्र कुमार गुजराल", "जवाहरलाल नेहरू"], ans: 1 },
-        { q: "6. गरीबी के कुचक्र की धारणा किसने दी?", options: ["साइमन कुजनेत्स", "कीन्स", "अल्फ्रेड मार्शल", "रैगनर नर्क्स"], ans: 3 },
-        { q: "7. भारत की सर्वाधिक प्रति व्यक्ति आय वाला राज्य कौन है?", options: ["पंजाब", "गोवा", "महाराष्ट्र", "कर्नाटक"], ans: 1 },
-        { q: "8. वर्ष भर में किसी देश में अर्जित आय की कुल मात्रा को क्या कहते हैं?", options: ["प्रति व्यक्ति आय", "औसत आय", "राष्ट्रीय आय", "इनमें कोई नहीं"], ans: 2 },
-        { q: "9. टका किस देश की मुद्रा है?", options: ["सिंगापुर", "इराक", "नेपाल", "बांग्लादेश"], ans: 3 },
-        { q: "10. बिहार में पहला क्षेत्रीय ग्रामीण बैंक कब स्थापित हुआ?", options: ["1974", "1975", "1976", "1977"], ans: 1 },
-        { q: "11. केन्द्रीय सहकारी बैंक किस स्तर पर काम करता है?", options: ["ग्राम स्तर", "जिला स्तर", "राज्य स्तर", "राष्ट्रीय स्तर"], ans: 1 },
-        { q: "12. प्राथमिक कृषि साख समिति कृषकों को किस प्रकार का ऋण प्रदान करती है?", options: ["अल्पकालीन", "मध्यकालीन", "दीर्घकालीन", "इनमें से सभी"], ans: 3 },
-        { q: "13. आर्थिक विकास का तीसरा क्षेत्र क्या है?", options: ["कृषि", "उद्योग", "विनिर्माण", "सेवा"], ans: 3 },
-        { q: "14. सरकार द्वारा लगाए गए अनावश्यक नियंत्रणों तथा प्रतिबन्धों को हटाना क्या कहलाता है?", options: ["निजीकरण", "उदारीकरण", "वैश्वीकरण", "इनमें कोई नहीं"], ans: 1 },
-        { q: "15. विश्व व्यापार संगठन का मुख्यालय कहाँ है?", options: ["न्यूयॉर्क", "वाशिंगटन डी० सी०", "जेनेवा", "रोम"], ans: 2 },
-        { q: "16. वर्तमान में उपभोक्ता संरक्षण हेतु कितने राज्य आयोग काम कर रहे हैं?", options: ["34", "35", "32", "36"], ans: 1 },
-        { q: "17. सहकारिता प्रांतीय सरकारों का हस्तांतरणयोग्य विषय कब बनी?", options: ["1929", "1919", "1918", "1914"], ans: 1 },
-        { q: "18. मैंगनीज उत्पादन में अग्रणी राज्य कौन है?", options: ["ओडिशा", "मध्य प्रदेश", "महाराष्ट्र", "कर्नाटक"], ans: 0 },
-        { q: "19. निम्न में से कौन लौह अयस्क का एक प्रकार है?", options: ["लिग्नाइट", "हेमाटाइट", "बिटुमिनस", "इनमें से सभी"], ans: 1 },
-        { q: "20. भाखड़ा-नंगल परियोजना किस नदी पर बनी है?", options: ["महानदी", "सतलज", "गोदावरी", "कृष्णा"], ans: 1 },
-        { q: "21. निम्न में से कौन भारत का पहला स्वदेशी प्रयास से बना परमाणु विद्युत केन्द्र है?", options: ["राणा प्रताप सागर", "नरौरा", "तारापुर", "कलपक्कम"], ans: 3 },
-        { q: "22. हिमाचल प्रदेश के मणिकरण में किस प्रकार का ऊर्जा संयंत्र है?", options: ["परमाणु ऊर्जा", "भूतापीय ऊर्जा", "ताप विद्युत", "जल विद्युत"], ans: 1 },
-        { q: "23. प्राकृतिक गैस किस खनिज के साथ पाया जाता है?", options: ["यूरेनियम", "पेट्रोलियम", "चूनापत्थर", "कोयला"], ans: 1 },
-        { q: "24. ब्रिटेन के सहयोग से कहाँ लौह इस्पात उद्योग बनाया गया?", options: ["बोकारो", "राउरकेला", "सेलम", "दुर्गापुर"], ans: 3 },
-        { q: "25. हुगली औद्योगिक प्रदेश का केन्द्र है:", options: ["कोलकाता-रिशरा", "कोलकाता-कोन्नगर", "कोलकाता-मेदिनीपुर", "कोलकाता-हावड़ा"], ans: 0 },
-        { q: "26. भारत का सबसे छोटा रेलवे जोन कौन है?", options: ["उत्तर रेलवे", "उत्तर-पूर्वी सीमांत रेलवे", "दक्षिण-पूर्व रेलवे", "पूर्वी तटवर्ती रेलवे"], ans: 1 },
-        { q: "27. फाल्टा विशेष आर्थिक क्षेत्र कहाँ स्थित है?", options: ["बिहार", "पश्चिम बंगाल", "केरल", "ओडिशा"], ans: 1 },
-        { q: "28. भारत का पहला सीमेंट संयंत्र कहाँ स्थापित हुआ?", options: ["दिल्ली", "कोलकाता", "मुम्बई", "चेन्नई"], ans: 3 },
-        { q: "29. भारत का बर्मिंघम किस शहर को कहा जाता है?", options: ["बोकारो", "जमशेदपुर", "भिलाई", "रेवाड़ी"], ans: 1 },
-        { q: "30. निम्न में से कौन जीवाश्म ईंधन है?", options: ["कोयला", "पेट्रोलियम", "प्राकृतिक गैस", "इनमें से सभी"], ans: 3 },
-        { q: "31. बाघ परियोजना की शुरूआत कब हुई?", options: ["1970", "1973", "1975", "1978"], ans: 1 },
-        { q: "32. काजीरंगा राष्ट्रीय उद्यान कहाँ स्थित है?", options: ["राजस्थान", "उत्तर प्रदेश", "उत्तराखण्ड", "असम"], ans: 3 },
-        { q: "33. भारतीय वन्य जीव बोर्ड का गठन कब हुआ?", options: ["1950", "1952", "1948", "1954"], ans: 1 },
-        { q: "34. आयुर्वेद के जनक कौन हैं?", options: ["चरक", "धन्वन्तरी", "पतंजलि", "सुश्रुत"], ans: 0 },
-        { q: "35. टेक्सोल का उपयोग होता है:", options: ["मलेरिया में", "एड्स में", "कैंसर में", "टी० बी० में"], ans: 2 },
-        { q: "36. निम्न में से कौन नवीकरणीय ऊर्जा का स्रोत है?", options: ["कोयला", "सौर ऊर्जा", "पेट्रोलियम", "प्राकृतिक गैस"], ans: 1 },
-        { q: "37. भारत का सबसे लंबा बाँध कौन-सा है?", options: ["हीराकुंड बाँध", "टिहरी बाँध", "रिहन्द बाँध", "भाखड़ा-नंगल बाँध"], ans: 0 },
-        { q: "38. कहलगाँव तापीय विद्युत परियोजना कहाँ है?", options: ["मुजफ्फरपुर", "बरौनी", "भागलपुर", "कटिहार"], ans: 2 },
-        { q: "39. भूकंप की सर्वाधिक विनाशकारी तरंग कौन है?", options: ["पी-तरंग", "एस-तरंग", "एल-तरंग", "टी-तरंग"], ans: 2 },
-        { q: "40. निम्न में से किस नदी को 'बिहार का शोक' कहा जाता है?", options: ["गंगा", "गण्डक", "कोसी", "सोन"], ans: 2 },
-        { q: "41. निम्न में से कौन प्राकृतिक आपदा नहीं है?", options: ["सुनामी", "बाढ़", "भूकंप", "महामारी"], ans: 3 },
-        { q: "42. वर्ष 1934 में बिहार ने किस प्राकृतिक आपदा का सामना किया था?", options: ["सुखाड़", "बाढ़", "भूकंप", "सुनामी"], ans: 2 },
-        { q: "43. कच्छ प्रदेश किस भूकंपीय पेटी से सम्बन्धित है?", options: ["जोन-2", "जोन-3", "जोन-4", "जोन-5"], ans: 3 },
-        { q: "44. महासागर तल में कम्पन को कहते हैं:", options: ["भूकंप", "चक्रवात", "सुनामी", "भूस्खलन"], ans: 2 },
-        { q: "45. मलवे के नीचे दबे हुए लोगों का पता लगाने के लिए किस यंत्र की मदद ली जाती है?", options: ["दूरबीन", "इंफ्रारेड कैमरा", "हेलीकॉप्टर", "सूक्ष्मदर्शी"], ans: 1 },
-        { q: "46. भारत की संविधान सभा का गठन कब हुआ?", options: ["1946", "1947", "1948", "1949"], ans: 0 },
-        { q: "47. एन्क्रूमा कहाँ के राष्ट्रपति चुने गए?", options: ["पोलैंड", "चिली", "घाना", "मेक्सिको"], ans: 2 },
-        { q: "48. राजनीतिक दलों की मान्यता और उसका चिह्न प्रदान किया जाता है:", options: ["राष्ट्रपति द्वारा", "प्रधानमंत्री द्वारा", "निर्वाचन आयोग द्वारा", "संसद द्वारा"], ans: 2 },
-        { q: "49. निम्न में से कौन क्षेत्रीय पार्टी है?", options: ["लोक जनशक्ति पार्टी", "बहुजन समाज पार्टी", "झारखंड मुक्ति मोर्चा", "भारतीय जनता पार्टी"], ans: 2 },
-        { q: "50. बंगला किस राजनीतिक दल का चुनाव चिह्न है?", options: ["समाजवादी पार्टी", "राष्ट्रीय जनता दल", "लोक जनशक्ति पार्टी", "भारतीय कम्युनिस्ट पार्टी"], ans: 2 },
-        { q: "51. नर्मदा घाटी परियोजना किन राज्यों से सम्बन्धित है?", options: ["बिहार, यूपी, एमपी", "तमिलनाडु, केरल, कर्नाटक", "पश्चिम बंगाल, यूपी, पंजाब", "गुजरात, महाराष्ट्र, एमपी"], ans: 3 },
-        { q: "52. निम्न में से कौन भारतीय किसान यूनियन के प्रमुख नेता थे?", options: ["जयप्रकाश नारायण", "चौधरी चरण सिंह", "महेन्द्र सिंह टिकैत", "मोरारजी देसाई"], ans: 2 },
-        { q: "53. जिला परिषद का कार्यकाल कितने वर्ष का होता है?", options: ["4 वर्ष", "5 वर्ष", "6 वर्ष", "2 वर्ष"], ans: 1 },
-        { q: "54. पंचायती राज प्रणाली की शुरूआत कहाँ हुई थी?", options: ["बिहार", "राजस्थान", "कर्नाटक", "महाराष्ट्र"], ans: 1 },
-        { q: "55. ग्राम पंचायत का प्रधान कौन होता है?", options: ["पार्षद", "महापौर", "आयुक्त", "मुखिया"], ans: 3 },
-        { q: "56. राज्यपाल की नियुक्ति कौन करता है?", options: ["राष्ट्रपति", "प्रधानमंत्री", "उप-राष्ट्रपति", "मुख्यमंत्री"], ans: 0 },
-        { q: "57. आंग सान सू की का सम्बन्ध किस देश से है?", options: ["दक्षिण अफ्रीका", "म्यांमार", "श्रीलंका", "भूटान"], ans: 1 },
-        { q: "58. भारतीय राष्ट्रीय कांग्रेस की स्थापना कब हुई?", options: ["1732", "1885", "1890", "1945"], ans: 1 },
-        { q: "59. बोलिविया में जनसंघर्ष का मुख्य कारण क्या था?", options: ["पानी की कीमत में वृद्धि", "खाद्यान्न की कीमत में वृद्धि", "पेट्रोल की कीमत में वृद्धि", "इनमें से कोई नहीं"], ans: 0 },
-        { q: "60. किस पत्र ने वर्नाक्यूलर प्रेस एक्ट से बचने के लिए भाषा बदल दी?", options: ["हरिजन", "अमृत बाजार पत्रिका", "मराठा", "यंग इंडिया"], ans: 1 },
-        { q: "61. विश्व में सर्वप्रथम मुद्रण की शुरूआत कहाँ हुई?", options: ["चीन", "भारत", "जापान", "ब्रिटेन"], ans: 0 },
-        { q: "62. किस सम्मेलन में जर्मनी की क्षतिपूर्ति राशि को कम किया गया?", options: ["क्योटो सम्मेलन", "वियना सम्मेलन", "रियो-डी-जेनेरो", "लौसने सम्मेलन"], ans: 3 },
-        { q: "63. अमेरिका में 'न्यू डील' किसने लागू की?", options: ["अब्राहम लिंकन", "फ्रैंकलिन डी रूजवेल्ट", "बराक ओबामा", "निक्सन"], ans: 1 },
-        { q: "64. जॉन के ने किस मशीन का आविष्कार किया?", options: ["स्पिनिंग जेनी", "पावरलूम", "फ्लाइंग शटल", "वाष्प इंजन"], ans: 2 },
-        { q: "65. वल्लभ भाई पटेल को सरदार की उपाधि किस आंदोलन में दी गई?", options: ["बारदोली", "अहमदाबाद", "खेड़ा", "चंपारण"], ans: 0 },
-        { q: "66. किन्हें सीमांत गांधी के नाम से भी जाना जाता है?", options: ["सी० राजगोपालाचारी", "मौलाना आजाद", "खान अब्दुल गफ्फार खान", "लाला हरदयाल"], ans: 2 },
-        { q: "67. भारत सरकार अधिनियम, 1919 को ..... के नाम से भी जानते हैं।", options: ["मॉन्टेग्यू-चेम्सफोर्ड", "साइमन कमीशन", "इंडियन स्टेट्यूटरी", "नेहरू रिपोर्ट"], ans: 0 },
-        { q: "68. अंकोरवाट मंदिर का निर्माण किसने कराया?", options: ["चन्द्रगुप्त मौर्य", "सूर्यवर्मा द्वितीय", "समुद्रगुप्त", "हर्षवर्धन"], ans: 1 },
-        { q: "69. बोल्शेविक दल का कार्यक्रम 'अप्रैल थीसिस' किसने लिखा है?", options: ["स्टालिन", "ट्रॉट्स्की", "लेनिन", "गैरीबाल्डी"], ans: 2 },
-        { q: "70. अन्तर्राष्ट्रीय मजदूर दिवस कब मनाया जाता है?", options: ["1 मई", "1 जून", "5 जून", "8 मार्च"], ans: 0 },
-        { q: "71. 'समाजवादियों की बाइबिल' किसे कहते हैं?", options: ["वार एण्ड पीस", "कम्युनिस्ट मेनिफेस्टो", "दास कैपिटल", "अप्रैल थीसिस"], ans: 2 },
-        { q: "72. 'रक्त और लौह' की नीति का अवलम्बन किसने किया?", options: ["गैरीबाल्डी", "मेजिनी", "बिस्मार्क", "नेपोलियन"], ans: 2 },
-        { q: "73. वर्नाक्यूलर प्रेस एक्ट को किसने रद्द किया?", options: ["लॉर्ड लिटन", "लॉर्ड रिपन", "लॉर्ड डलहौजी", "लॉर्ड इरविन"], ans: 1 },
-        { q: "74. रूस में अल्पमत वाला दल क्या कहलाया?", options: ["बोल्शेविक", "मेनशेविक", "सर्वहारा वर्ग", "कोई नहीं"], ans: 1 },
-        { q: "75. वाओदाई की सरकार कहाँ थी?", options: ["उत्तरी वियतनाम", "दक्षिणी वियतनाम", "कम्बोडिया", "हनोई"], ans: 1 },
-        { q: "76. उत्तरी और दक्षिणी वियतनाम का एकीकरण कब हुआ?", options: ["1960", "1965", "1975", "1976"], ans: 2 },
-        { q: "77. किसके योगदान से इटली का एकीकरण पूर्ण हुआ?", options: ["मेजिनी", "काउंट कावूर", "विक्टर इमैनुएल", "इनमें से सभी"], ans: 3 },
-        { q: "78. हीगेल किस देश का दार्शनिक था?", options: ["फ्रांस", "इटली", "जर्मनी", "ऑस्ट्रिया"], ans: 2 },
-        { q: "79. जर्मन राईन राज्य का निर्माण किसने किया था?", options: ["लुई XVIII", "नेपोलियन बोनापार्ट", "नेपोलियन III", "बिस्मार्क"], ans: 1 },
-        { q: "80. अन्तर्राष्ट्रीय महिला दिवस की घोषणा किस संस्था ने की?", options: ["महिला आयोग", "संयुक्त राष्ट्र संघ", "यूरोपीय संघ", "आसियान"], ans: 1 }
-    ];
-
-    let currentQIndex = 0;
-    let userAnswers = new Array(questions.length).fill(null);
-    let instantMode = false;
-
-    const quizScreen = document.getElementById('quiz-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const footerNav = document.getElementById('footer-nav');
-    const progressText = document.getElementById('progress-text');
-    const questionText = document.getElementById('question-text');
-    const optionsContainer = document.getElementById('options-container');
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const modeToggle = document.getElementById('mode-toggle');
-
-    // Initialize
-    modeToggle.addEventListener('change', (e) => {
-        instantMode = e.target.checked;
-        renderQuestion();
-    });
-
-    function renderQuestion() {
-        const q = questions[currentQIndex];
-        progressText.innerText = `प्रश्न ${currentQIndex + 1} / ${questions.length}`;
-        questionText.innerText = q.q;
-        optionsContainer.innerHTML = '';
-
-        q.options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = `(${String.fromCharCode(65 + idx)}) ${opt}`;
-            
-            // State handling
-            const userAns = userAnswers[currentQIndex];
-            
-            if (instantMode) {
-                // In Instant Mode, if answered:
-                if (userAns !== null) {
-                    if (idx === q.ans) btn.classList.add('correct');
-                    if (idx === userAns && idx !== q.ans) btn.classList.add('wrong');
-                    btn.disabled = true; // Disable clicks after answering
-                }
-                btn.onclick = () => handleAnswer(idx);
-            } else {
-                // In Exam Mode
-                if (userAns === idx) btn.classList.add('selected');
-                btn.onclick = () => handleAnswer(idx);
-            }
-
-            optionsContainer.appendChild(btn);
-        });
-
-        // Button States
-        prevBtn.disabled = currentQIndex === 0;
-        if (currentQIndex === questions.length - 1) {
-            nextBtn.innerText = "जमा करें (Submit)";
-            nextBtn.onclick = submitQuiz;
-        } else {
-            nextBtn.innerText = "अगला";
-            nextBtn.onclick = nextQuestion;
-        }
-    }
-
-    function handleAnswer(selectedIdx) {
-        userAnswers[currentQIndex] = selectedIdx;
+        <button class="toggle-key-btn" onclick="toggleAnswerKey()">All Answers (Show/Hide)</button>
         
-        if (instantMode) {
-            // Re-render to show colors immediately
-            renderQuestion();
-        } else {
-            // Just update selection style
-            renderQuestion();
-        }
-    }
+        <div id="answer-key"></div>
+    </div>
 
-    function nextQuestion() {
-        if (currentQIndex < questions.length - 1) {
-            currentQIndex++;
-            renderQuestion();
-        }
-    }
+    <script>
+        // --- 80 प्रश्न और उत्तर (डेटा) ---
+        // 0 = A, 1 = B, 2 = C, 3 = D
+        const questions = [
+            { q: "1. निम्नलिखित में से किस समुदाय ने ब्रुसेल्स में बहुमत का गठन किया?", options: ["(A) फ्रेंच भाषी समुदाय", "(B) डच भाषी समुदाय", "(C) जर्मन भाषी समुदाय", "(D) डेनिश भाषी समुदाय"], correct: 1 },
+            { q: "2. सरकार के उच्च और निम्न स्तरों के बीच शक्तियों के विभाजन को कहा जाता है:", options: ["(A) क्षैतिज वितरण", "(B) समानांतर वितरण", "(C) ऊर्ध्वाधर वितरण", "(D) इनमें से कोई नहीं"], correct: 2 },
+            { q: "3. निम्न में से कौन नगर निगम का प्रमुख है?", options: ["(A) गृह मंत्री", "(B) राज्यपाल", "(C) सरपंच", "(D) महापौर"], correct: 3 },
+            { q: "4. निम्न में से कौन-सा विषय समवर्ती सूची में शामिल है?", options: ["(A) बैंकिंग", "(B) व्यापार", "(C) पुलिस", "(D) शिक्षा"], correct: 3 },
+            { q: "5. राष्ट्रवादियों और यू॰ के॰ सरकार के बीच कब समझौता हुआ?", options: ["(A) 1992", "(B) 1995", "(C) 1998", "(D) 1999"], correct: 2 },
+            { q: "6. नेपाल के किस राजा ने प्रजातांत्रिक शासन को स्वीकार करने से इंकार कर दिया?", options: ["(A) राजा बीरेन्द्र", "(B) गिरिजा प्रसाद कोइराला", "(C) राजा ज्ञानेन्द्र", "(D) राजा महेन्द्र"], correct: 2 },
+            { q: "7. समकालीन विश्व में सरकार का सबसे लोकप्रिय रूप क्या है?", options: ["(A) राजतंत्र", "(B) सैनिक शासन", "(C) अधिनायकवाद", "(D) लोकतंत्र"], correct: 3 },
+            { q: "8. निम्न में से किस देश में एक-दलीय प्रणाली है?", options: ["(A) भारत", "(B) चीन", "(C) संयुक्त राज्य अमेरिका", "(D) इंग्लैंड"], correct: 1 },
+            { q: "9. निम्न में से कौन राष्ट्रीय राजनीतिक दल नहीं है?", options: ["(A) भारतीय जनता पार्टी", "(B) भारतीय कम्युनिस्ट पार्टी", "(C) समाजवादी पार्टी", "(D) बहुजन समाज पार्टी"], correct: 2 },
+            { q: "10. आजादी के समय से ही किस देश में सरकार का लोकतांत्रिक स्वरूप है?", options: ["(A) पाकिस्तान", "(B) भूटान", "(C) नेपाल", "(D) भारत"], correct: 3 },
+            { q: "11. निम्न में से किसने कहा कि धर्म को कभी भी राजनीति से अलग नहीं किया जा सकता है?", options: ["(A) आचार्य विनोबा भावे", "(B) महात्मा गांधी", "(C) सरोजिनी नायडू", "(D) राजेन्द्र प्रसाद"], correct: 1 },
+            { q: "12. 'ताड़ी विरोधी आंदोलन' निम्न में से किस राज्य में शुरू किया गया?", options: ["(A) बिहार", "(B) उत्तर प्रदेश", "(C) आंध्र प्रदेश", "(D) तमिलनाडु"], correct: 2 },
+            { q: "13. साइकिल किस राजनीतिक दल का चुनाव चिह्न है?", options: ["(A) राष्ट्रीय जनता दल", "(B) समाजवादी पार्टी", "(C) लोक जनशक्ति पार्टी", "(D) बहुजन समाज पार्टी"], correct: 1 },
+            { q: "14. संविधान का अनुच्छेद 40 किससे संबंधित है?", options: ["(A) समानता का अधिकार", "(B) जीवन का अधिकार", "(C) स्थानीय स्वशासन", "(D) शिक्षा का अधिकार"], correct: 2 },
+            { q: "15. वेस्ट इंडिज में संघ की स्थापना कब की गई?", options: ["(A) 1958", "(B) 1962", "(C) 1973", "(D) 1975"], correct: 0 },
+            { q: "16. निम्नलिखित में से कौन संघों के एक साथ आने का उदाहरण नहीं है?", options: ["(A) भारत", "(B) संयुक्त राज्य अमेरिका", "(C) स्विट्जरलैंड", "(D) ऑस्ट्रेलिया"], correct: 0 },
+            { q: "17. फ्रांसीसी क्रांति कब हुई?", options: ["(A) 1789", "(B) 1804", "(C) 1871", "(D) 1817"], correct: 0 },
+            { q: "18. मेजिनी का संबंध किस संगठन से था?", options: ["(A) लाल सेना", "(B) कार्बोनरी", "(C) डायट", "(D) जालवेरिन"], correct: 1 },
+            { q: "19. राष्ट्रीय आन्दोलन का केन्द्र जेना विश्वविद्यालय कहाँ स्थित है?", options: ["(A) इटली", "(B) जर्मनी", "(C) रूस", "(D) ग्रेट ब्रिटेन"], correct: 1 },
+            { q: "20. कोसूथ का संबंध किस देश में है?", options: ["(A) ऑस्ट्रिया", "(B) यूनान", "(C) पोलैंड", "(D) हंगरी"], correct: 3 },
+            { q: "21. रूस में प्रतिनिधियात्मक संस्था ड्यूमा का गठन कब हुआ?", options: ["(A) 1861", "(B) 1867", "(C) 1905", "(D) 1917"], correct: 2 },
+            { q: "22. वैज्ञानिक समाजवाद का जनक किसे माना जाता है?", options: ["(A) फ्रैंकफर्ट की संधि", "(B) ब्रेस्ट-लिटोवस्क की संधि", "(C) वर्साय की संधि", "(D) पेरिस की संधि"], correct: 0 },
+            { q: "23. वैज्ञानिक समाजवाद का जनक किसे माना जाता है?", options: ["(A) सेंट साइमन", "(B) रॉबर्ट ओवन", "(C) कार्ल मार्क्स", "(D) फ्रेडरिक एंगेल्स"], correct: 2 },
+            { q: "24. निम्न में से क्या पोट्सडम की घोषणा का उद्देश्य था?", options: ["(A) जापान का आत्मसमर्पण", "(B) अमेरिका का आत्मसमर्पण", "(C) वियतनाम की स्वतंत्रता", "(D) जर्मनी का एकीकरण"], correct: 0 },
+            { q: "25. भारत में रेलवे और टेलीग्राफ लाइन की शुरूआत किसके शासनकाल में हुई?", options: ["(A) लॉर्ड लिटन", "(B) लॉर्ड डलहौजी", "(C) लॉर्ड कर्जन", "(D) लॉर्ड डफरिन"], correct: 1 },
+            { q: "26. महात्मा गाँधी के राजनीतिक गुरु कौन थे?", options: ["(A) सुरेन्द्रनाथ बनर्जी", "(B) सत्येन्द्रनाथ टैगोर", "(C) गोपाल कृष्ण गोखले", "(D) मोतीलाल नेहरू"], correct: 2 },
+            { q: "27. चौरी-चौरा हत्याकांड के बाद किस आंदोलन को स्थगित कर दिया गया?", options: ["(A) असहयोग आंदोलन", "(B) सविनय अवज्ञा आंदोलन", "(C) खिलाफत आंदोलन", "(D) भारत छोड़ो आंदोलन"], correct: 0 },
+            { q: "28. 'लाल कुर्ती' नामक संगठन का गठन किसने किया?", options: ["(A) मेजिनी", "(B) खान अब्दुल गफ्फार खान", "(C) सी॰ राजगोपालाचारी", "(D) सरदार वल्लभ भाई पटेल"], correct: 1 },
+            { q: "29. लखनऊ समझौता किस वर्ष हुआ?", options: ["(A) 1916", "(B) 1918", "(C) 1920", "(D) 1922"], correct: 0 },
+            { q: "30. 'इंडियन स्टेट्यूटरी कमीशन' के अध्यक्ष कौन थे?", options: ["(A) जनरल डायर", "(B) विलियम हंटर", "(C) रॉबर्ट ओवन", "(D) जॉन साइमन"], correct: 3 },
+            { q: "31. स्वेज नहर को कब खोला गया?", options: ["(A) 1828", "(B) 1869", "(C) 1914", "(D) 1924"], correct: 1 },
+            { q: "32. भारत में प्रथम सूती वस्त्र उद्योग कहाँ स्थापित किया गया?", options: ["(A) मुम्बई", "(B) चेन्नई", "(C) कोलकाता", "(D) अहमदाबाद"], correct: 2 },
+            { q: "33. 1921 में सरकार द्वारा गठित राजस्व आयोग के अध्यक्ष कौन थे?", options: ["(A) इब्राहिम रहिमतूल्ला", "(B) जे॰ एम॰ कीन्स", "(C) जमशेदजी टाटा", "(D) घनश्यामदास बिड़ला"], correct: 0 },
+            { q: "34. भारत में प्रथम औद्योगिक नीति की घोषणा कब हुई?", options: ["(A) 1948", "(B) 1956", "(C) 1990", "(D) इनमें कोई नहीं"], correct: 0 },
+            { q: "35. 1929 की आर्थिक मंदी का सबसे बुरा असर किस देश पर पड़ा?", options: ["(A) ग्रेट ब्रिटेन", "(B) अमेरिका", "(C) भारत", "(D) फ्रांस"], correct: 1 },
+            { q: "36. युद्धोत्तर पुनर्निर्माण के लिए पैसे का इंतजाम करने हेतु किस संस्था का गठन हुआ?", options: ["(A) अन्तरराष्ट्रीय मुद्रा कोष", "(B) विश्व बैंक", "(C) एशियाई विकास बैंक", "(D) फेडरल बैंक"], correct: 1 },
+            { q: "37. यूरोपीय आर्थिक संघ की मुद्रा क्या है?", options: ["(A) डॉलर", "(B) पौण्ड", "(C) रूबल", "(D) यूरो"], correct: 3 },
+            { q: "38. 'न्यू इंडिया' समाचार पत्र को किसने शुरू किया?", options: ["(A) महात्मा गाँधी", "(B) एनी बेसेंट", "(C) राजा राममोहन राय", "(D) मनमोहन घोष"], correct: 1 },
+            { q: "39. वियना कांग्रेस का मुख्य उद्देश्य क्या था?", options: ["(A) गणराज्यों को पुनर्स्थापित करना", "(B) लोकतंत्रों को पुनर्स्थापित करना", "(C) राजतंत्रों को पुनर्स्थापित करना", "(D) इनमें से कोई नहीं"], correct: 2 },
+            { q: "40. सिकन्दर कहाँ का निवासी था?", options: ["(A) रोम", "(B) चीन", "(C) यूनान", "(D) मिस्र"], correct: 2 },
+            { q: "41. किस आयोग/कमिटी ने सतत् पोषणीय विकास की अवधारणा प्रस्तुत की?", options: ["(A) ब्रुन्टलैंड आयोग", "(B) ब्रेटन वुड्स कमिटी", "(C) साइमन आयोग", "(D) जेनेवा आयोग"], correct: 0 },
+            { q: "42. निम्न में पुरानी जलोढ़ मिट्टी कौन है?", options: ["(A) खादर", "(B) बांगर", "(C) लेटेराइट", "(D) इनमें कोई नहीं"], correct: 1 },
+            { q: "43. प्रथम राष्ट्रीय जल नीति कब लागू हुई?", options: ["(A) अगस्त, 1980", "(B) जुलाई, 1985", "(C) सितम्बर, 1987", "(D) अक्टूबर, 1990"], correct: 2 },
+            { q: "44. जिम कार्बेट राष्ट्रीय उद्यान कहाँ स्थित है?", options: ["(A) उत्तराखण्ड", "(B) गुजरात", "(C) केरल", "(D) उत्तर प्रदेश"], correct: 0 },
+            { q: "45. भारत का सबसे छोटा जैव मंडल रिजर्व कौन-सा है?", options: ["(A) सुन्दरवन", "(B) नन्दा देवी", "(C) ग्रेट निकोबार", "(D) डिब्रू सैखोवा"], correct: 3 },
+            { q: "46. क्यूनाइन का उपयोग होता है:", options: ["(A) मलेरिया में", "(B) कैंसर में", "(C) दर्द निवारण में", "(D) टी॰बी॰ में"], correct: 0 },
+            { q: "47. भारत में कितने सार्वजनिक क्षेत्र के तेल परिष्करण केन्द्र कार्य कर रहे हैं?", options: ["(A) 16", "(B) 18", "(C) 20", "(D) 23"], correct: 1 },
+            { q: "48. भारत के प्रथम जल विद्युत संयंत्र की स्थापना कहाँ की गई?", options: ["(A) शिवसमुद्रम", "(B) देहरादून", "(C) शिमला", "(D) दार्जिलिंग"], correct: 3 },
+            { q: "49. कैगा परमाणु विद्युत किस राज्य में स्थित है?", options: ["(A) तमिलनाडु", "(B) कर्नाटक", "(C) उत्तर प्रदेश", "(D) राजस्थान"], correct: 1 },
+            { q: "50. भारत के किस राज्य में सौर ऊर्जा के विकास की सर्वाधिक संभावनाएँ हैं?", options: ["(A) असम", "(B) अरुणाचल प्रदेश", "(C) राजस्थान", "(D) मेघालय"], correct: 2 },
+            { q: "51. निम्न में से कौन रोपण फसल का उदाहरण है?", options: ["(A) रबड़", "(B) चाय", "(C) गन्ना", "(D) इनमें से सभी"], correct: 3 },
+            { q: "52. निम्न में से कौन दलहनी फसल वायुमंडलीय नाइट्रोजन का स्थिरीकरण नहीं करती है?", options: ["(A) चना", "(B) मटर", "(C) मूँग", "(D) राजमा"], correct: 3 },
+            { q: "53. भारत में बफर स्टॉक कौन बनाता है?", options: ["(A) भारतीय खाद्य निगम", "(B) खाद्य एवं कृषि संगठन", "(C) संयुक्त राष्ट्र संघ", "(D) इनमें से कोई नहीं"], correct: 0 },
+            { q: "54. भारतीय लोहा और इस्पात कम्पनी (IISCO) कहाँ स्थापित किया गया?", options: ["(A) भद्रावती", "(B) दुर्गापुर", "(C) सेलम", "(D) बर्नपुर"], correct: 3 },
+            { q: "55. मध्य रेलवे का मुख्यालय कहाँ स्थित है?", options: ["(A) सिकंदराबाद", "(B) मुंबई", "(C) चेन्नई", "(D) गोरखपुर"], correct: 1 },
+            { q: "56. कौन-सा राष्ट्रीय जलमार्ग इलाहाबाद को हल्दिया से जोड़ता है?", options: ["(A) राष्ट्रीय जलमार्ग संख्या-1", "(B) राष्ट्रीय जलमार्ग संख्या-2", "(C) राष्ट्रीय जलमार्ग संख्या-3", "(D) राष्ट्रीय जलमार्ग संख्या-4"], correct: 0 },
+            { q: "57. इन्नौर बंदरगाह कहाँ स्थित है?", options: ["(A) केरल", "(B) तमिलनाडु", "(C) ओडिशा", "(D) महाराष्ट्र"], correct: 1 },
+            { q: "58. कहलगाँव तापीय विद्युत केन्द्र किस जिला में अवस्थित है?", options: ["(A) भागलपुर", "(B) मुंगेर", "(C) जमुई", "(D) कांटी"], correct: 0 },
+            { q: "59. निम्न में से कौन प्राकृतिक आपदा नहीं है?", options: ["(A) सुनामी", "(B) बाढ़", "(C) आतंकवाद", "(D) भूकम्प"], correct: 2 },
+            { q: "60. कृष्णराज सागर बाँध किस नदी पर बना है?", options: ["(A) कृष्णा", "(B) नर्मदा", "(C) कावेरी", "(D) रिहन्द"], correct: 2 },
+            { q: "61. भूकंप की लहरें कहाँ से उत्पन्न होती हैं?", options: ["(A) केन्द्र", "(B) अधिकेन्द्र", "(C) ठोस आन्तरिक कोर", "(D) इनमें से कोई नहीं"], correct: 0 },
+            { q: "62. निम्न में से भूकम्प तरंग मापन यंत्र कौन है?", options: ["(A) बैरोमीटर", "(B) सिस्मोग्राफ", "(C) एनीमोमीटर", "(D) थर्मामीटर"], correct: 1 },
+            { q: "63. कृषि सुखाड़ होता है:", options: ["(A) जल के अभाव में", "(B) मिट्टी के क्षय के कारण", "(C) मिट्टी की लवणता के कारण", "(D) चट्टानों के खिसकने के कारण"], correct: 0 },
+            { q: "64. निम्न में से कौन-सा क्षेत्र भूकंप या सुनामी से अधिक प्रभावित होता है?", options: ["(A) वलित पर्वत के क्षेत्र", "(B) भूपटलीय दरार के क्षेत्र", "(C) महासागरीय गर्त", "(D) इनमें से सभी"], correct: 3 },
+            { q: "65. निम्न में से कौन भारतीय बहुराष्ट्रीय कंपनी है?", options: ["(A) नोकिया", "(B) सैमसंग", "(C) इनफोसिस", "(D) फोर्ड मोटर्स"], correct: 2 },
+            { q: "66. प्रत्यक्ष विदेशी निवेश का सर्वाधिक लाभ किस क्षेत्र को मिला है?", options: ["(A) कृषि क्षेत्र", "(B) औद्योगिक क्षेत्र", "(C) सेवा क्षेत्र", "(D) विनिर्माण क्षेत्र"], correct: 2 },
+            { q: "67. वैश्वीकरण का नकारात्मक प्रभाव निम्न में से किस क्षेत्र में देखा गया?", options: ["(A) कृषि एवं ग्रामीण क्षेत्र", "(B) रोजगार", "(C) बैंक", "(D) उद्योग"], correct: 0 },
+            { q: "68. गरीबी रेखा निर्धारण हेतु ग्रामीण क्षेत्रों के लिए प्रति व्यक्ति प्रतिदिन न्यूनतम कितनी कैलोरी निर्धारित की गई है?", options: ["(A) 2100 कैलोरी", "(B) 2200 कैलोरी", "(C) 2400 कैलोरी", "(D) 2600 कैलोरी"], correct: 2 },
+            { q: "69. निम्न में से कौन कृषि आधारित उद्योग नहीं है?", options: ["(A) चीनी उद्योग", "(B) चमड़ा उद्योग", "(C) सीमेंट उद्योग", "(D) वस्त्र उद्योग"], correct: 2 },
+            { q: "70. 'पॉवर्टी एण्ड अन-ब्रिटिश रूल इन इण्डिया' नामक पुस्तक किसने लिखी?", options: ["(A) पी॰सी॰ महालानोबिस", "(B) दादाभाई नौरोजी", "(C) प्रो॰ मार्शल", "(D) प्रो॰ कीन्स"], correct: 1 },
+            { q: "71. निम्न में से किस विधि के अन्तर्गत उत्पादित अंतिम वस्तुओं के मूल्य को जोड़कर राष्ट्रीय आय की गणना की जाती है?", options: ["(A) आय विधि", "(B) व्यय विधि", "(C) मूल्य योग विधि", "(D) इनमें कोई नहीं"], correct: 2 },
+            { q: "72. क्षेत्रीय ग्रामीण बैंक की स्थापना कब की गई?", options: ["(A) 1975", "(B) 1980", "(C) 1969", "(D) 1982"], correct: 0 },
+            { q: "73. निम्न में कौन-सा खाता विशेष रूप से व्यापारियों के लिए है?", options: ["(A) स्थायी जमा", "(B) चालू जमा", "(C) संचयी जमा", "(D) आवर्ती जमा"], correct: 1 },
+            { q: "74. मनरेगा कार्यक्रम की शुरूआत किस राज्य से हुई?", options: ["(A) राजस्थान", "(B) उत्तर प्रदेश", "(C) बिहार", "(D) आन्ध्र प्रदेश"], correct: 3 },
+            { q: "75. औद्योगिक उत्पादों की गुणवत्ता सुनिश्चित करने के लिए किस मानक चिह्न का प्रयोग किया जाता है?", options: ["(A) एगमार्क", "(B) हॉलमार्क", "(C) ISI मार्क", "(D) इनमें कोई नहीं"], correct: 2 },
+            { q: "76. राष्ट्रीय उपभोक्ता दिवस कब मनाया जाता है?", options: ["(A) 15 मार्च", "(B) 24 दिसम्बर", "(C) 5 जून", "(D) 8 मार्च"], correct: 1 },
+            { q: "77. निर्यात संवर्द्धन क्षेत्र (EPZ) को निम्न में से किसमें बदल दिया गया है?", options: ["(A) विशेष औद्योगिक क्षेत्र", "(B) विशेष संवर्द्धन क्षेत्र", "(C) विशेष आर्थिक क्षेत्र", "(D) विशेष विकास क्षेत्र"], correct: 2 },
+            { q: "78. निम्न में से कौन-सी बेरोजगारी कृषि क्षेत्र में पाई जाती है?", options: ["(A) छिपी बेरोजगारी", "(B) मौसमी बेरोजगारी", "(C) (A) और (B) दोनों", "(D) संरचनात्मक बेरोज़गारी"], correct: 2 },
+            { q: "79. प्रधानमंत्री नरेन्द्र मोदी ने विमुद्रीकरण की घोषणा कब की?", options: ["(A) 8 नवंबर, 2016", "(B) 16 नवंबर, 2016", "(C) 25 नवंबर, 2015", "(D) 8 नवंबर, 2018"], correct: 0 },
+            { q: "80. भारत में मौद्रिक नीति का निर्धारण कौन करता है?", options: ["(A) वित्त मंत्रालय", "(B) राज्य सरकार", "(C) भारतीय रिजर्व बैंक", "(D) वित्त आयोग"], correct: 2 }
+        ];
 
-    function prevQuestion() {
-        if (currentQIndex > 0) {
-            currentQIndex--;
-            renderQuestion();
-        }
-    }
-
-    function submitQuiz() {
-        quizScreen.style.display = 'none';
-        footerNav.style.display = 'none';
-        resultScreen.style.display = 'block';
-        document.querySelector('.header').style.display = 'none';
-
+        let currentIndex = 0;
         let score = 0;
-        const reviewList = document.getElementById('review-list');
-        reviewList.innerHTML = '';
 
-        questions.forEach((q, idx) => {
-            const uAns = userAnswers[idx];
-            const isCorrect = uAns === q.ans;
-            if (isCorrect) score++;
+        // HTML elements
+        const qNumberEl = document.getElementById('q-number');
+        const qTextEl = document.getElementById('q-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreEl = document.getElementById('score');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const answerKeyDiv = document.getElementById('answer-key');
 
-            const div = document.createElement('div');
-            div.className = 'review-item';
+        function loadQuestion() {
+            // डेटा लोड करो
+            const currentData = questions[currentIndex];
             
-            let statusBadge = '';
-            if (uAns === null) statusBadge = '<span class="badge badge-skipped">छोड़ा गया</span>';
-            else if (isCorrect) statusBadge = '<span class="badge badge-correct">सही</span>';
-            else statusBadge = '<span class="badge badge-wrong">गलत</span>';
+            // टेक्स्ट अपडेट करो
+            qNumberEl.innerText = `Question ${currentIndex + 1} / ${questions.length}`;
+            qTextEl.innerText = currentData.q;
+            
+            // पुराने बटन हटाओ
+            optionsContainer.innerHTML = '';
 
-            div.innerHTML = `
-                ${statusBadge}
-                <div class="review-q">${q.q}</div>
-                <div class="review-ans">
-                    <span class="${uAns === q.ans ? 'ans-correct' : (uAns !== null ? 'ans-wrong' : '')}">
-                        आपका उत्तर: ${uAns !== null ? q.options[uAns] : 'कोई नहीं'}
-                    </span><br>
-                    <span class="ans-correct">सही उत्तर: ${q.options[q.ans]}</span>
-                </div>
-            `;
-            reviewList.appendChild(div);
-        });
+            // नए बटन बनाओ
+            currentData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn, currentData.correct);
+                optionsContainer.appendChild(btn);
+            });
 
-        document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
-        const percent = (score / questions.length) * 100;
-        let msg = "अच्छा प्रयास!";
-        if (percent > 80) msg = "अद्भुत! बहुत बढ़िया तैयारी है।";
-        else if (percent < 40) msg = "थोड़ी और मेहनत की जरूरत है।";
-        document.getElementById('score-msg').innerText = msg;
-    }
+            // नेविगेशन बटन कंट्रोल
+            prevBtn.disabled = (currentIndex === 0);
+            nextBtn.disabled = (currentIndex === questions.length - 1);
+        }
 
-    // Start
-    renderQuestion();
+        function checkAnswer(selectedIndex, btn, correctIndex) {
+            // एक बार क्लिक करने के बाद सभी बटन डिसेबल करें
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            buttons.forEach(b => b.disabled = true);
 
-</script>
+            if(selectedIndex === correctIndex) {
+                btn.classList.add('correct');
+                score++;
+                scoreEl.innerText = score;
+            } else {
+                btn.classList.add('wrong');
+                // सही उत्तर को हरे रंग में दिखाओ
+                buttons[correctIndex].classList.add('correct');
+            }
+        }
 
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion();
+            }
+        }
+
+        function toggleAnswerKey() {
+            if (answerKeyDiv.style.display === 'block') {
+                answerKeyDiv.style.display = 'none';
+            } else {
+                answerKeyDiv.style.display = 'block';
+                // लिस्ट जनरेट करो
+                answerKeyDiv.innerHTML = '<h3>Correct Answer Key</h3>';
+                questions.forEach((q, i) => {
+                    const p = document.createElement('div');
+                    p.className = 'key-item';
+                    p.innerHTML = `<strong>Q${i+1}:</strong> ${q.options[q.correct]}`;
+                    answerKeyDiv.appendChild(p);
+                });
+            }
+        }
+
+        // एप्प शुरू करो
+        loadQuestion();
+
+    </script>
 </body>
 </html>
