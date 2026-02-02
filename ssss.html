@@ -2,49 +2,91 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <title>SuperKeyStore - Smart Billing Roadmap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperKey - Smart QR Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Arial', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 10mm auto; background: white; border-top: 10px solid #34a853; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #34a853; text-align: center; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; }
-        h2 { color: #1e8e3e; border-left: 5px solid #34a853; padding-left: 10px; margin-top: 20px; font-size: 1.2em; }
-        .feature-box { background: #ffffff; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #dee2e6; }
-        li { margin-bottom: 10px; color: #3c4043; line-height: 1.6; }
-        .footer { text-align: center; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px; color: #70757a; }
-        @media print { .no-print { display: none; } }
+        :root { --primary: #1a73e8; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 90%; max-width: 400px; text-align: center; }
+        h2 { color: #202124; margin-bottom: 8px; }
+        p { color: #5f6368; font-size: 14px; margin-bottom: 24px; }
+        .upload-btn { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; }
+        .upload-btn:hover { background: #1557b0; }
+        #fileInput { display: none; }
+        #qr-result { margin-top: 25px; display: none; background: #f1f3f4; padding: 20px; border-radius: 12px; }
+        #qrcode { display: flex; justify-content: center; margin-bottom: 15px; }
+        .link-text { word-break: break-all; font-size: 12px; color: var(--primary); text-decoration: none; display: block; margin-top: 10px; }
+        .loader { display: none; color: var(--primary); font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="no-print" style="text-align: center; padding: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; background: #34a853; color: white; border: none; border-radius: 5px; cursor: pointer;">SuperKeyStore PDF डाउनलोड करें</button>
+
+<div class="card">
+    <h2>SuperKey QR Tool</h2>
+    <p>फोटो या फाइल अपलोड करें और तुरंत QR कोड पाएँ</p>
+    
+    <label for="fileInput" class="upload-btn">फाइल चुनें</label>
+    <input type="file" id="fileInput" onchange="uploadToCloudinary(this)">
+    
+    <div id="loader" class="loader">अपलोड हो रहा है... कृपया रुकें</div>
+
+    <div id="qr-result">
+        <div id="qrcode"></div>
+        <span style="font-size: 12px; color: #5f6368;">आपका पब्लिक लिंक:</span>
+        <a id="public-link" class="link-text" target="_blank"></a>
     </div>
-    <div class="page">
-        <h1>🏬 SuperKeyStore - स्मार्ट बिलिंग विज़न</h1>
-        <p style="text-align: center; font-weight: bold;">छोटे दुकानदारों के लिए आधुनिक इन्वेंटरी सिस्टम</p>
-        <div class="feature-box">
-            <h2>1. स्मार्ट इन्वेंटरी (Smart Inventory)</h2>
-            <ul>
-                <li><b>ऑफलाइन डेटाबेस:</b> बिना इंटरनेट के सामान की लिस्ट और कीमत फोन में सेव करना।</li>
-                <li><b>QR कोड टैगिंग:</b> हर प्रोडक्ट के लिए अलग QR कोड बनाना।</li>
-            </ul>
-        </div>
-        <div class="feature-box">
-            <h2>2. ऑटो-बिलिंग और स्कैनर (Auto-Billing)</h2>
-            <ul>
-                <li><b>स्मार्ट स्कैनर:</b> कैमरा से स्कैन करते ही सामान का नाम और दाम 'कार्ट' में जुड़ना।</li>
-                <li><b>इंस्टेंट कैलकुलेशन:</b> कुल राशि (Total Amount) का अपने आप हिसाब लगाना।</li>
-            </ul>
-        </div>
-        <div class="feature-box">
-            <h2>3. पेमेंट और रसीद (Payment & Receipt)</h2>
-            <ul>
-                <li><b>डायनामिक UPI QR:</b> कुल बिल के हिसाब से पेमेंट QR स्क्रीन पर दिखाना।</li>
-                <li><b>डिजिटल रसीद:</b> ट्रांजेक्शन के बाद कस्टमर को डिजिटल पर्ची देना।</li>
-            </ul>
-        </div>
-        <div class="footer">
-            <p>कंपनी: <b>SuperKey Ecosystem</b> | डेवलपर: <b>आयुष राज</b></p>
-        </div>
-    </div>
+</div>
+
+<script>
+    const CLOUD_NAME = "dprbizfao";
+    const UPLOAD_PRESET = "ml_default"; // नोट: Cloudinary में एक 'Unsigned Upload Preset' बनाना होगा जिसका नाम 'ml_default' हो।
+
+    function uploadToCloudinary(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const loader = document.getElementById('loader');
+        const qrResult = document.getElementById('qr-result');
+        const qrCodeDiv = document.getElementById('qrcode');
+        
+        loader.style.display = 'block';
+        qrResult.style.display = 'none';
+        qrCodeDiv.innerHTML = "";
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            loader.style.display = 'none';
+            if (data.secure_url) {
+                qrResult.style.display = 'block';
+                // Generate QR Code
+                new QRCode(qrCodeDiv, {
+                    text: data.secure_url,
+                    width: 150,
+                    height: 150
+                });
+                // Set Link
+                document.getElementById('public-link').href = data.secure_url;
+                document.getElementById('public-link').innerText = data.secure_url;
+            } else {
+                alert("अपलोड फेल हो गया। कृपया अपना 'Upload Preset' चेक करें।");
+            }
+        })
+        .catch(err => {
+            loader.style.display = 'none';
+            console.error(err);
+            alert("कुछ गड़बड़ हुई!");
+        });
+    }
+</script>
+
 </body>
 </html>
