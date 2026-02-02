@@ -4,176 +4,214 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Success Point Hub</title>
-    <meta name="description" content="Class 10 Study Hub">
+    <meta name="theme-color" content="#008069">
     
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        /* 🚀 HIGH PERFORMANCE CSS */
+        :root { --primary: #008069; --bg: #f0f2f5; --white: #ffffff; --text: #111b21; --gray: #8696a0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* HEADER & DOCK */
-        .app-header { height: 60px; position: fixed; top: 0; width: 100%; z-index: 50; background: #008069; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .app-dock { position: fixed; bottom: 0; width: 100%; height: 65px; z-index: 50; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; padding-bottom: 5px; }
-        
-        .dock-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; font-size: 10px; font-weight: 500; transition: color 0.2s; }
-        .dock-btn i { font-size: 20px; margin-bottom: 4px; }
-        .dock-btn.active { color: #008069; }
-
-        /* SCROLL AREA FIX (SST Button Cutoff Solved) */
-        .main-scroll { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 100px; } 
-
-        /* CARDS */
-        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 12px; }
-        .subject-card { background: white; border-radius: 16px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-bottom: 4px solid transparent; transition: transform 0.1s; cursor: pointer; }
-        .subject-card:active { transform: scale(0.97); }
-
-        /* CHAT BUBBLES */
-        .msg-me { align-self: flex-end; background: #d9fdd3; border-radius: 8px 0 8px 8px; }
-        .msg-other { align-self: flex-start; background: white; border-radius: 0 8px 8px 8px; }
-
-        /* LOADING SPINNER */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #008069; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+        /* UTILS */
         .hidden { display: none !important; }
+        .flex { display: flex; align-items: center; }
+        .center { justify-content: center; }
+        .col { flex-direction: column; }
+        .gap { gap: 10px; }
+        .p-4 { padding: 16px; }
+        .w-full { width: 100%; }
+
+        /* AUTH SCREEN */
+        #auth-view { position: fixed; inset: 0; background: var(--primary); z-index: 999; justify-content: center; }
+        .auth-box { background: var(--white); width: 90%; max-width: 350px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
+        .inp { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; transition: 0.2s; }
+        .inp:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.1s; }
+        .btn:active { transform: scale(0.98); opacity: 0.9; }
+        .btn-sec { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }
+        .link { color: var(--primary); cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-top: 10px; display: block; }
+
+        /* APP HEADER */
+        header { height: 60px; background: var(--primary); padding: 0 16px; color: white; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; background: #ddd; object-fit: cover; border: 2px solid rgba(255,255,255,0.5); cursor: pointer; }
+
+        /* CONTENT AREA */
+        #main-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); margin-bottom: 12px; cursor: pointer; transition: 0.1s; }
+        .card:active { background: #f5f5f5; }
+        
+        /* SUBJECT GRID */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sub-card { height: 100px; background: white; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-bottom: 4px solid #ddd; }
+        
+        /* CHAT */
+        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; font-size: 0.95rem; }
+        .msg-me { align-self: flex-end; background: #d9fdd3; margin-left: auto; border-radius: 8px 0 8px 8px; }
+        .msg-other { align-self: flex-start; background: white; margin-right: auto; border-radius: 0 8px 8px 8px; }
+
+        /* BOTTOM DOCK */
+        nav { height: 65px; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; align-items: center; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 0.7rem; background: none; border: none; }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary); }
+
+        /* OVERLAYS */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 500; display: flex; flex-direction: column; }
+        .top-bar { height: 60px; background: var(--primary); color: white; padding: 0 10px; display: flex; align-items: center; gap: 10px; }
+        
+        /* SETTINGS MODAL */
+        #settings-view { background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="overflow-hidden">
+<body>
 
-    <div id="auth-view" class="fixed inset-0 z-[100] bg-[#008069] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-[#008069]">Success Point</h1>
-                <p class="text-gray-500 text-sm">Class 10th Study Hub</p>
+    <div id="auth-view" class="flex overlay">
+        <div class="auth-box">
+            <h2 style="color:var(--primary); margin-bottom:5px;">Success Point</h2>
+            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Class 10th Study Hub</p>
+
+            <div id="form-login">
+                <input id="l-email" class="inp" type="email" placeholder="Email">
+                <input id="l-pass" class="inp" type="password" placeholder="Password">
+                <button onclick="handleLogin()" class="btn">LOGIN</button>
+                <div onclick="showForgot()" class="link" style="text-align:right; font-size:0.8rem; margin-bottom:10px;">Forgot Password?</div>
+                <div style="margin:15px 0; color:#ccc;">OR</div>
+                <button onclick="handleGoogle()" class="btn" style="background:white; color:#333; border:1px solid #ccc;"><i class="fa-brands fa-google" style="color:red;"></i> Google</button>
+                <div onclick="showSignup()" class="link">Create New Account</div>
             </div>
 
-            <div id="login-form">
-                <input type="email" id="l-email" placeholder="Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none focus:border-[#008069]">
-                <input type="password" id="l-pass" placeholder="Password" class="w-full p-3 bg-gray-50 border rounded-lg mb-2 outline-none focus:border-[#008069]">
-                <div class="text-right mb-4">
-                    <span onclick="toggleForgot()" class="text-xs text-[#008069] font-bold cursor-pointer">Forgot Password?</span>
+            <div id="form-signup" class="hidden">
+                <h3 style="margin-bottom:15px;">Create Account</h3>
+                <input id="s-name" class="inp" placeholder="Full Name">
+                <input id="s-email" class="inp" type="email" placeholder="Email">
+                
+                <div id="otp-step-1">
+                    <button onclick="sendSignupOTP()" class="btn">Send OTP</button>
                 </div>
-                <button id="btn-login" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-md active:scale-95 transition-transform">Login</button>
-                <div class="my-4 flex items-center gap-2"><div class="h-[1px] bg-gray-200 flex-grow"></div><span class="text-gray-400 text-xs">OR</span><div class="h-[1px] bg-gray-200 flex-grow"></div></div>
-                <button id="btn-google" class="w-full border border-gray-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 active:bg-gray-50"><i class="fa-brands fa-google text-red-500"></i> Google Login</button>
-                <p class="text-center mt-4 text-sm">New here? <span onclick="toggleMode()" class="text-[#008069] font-bold cursor-pointer">Create Account</span></p>
+
+                <div id="otp-step-2" class="hidden">
+                    <input id="s-otp" class="inp" placeholder="Enter OTP Code" style="text-align:center; letter-spacing:2px; font-weight:bold;">
+                    <input id="s-pass" class="inp" type="password" placeholder="Set Password">
+                    <button onclick="verifyAndSignup()" class="btn">Verify & Create</button>
+                </div>
+                
+                <div onclick="showLogin()" class="link">Back to Login</div>
             </div>
 
-            <div id="signup-form" class="hidden">
-                <input type="text" id="s-name" placeholder="Full Name" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none">
-                <input type="email" id="s-email" placeholder="Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none">
-                <input type="password" id="s-pass" placeholder="Create Password" class="w-full p-3 bg-gray-50 border rounded-lg mb-4 outline-none">
-                <button id="btn-signup" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-md">Sign Up</button>
-                <p class="text-center mt-4 text-sm">Have account? <span onclick="toggleMode()" class="text-[#008069] font-bold cursor-pointer">Login</span></p>
-            </div>
-
-            <div id="forgot-form" class="hidden text-center">
-                <h3 class="font-bold text-gray-700 mb-2">Reset Password</h3>
-                <p class="text-xs text-gray-500 mb-4">Enter email to receive reset link</p>
-                <input type="email" id="f-email" placeholder="Your Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-4 outline-none">
-                <button id="btn-forgot" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold mb-3">Send Link</button>
-                <span onclick="toggleForgot()" class="text-sm text-gray-400 cursor-pointer">Cancel</span>
+            <div id="form-forgot" class="hidden">
+                <h3>Reset Password</h3>
+                <input id="f-email" class="inp" placeholder="Enter Email">
+                <div id="f-step-1"><button onclick="sendForgotOTP()" class="btn">Send OTP</button></div>
+                
+                <div id="f-step-2" class="hidden">
+                    <input id="f-otp" class="inp" placeholder="OTP Code">
+                    <button onclick="verifyForgotOTP()" class="btn">Verify Code</button>
+                </div>
+                
+                <div onclick="showLogin()" class="link">Cancel</div>
             </div>
         </div>
     </div>
 
-    <div id="app-view" class="hidden h-screen flex flex-col bg-[#f0f2f5]">
-        
-        <header class="app-header">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white font-bold">SP</div>
-                <h1 class="font-bold text-lg tracking-wide">Hub</h1>
+    <div id="app-view" class="hidden flex col h-full">
+        <header class="flex">
+            <div class="flex gap">
+                <div style="background:rgba(255,255,255,0.2); width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:bold;">SP</div>
+                <b>Hub</b>
             </div>
-            <div class="flex gap-3 items-center">
-                <button onclick="doLogout()" class="text-white text-xs bg-white/20 px-2 py-1 rounded">Logout</button>
-                <img id="head-av" src="https://ui-avatars.com/api/?name=User&background=random" class="w-8 h-8 rounded-full border border-white">
-            </div>
+            <img id="my-dp" src="" class="avatar" onclick="openSettings()">
         </header>
 
-        <div id="main-content" class="main-scroll px-4">
-            
-            <div id="tab-home" class="animate-fade">
-                <div class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg mb-6 flex items-center justify-between">
-                    <div><p class="text-xs opacity-80 uppercase">Board Exam 2026</p><h2 class="text-2xl font-bold" id="days-left">Loading...</h2></div>
-                    <i class="fa-solid fa-hourglass-half text-4xl opacity-30"></i>
+        <div id="main-content">
+            <div id="tab-home">
+                <div style="background:linear-gradient(45deg, #008069, #00a884); padding:20px; border-radius:12px; color:white; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <small style="opacity:0.8;">BOARD EXAM 2026</small>
+                        <h2 id="days-left">Loading...</h2>
+                    </div>
+                    <i class="fa-solid fa-clock" style="font-size:2rem; opacity:0.3;"></i>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div onclick="openList('science', 'Science Q-Bank')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-2xl mb-2"></i><b class="text-sm">Science</b></div>
-                    <div onclick="openList('math', 'Math Q-Bank')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-2xl mb-2"></i><b class="text-sm">Math</b></div>
-                    <div onclick="switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-2xl mb-2"></i><b class="text-sm">Hindi</b></div>
-                    <div onclick="openList('sst', 'SST Q-Bank')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-2xl mb-2"></i><b class="text-sm">SST</b></div>
-                    <div onclick="openList('sanskrit', 'Sanskrit')" class="col-span-2 subject-card border-yellow-500 text-yellow-600 h-16 flex-row gap-3"><i class="fa-solid fa-om text-2xl"></i><b class="text-sm">Sanskrit (Full)</b></div>
+                <div class="grid">
+                    <div onclick="openList('science', 'Science')" class="sub-card" style="border-color:#3b82f6; color:#3b82f6;"><i class="fa-solid fa-flask fa-xl"></i><br>Science</div>
+                    <div onclick="openList('math', 'Math')" class="sub-card" style="border-color:#ef4444; color:#ef4444;"><i class="fa-solid fa-calculator fa-xl"></i><br>Math</div>
+                    <div onclick="switchView('menu-hindi')" class="sub-card" style="border-color:#f97316; color:#f97316;"><i class="fa-solid fa-book fa-xl"></i><br>Hindi</div>
+                    <div onclick="openList('sst', 'SST')" class="sub-card" style="border-color:#a855f7; color:#a855f7;"><i class="fa-solid fa-landmark fa-xl"></i><br>SST</div>
+                </div>
+                <div onclick="openList('sanskrit', 'Sanskrit')" class="card center flex gap" style="margin-top:12px; border-left:4px solid #eab308;">
+                    <i class="fa-solid fa-om text-xl text-yellow-600"></i> <b>Sanskrit (Full)</b>
                 </div>
             </div>
 
             <div id="tab-people" class="hidden">
-                <div class="bg-white p-3 rounded-lg shadow-sm mb-4 sticky top-0 z-10 flex gap-2 border">
-                    <i class="fa-solid fa-search text-gray-400 mt-1"></i>
-                    <input id="p-search" onkeyup="filterPeople()" class="flex-grow outline-none text-sm" placeholder="Search friends...">
-                </div>
-                <div id="people-list" class="space-y-2 pb-20">Loading Users...</div>
+                <input id="search-ppl" onkeyup="filterPeople()" class="inp" placeholder="Search students..." style="padding:8px; margin-bottom:10px;">
+                <div id="list-people">Loading...</div>
             </div>
 
             <div id="tab-chat" class="hidden">
-                <h2 class="font-bold text-gray-700 mb-4 px-2">Your Conversations</h2>
-                <div id="recent-chats" class="space-y-2 pb-20">
-                    <div class="text-center text-gray-400 mt-10 text-sm">No chats yet. Go to People tab to start!</div>
-                </div>
+                <h3 style="margin-bottom:10px; color:#555;">Recent Chats</h3>
+                <div id="list-chat">No chats yet.</div>
             </div>
 
-            <div id="v-hindi-menu" class="hidden">
-                <button onclick="switchV('tab-home')" class="mb-4 text-gray-500 font-bold text-sm"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                <div class="space-y-3">
-                    <div onclick="openList('gad', 'Gadya Khand')" class="card flex justify-between items-center cursor-pointer"><b>📖 Gadya</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
-                    <div onclick="openList('kav', 'Kavya Khand')" class="card flex justify-between items-center cursor-pointer"><b>🎼 Kavya</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
-                    <div onclick="openList('var', 'Varnika')" class="card flex justify-between items-center cursor-pointer"><b>📚 Varnika</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
-                </div>
+            <div id="menu-hindi" class="hidden">
+                <button onclick="switchView('tab-home')" class="btn-sec" style="border:none; text-align:left; margin-bottom:10px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <div onclick="openList('gad', 'Gadya')" class="card flex" style="justify-content:space-between;"><b>Gadya Khand</b> <i class="fa-solid fa-chevron-right"></i></div>
+                <div onclick="openList('kav', 'Kavya')" class="card flex" style="justify-content:space-between;"><b>Kavya Khand</b> <i class="fa-solid fa-chevron-right"></i></div>
+                <div onclick="openList('var', 'Varnika')" class="card flex" style="justify-content:space-between;"><b>Varnika</b> <i class="fa-solid fa-chevron-right"></i></div>
             </div>
 
-            <div id="v-list" class="hidden">
-                <div class="flex items-center gap-3 mb-4 sticky top-0 bg-[#f0f2f5] py-2 z-10">
-                    <button onclick="goBack()" class="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-                    <b id="list-title" class="text-[#008069]">Files</b>
+            <div id="view-list" class="hidden">
+                <div class="flex" style="margin-bottom:15px; gap:10px; position:sticky; top:0; background:var(--bg); padding:10px 0;">
+                    <button onclick="goBack()" style="background:white; border:none; width:30px; height:30px; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.2);"><i class="fa-solid fa-arrow-left"></i></button>
+                    <b id="list-title" style="color:var(--primary); font-size:1.2rem;">Files</b>
                 </div>
-                <div id="list-container" class="space-y-2 pb-20"></div>
-            </div>
-
-        </div> <div id="v-room" class="fixed inset-0 bg-[#e5ddd5] z-[200] hidden flex flex-col">
-            <div class="h-[60px] bg-[#008069] flex items-center px-3 gap-3 shadow text-white">
-                <button onclick="switchV('tab-chat')"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-                <div id="rm-av" class="w-9 h-9 bg-white text-[#008069] rounded-full flex items-center justify-center font-bold"></div>
-                <div class="flex-grow overflow-hidden"><b id="rm-name" class="truncate block">User</b><span class="text-[10px] opacity-80">Online</span></div>
-            </div>
-            <div id="msg-log" class="flex-grow overflow-y-auto p-4 flex flex-col gap-2"></div>
-            <div class="p-2 bg-white flex items-center gap-2">
-                <input id="m-in" class="flex-grow bg-gray-100 p-3 rounded-full outline-none" placeholder="Type a message...">
-                <button onclick="sndMsg()" class="w-10 h-10 bg-[#008069] text-white rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+                <div id="list-container"></div>
             </div>
         </div>
 
-        <div id="v-frame" class="fixed inset-0 bg-white z-[300] hidden flex flex-col">
-            <div class="h-[50px] border-b flex items-center justify-between px-4 bg-gray-50">
-                <button onclick="closeFrame()" class="text-red-600 font-bold text-sm">Close</button>
-                <b id="file-title" class="truncate text-sm max-w-[200px]">Doc</b>
-                <div class="w-8"></div>
-            </div>
-            <iframe id="main-frame" class="flex-grow w-full border-none"></iframe>
-        </div>
-
-        <nav class="app-dock">
-            <button onclick="switchV('tab-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
-            <button onclick="switchV('tab-people')" class="dock-btn"><i class="fa-solid fa-users"></i>People</button>
-            <button onclick="switchV('tab-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
+        <nav>
+            <button onclick="switchView('tab-home')" class="nav-item active"><i class="fa-solid fa-house"></i>Home</button>
+            <button onclick="switchView('tab-people')" class="nav-item"><i class="fa-solid fa-users"></i>People</button>
+            <button onclick="switchView('tab-chat')" class="nav-item"><i class="fa-solid fa-comment-dots"></i>Chat</button>
         </nav>
     </div>
 
-    <script>
-        // UI Helpers
-        function toggleMode() { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('signup-form').classList.toggle('hidden'); }
-        function toggleForgot() { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('forgot-form').classList.toggle('hidden'); }
-    </script>
+    <div id="room-view" class="overlay hidden" style="background:#e5ddd5;">
+        <div class="top-bar">
+            <button onclick="closeChat()" style="background:none; border:none; color:white;"><i class="fa-solid fa-arrow-left fa-lg"></i></button>
+            <img id="room-av" src="" class="avatar" style="width:35px; height:35px;">
+            <b id="room-name" style="flex:1;">User</b>
+        </div>
+        <div id="chat-logs" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column;"></div>
+        <div style="padding:10px; background:white; display:flex; gap:10px;">
+            <input id="chat-in" class="inp" placeholder="Type a message..." style="margin:0; border-radius:20px;">
+            <button onclick="sendMessage()" style="width:45px; height:45px; border-radius:50%; background:var(--primary); color:white; border:none;"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div id="pdf-view" class="overlay hidden" style="background:white;">
+        <div class="top-bar" style="background:white; color:#333; border-bottom:1px solid #ddd;">
+            <button onclick="closePdf()" style="border:none; background:none; font-weight:bold; color:red;">Close</button>
+            <b id="pdf-title" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Doc</b>
+            <div style="width:30px;"></div>
+        </div>
+        <iframe id="pdf-frame" style="flex:1; border:none; width:100%;"></iframe>
+    </div>
+
+    <div id="settings-view" class="overlay hidden flex">
+        <div class="auth-box">
+            <h3>Update Profile</h3>
+            <img id="set-dp-prev" src="" class="avatar" style="width:80px; height:80px; margin:15px auto;">
+            <input id="set-name" class="inp" placeholder="Change Name">
+            <input id="set-url" class="inp" placeholder="Paste Image URL (Optional)">
+            <button onclick="saveProfile()" class="btn">Save Changes</button>
+            <button onclick="doLogout()" class="btn-sec" style="border-color:red; color:red;">Log Out</button>
+            <button onclick="document.getElementById('settings-view').classList.add('hidden')" class="link" style="border:none; background:none;">Close</button>
+        </div>
+    </div>
+
     <script type="module" src="login.js"></script>
 </body>
 </html>
