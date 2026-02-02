@@ -5,211 +5,130 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Success Point Hub</title>
     <meta name="theme-color" content="#008069">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* 🚀 HIGH PERFORMANCE CSS */
-        :root { --primary: #008069; --bg: #f0f2f5; --white: #ffffff; --text: #111b21; --gray: #8696a0; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        /* 🚀 ULTRA FAST CSS */
+        :root { --primary: #008069; --bg: #f0f2f5; --white: #fff; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         /* UTILS */
         .hidden { display: none !important; }
         .flex { display: flex; align-items: center; }
         .center { justify-content: center; }
         .col { flex-direction: column; }
-        .gap { gap: 10px; }
-        .p-4 { padding: 16px; }
-        .w-full { width: 100%; }
-
-        /* AUTH SCREEN */
-        #auth-view { position: fixed; inset: 0; background: var(--primary); z-index: 999; justify-content: center; }
-        .auth-box { background: var(--white); width: 90%; max-width: 350px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
-        .inp { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; transition: 0.2s; }
+        
+        /* AUTH UI */
+        #auth-view { position: fixed; inset: 0; background: var(--primary); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .auth-box { background: white; width: 90%; max-width: 350px; padding: 25px; border-radius: 12px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .inp { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 16px; }
         .inp:focus { border-color: var(--primary); }
-        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.1s; }
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; margin-top: 5px; cursor: pointer; }
         .btn:active { transform: scale(0.98); opacity: 0.9; }
-        .btn-sec { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }
-        .link { color: var(--primary); cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-top: 10px; display: block; }
+        .btn-sec { background: white; color: #333; border: 1px solid #ddd; margin-top: 10px; display: flex; justify-content: center; gap: 8px; align-items: center; }
+        .link { color: var(--primary); margin-top: 15px; font-size: 14px; font-weight: 600; cursor: pointer; display: inline-block; }
 
-        /* APP HEADER */
-        header { height: 60px; background: var(--primary); padding: 0 16px; color: white; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .avatar { width: 35px; height: 35px; border-radius: 50%; background: #ddd; object-fit: cover; border: 2px solid rgba(255,255,255,0.5); cursor: pointer; }
-
-        /* CONTENT AREA */
-        #main-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); margin-bottom: 12px; cursor: pointer; transition: 0.1s; }
-        .card:active { background: #f5f5f5; }
+        /* APP UI */
+        header { height: 60px; background: var(--primary); padding: 0 15px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .avatar { width: 35px; height: 35px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); object-fit: cover; }
         
-        /* SUBJECT GRID */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .sub-card { height: 100px; background: white; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-bottom: 4px solid #ddd; }
-        
-        /* CHAT */
-        .msg { max-width: 80%; padding: 8px 12px; border-radius: 8px; margin-bottom: 5px; font-size: 0.95rem; }
-        .msg-me { align-self: flex-end; background: #d9fdd3; margin-left: auto; border-radius: 8px 0 8px 8px; }
-        .msg-other { align-self: flex-start; background: white; margin-right: auto; border-radius: 0 8px 8px 8px; }
+        #main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 80px; }
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .sub-card { background: white; height: 100px; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 4px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-        /* BOTTOM DOCK */
         nav { height: 65px; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; align-items: center; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--gray); font-size: 0.7rem; background: none; border: none; }
-        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; }
-        .nav-item.active { color: var(--primary); }
-
-        /* OVERLAYS */
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 500; display: flex; flex-direction: column; }
-        .top-bar { height: 60px; background: var(--primary); color: white; padding: 0 10px; display: flex; align-items: center; gap: 10px; }
-        
-        /* SETTINGS MODAL */
-        #settings-view { background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .nav-btn { background: none; border: none; color: #888; display: flex; flex-direction: column; align-items: center; font-size: 10px; }
+        .nav-btn i { font-size: 20px; margin-bottom: 4px; }
+        .nav-btn.active { color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="auth-view" class="flex overlay">
+    <div id="auth-view" class="flex">
         <div class="auth-box">
-            <h2 style="color:var(--primary); margin-bottom:5px;">Success Point</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Class 10th Study Hub</p>
+            <h2 style="color:var(--primary); margin-bottom: 5px;">Success Point</h2>
+            <p style="color:#666; font-size: 12px; margin-bottom: 20px;">Class 10th Study Hub</p>
 
             <div id="form-login">
-                <input id="l-email" class="inp" type="email" placeholder="Email">
+                <input id="l-email" class="inp" type="email" placeholder="Email Address">
                 <input id="l-pass" class="inp" type="password" placeholder="Password">
-                <button onclick="handleLogin()" class="btn">LOGIN</button>
-                <div onclick="showForgot()" class="link" style="text-align:right; font-size:0.8rem; margin-bottom:10px;">Forgot Password?</div>
-                <div style="margin:15px 0; color:#ccc;">OR</div>
-                <button onclick="handleGoogle()" class="btn" style="background:white; color:#333; border:1px solid #ccc;"><i class="fa-brands fa-google" style="color:red;"></i> Google</button>
-                <div onclick="showSignup()" class="link">Create New Account</div>
+                <button id="btn-login-action" class="btn">Login</button>
+                <div id="link-forgot" class="link" style="font-size: 12px; width: 100%; text-align: right; margin-top: 5px;">Forgot Password?</div>
+                <button id="btn-google" class="btn btn-sec"><i class="fa-brands fa-google" style="color:red"></i> Continue with Google</button>
+                <div id="link-create" class="link">Create New Account</div>
             </div>
 
             <div id="form-signup" class="hidden">
-                <h3 style="margin-bottom:15px;">Create Account</h3>
-                <input id="s-name" class="inp" placeholder="Full Name">
-                <input id="s-email" class="inp" type="email" placeholder="Email">
+                <h3>Create Account</h3>
+                <input id="s-name" class="inp" placeholder="Full Name" style="margin-top:15px;">
+                <input id="s-email" class="inp" type="email" placeholder="Email Address">
                 
-                <div id="otp-step-1">
-                    <button onclick="sendSignupOTP()" class="btn">Send OTP</button>
+                <div id="signup-step-1">
+                    <button id="btn-send-signup-otp" class="btn">Send OTP</button>
+                </div>
+                
+                <div id="signup-step-2" class="hidden">
+                    <input id="s-otp" class="inp" placeholder="Enter OTP Code" style="text-align:center; letter-spacing: 3px; font-weight: bold;">
+                    <input id="s-pass" class="inp" type="password" placeholder="Set Password">
+                    <button id="btn-verify-signup" class="btn">Verify & Create</button>
                 </div>
 
-                <div id="otp-step-2" class="hidden">
-                    <input id="s-otp" class="inp" placeholder="Enter OTP Code" style="text-align:center; letter-spacing:2px; font-weight:bold;">
-                    <input id="s-pass" class="inp" type="password" placeholder="Set Password">
-                    <button onclick="verifyAndSignup()" class="btn">Verify & Create</button>
-                </div>
-                
-                <div onclick="showLogin()" class="link">Back to Login</div>
+                <div id="link-back-login" class="link" style="color:#666;">Back to Login</div>
             </div>
 
             <div id="form-forgot" class="hidden">
                 <h3>Reset Password</h3>
-                <input id="f-email" class="inp" placeholder="Enter Email">
-                <div id="f-step-1"><button onclick="sendForgotOTP()" class="btn">Send OTP</button></div>
+                <p style="font-size:12px; color:#666; margin-bottom:15px;">We will send an OTP to your email.</p>
+                <input id="f-email" class="inp" placeholder="Enter Registered Email">
                 
-                <div id="f-step-2" class="hidden">
-                    <input id="f-otp" class="inp" placeholder="OTP Code">
-                    <button onclick="verifyForgotOTP()" class="btn">Verify Code</button>
+                <div id="forgot-step-1">
+                    <button id="btn-send-forgot-otp" class="btn">Send OTP</button>
                 </div>
-                
-                <div onclick="showLogin()" class="link">Cancel</div>
+
+                <div id="forgot-step-2" class="hidden">
+                    <input id="f-otp" class="inp" placeholder="Enter OTP Code" style="text-align:center;">
+                    <button id="btn-verify-forgot" class="btn">Verify Code</button>
+                </div>
+
+                <div id="link-cancel-forgot" class="link" style="color:#666;">Cancel</div>
             </div>
         </div>
     </div>
 
-    <div id="app-view" class="hidden flex col h-full">
-        <header class="flex">
-            <div class="flex gap">
-                <div style="background:rgba(255,255,255,0.2); width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:bold;">SP</div>
+    <div id="app-view" class="hidden col">
+        <header>
+            <div class="flex" style="gap:10px;">
+                <div style="width:30px; height:30px; background:rgba(255,255,255,0.2); border-radius:5px; display:flex; align-items:center; justify-content:center; font-weight:bold;">SP</div>
                 <b>Hub</b>
             </div>
-            <img id="my-dp" src="" class="avatar" onclick="openSettings()">
+            <img id="header-dp" src="" class="avatar">
         </header>
 
         <div id="main-content">
             <div id="tab-home">
-                <div style="background:linear-gradient(45deg, #008069, #00a884); padding:20px; border-radius:12px; color:white; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <small style="opacity:0.8;">BOARD EXAM 2026</small>
-                        <h2 id="days-left">Loading...</h2>
-                    </div>
-                    <i class="fa-solid fa-clock" style="font-size:2rem; opacity:0.3;"></i>
+                <div class="card" style="background:linear-gradient(45deg, #008069, #00a884); color:white;">
+                    <small>BOARD EXAM 2026</small>
+                    <h2 id="days-left">Loading...</h2>
                 </div>
-
                 <div class="grid">
-                    <div onclick="openList('science', 'Science')" class="sub-card" style="border-color:#3b82f6; color:#3b82f6;"><i class="fa-solid fa-flask fa-xl"></i><br>Science</div>
-                    <div onclick="openList('math', 'Math')" class="sub-card" style="border-color:#ef4444; color:#ef4444;"><i class="fa-solid fa-calculator fa-xl"></i><br>Math</div>
-                    <div onclick="switchView('menu-hindi')" class="sub-card" style="border-color:#f97316; color:#f97316;"><i class="fa-solid fa-book fa-xl"></i><br>Hindi</div>
-                    <div onclick="openList('sst', 'SST')" class="sub-card" style="border-color:#a855f7; color:#a855f7;"><i class="fa-solid fa-landmark fa-xl"></i><br>SST</div>
-                </div>
-                <div onclick="openList('sanskrit', 'Sanskrit')" class="card center flex gap" style="margin-top:12px; border-left:4px solid #eab308;">
-                    <i class="fa-solid fa-om text-xl text-yellow-600"></i> <b>Sanskrit (Full)</b>
+                    <div id="open-sci" class="sub-card" style="border-color:blue; color:blue;"><i class="fa-solid fa-flask fa-xl"></i><br>Science</div>
+                    <div id="open-math" class="sub-card" style="border-color:red; color:red;"><i class="fa-solid fa-calculator fa-xl"></i><br>Math</div>
+                    <div id="open-hin" class="sub-card" style="border-color:orange; color:orange;"><i class="fa-solid fa-book fa-xl"></i><br>Hindi</div>
+                    <div id="open-sst" class="sub-card" style="border-color:purple; color:purple;"><i class="fa-solid fa-landmark fa-xl"></i><br>SST</div>
                 </div>
             </div>
-
-            <div id="tab-people" class="hidden">
-                <input id="search-ppl" onkeyup="filterPeople()" class="inp" placeholder="Search students..." style="padding:8px; margin-bottom:10px;">
-                <div id="list-people">Loading...</div>
-            </div>
-
-            <div id="tab-chat" class="hidden">
-                <h3 style="margin-bottom:10px; color:#555;">Recent Chats</h3>
-                <div id="list-chat">No chats yet.</div>
-            </div>
-
-            <div id="menu-hindi" class="hidden">
-                <button onclick="switchView('tab-home')" class="btn-sec" style="border:none; text-align:left; margin-bottom:10px;"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                <div onclick="openList('gad', 'Gadya')" class="card flex" style="justify-content:space-between;"><b>Gadya Khand</b> <i class="fa-solid fa-chevron-right"></i></div>
-                <div onclick="openList('kav', 'Kavya')" class="card flex" style="justify-content:space-between;"><b>Kavya Khand</b> <i class="fa-solid fa-chevron-right"></i></div>
-                <div onclick="openList('var', 'Varnika')" class="card flex" style="justify-content:space-between;"><b>Varnika</b> <i class="fa-solid fa-chevron-right"></i></div>
-            </div>
-
-            <div id="view-list" class="hidden">
-                <div class="flex" style="margin-bottom:15px; gap:10px; position:sticky; top:0; background:var(--bg); padding:10px 0;">
-                    <button onclick="goBack()" style="background:white; border:none; width:30px; height:30px; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.2);"><i class="fa-solid fa-arrow-left"></i></button>
-                    <b id="list-title" style="color:var(--primary); font-size:1.2rem;">Files</b>
-                </div>
-                <div id="list-container"></div>
-            </div>
+            
+            <div id="tab-people" class="hidden center" style="margin-top:50px; color:#888;">People Tab Loading...</div>
+            <div id="tab-chat" class="hidden center" style="margin-top:50px; color:#888;">Chat Tab Loading...</div>
         </div>
 
         <nav>
-            <button onclick="switchView('tab-home')" class="nav-item active"><i class="fa-solid fa-house"></i>Home</button>
-            <button onclick="switchView('tab-people')" class="nav-item"><i class="fa-solid fa-users"></i>People</button>
-            <button onclick="switchView('tab-chat')" class="nav-item"><i class="fa-solid fa-comment-dots"></i>Chat</button>
+            <button id="nav-home" class="nav-btn active"><i class="fa-solid fa-house"></i>Home</button>
+            <button id="nav-ppl" class="nav-btn"><i class="fa-solid fa-users"></i>People</button>
+            <button id="nav-chat" class="nav-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
         </nav>
-    </div>
-
-    <div id="room-view" class="overlay hidden" style="background:#e5ddd5;">
-        <div class="top-bar">
-            <button onclick="closeChat()" style="background:none; border:none; color:white;"><i class="fa-solid fa-arrow-left fa-lg"></i></button>
-            <img id="room-av" src="" class="avatar" style="width:35px; height:35px;">
-            <b id="room-name" style="flex:1;">User</b>
-        </div>
-        <div id="chat-logs" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column;"></div>
-        <div style="padding:10px; background:white; display:flex; gap:10px;">
-            <input id="chat-in" class="inp" placeholder="Type a message..." style="margin:0; border-radius:20px;">
-            <button onclick="sendMessage()" style="width:45px; height:45px; border-radius:50%; background:var(--primary); color:white; border:none;"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <div id="pdf-view" class="overlay hidden" style="background:white;">
-        <div class="top-bar" style="background:white; color:#333; border-bottom:1px solid #ddd;">
-            <button onclick="closePdf()" style="border:none; background:none; font-weight:bold; color:red;">Close</button>
-            <b id="pdf-title" style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Doc</b>
-            <div style="width:30px;"></div>
-        </div>
-        <iframe id="pdf-frame" style="flex:1; border:none; width:100%;"></iframe>
-    </div>
-
-    <div id="settings-view" class="overlay hidden flex">
-        <div class="auth-box">
-            <h3>Update Profile</h3>
-            <img id="set-dp-prev" src="" class="avatar" style="width:80px; height:80px; margin:15px auto;">
-            <input id="set-name" class="inp" placeholder="Change Name">
-            <input id="set-url" class="inp" placeholder="Paste Image URL (Optional)">
-            <button onclick="saveProfile()" class="btn">Save Changes</button>
-            <button onclick="doLogout()" class="btn-sec" style="border-color:red; color:red;">Log Out</button>
-            <button onclick="document.getElementById('settings-view').classList.add('hidden')" class="link" style="border:none; background:none;">Close</button>
-        </div>
     </div>
 
     <script type="module" src="login.js"></script>
