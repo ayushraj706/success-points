@@ -3,87 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperKey - Smart QR Generator</title>
+    <title>SuperKey - Smart QR Tool</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --primary: #1a73e8; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 90%; max-width: 400px; text-align: center; }
-        h2 { color: #202124; margin-bottom: 8px; }
-        p { color: #5f6368; font-size: 14px; margin-bottom: 24px; }
-        .upload-btn { background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; transition: 0.3s; }
-        .upload-btn:hover { background: #1557b0; }
-        #fileInput { display: none; }
-        #qr-result { margin-top: 25px; display: none; background: #f1f3f4; padding: 20px; border-radius: 12px; }
+        :root { --meta-blue: #0081fb; --meta-bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--meta-bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 12px 28px rgba(0,0,0,0.12); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #1c1e21; font-size: 24px; margin-bottom: 10px; }
+        .upload-area { border: 2px dashed #ccd0d5; padding: 30px; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+        .upload-area:hover { border-color: var(--meta-blue); background: #f7f8fa; }
+        .btn { background: var(--meta-blue); color: white; padding: 12px; border: none; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        #qr-box { margin-top: 30px; display: none; border-top: 1px solid #ddd; padding-top: 20px; }
         #qrcode { display: flex; justify-content: center; margin-bottom: 15px; }
-        .link-text { word-break: break-all; font-size: 12px; color: var(--primary); text-decoration: none; display: block; margin-top: 10px; }
-        .loader { display: none; color: var(--primary); font-size: 14px; margin-top: 10px; }
+        .link { font-size: 12px; color: var(--meta-blue); word-break: break-all; }
+        .loader { display: none; margin: 15px 0; font-weight: bold; color: #606770; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>SuperKey QR Tool</h2>
-    <p>फोटो या फाइल अपलोड करें और तुरंत QR कोड पाएँ</p>
+    <p style="color: #606770;">फाइल अपलोड करें और उसका QR कोड पाएँ</p>
     
-    <label for="fileInput" class="upload-btn">फाइल चुनें</label>
-    <input type="file" id="fileInput" onchange="uploadToCloudinary(this)">
-    
-    <div id="loader" class="loader">अपलोड हो रहा है... कृपया रुकें</div>
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <span id="file-label">यहाँ क्लिक करके फोटो चुनें</span>
+        <input type="file" id="fileInput" style="display:none" onchange="startUpload(this)">
+    </div>
 
-    <div id="qr-result">
+    <div id="loader" class="loader">प्रोसेसिंग... 🚀</div>
+
+    <div id="qr-box">
         <div id="qrcode"></div>
-        <span style="font-size: 12px; color: #5f6368;">आपका पब्लिक लिंक:</span>
-        <a id="public-link" class="link-text" target="_blank"></a>
+        <p style="font-size: 13px;">आपका लिंक तैयार है:</p>
+        <a id="final-link" class="link" target="_blank"></a>
     </div>
 </div>
 
 <script>
     const CLOUD_NAME = "dprbizfao";
-    const UPLOAD_PRESET = "ml_default"; // नोट: Cloudinary में एक 'Unsigned Upload Preset' बनाना होगा जिसका नाम 'ml_default' हो।
+    const PRESET_ID = "3d2f1ace-6e44-4aaf-942f-8a0ee98ecba9"; // तुम्हारी लंबी ID
 
-    function uploadToCloudinary(input) {
+    function startUpload(input) {
         const file = input.files[0];
-        if (!file) return;
+        if(!file) return;
 
-        const loader = document.getElementById('loader');
-        const qrResult = document.getElementById('qr-result');
-        const qrCodeDiv = document.getElementById('qrcode');
-        
-        loader.style.display = 'block';
-        qrResult.style.display = 'none';
-        qrCodeDiv.innerHTML = "";
+        document.getElementById('file-label').innerText = file.name;
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('qr-box').style.display = 'none';
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', UPLOAD_PRESET);
+        formData.append('upload_preset', PRESET_ID); // लंबी ID यहाँ काम करेगी
 
-        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+        fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-            loader.style.display = 'none';
-            if (data.secure_url) {
-                qrResult.style.display = 'block';
-                // Generate QR Code
-                new QRCode(qrCodeDiv, {
+            document.getElementById('loader').style.display = 'none';
+            if(data.secure_url) {
+                document.getElementById('qr-box').style.display = 'block';
+                document.getElementById('qrcode').innerHTML = "";
+                new QRCode(document.getElementById('qrcode'), {
                     text: data.secure_url,
-                    width: 150,
-                    height: 150
+                    width: 160,
+                    height: 160
                 });
-                // Set Link
-                document.getElementById('public-link').href = data.secure_url;
-                document.getElementById('public-link').innerText = data.secure_url;
+                document.getElementById('final-link').href = data.secure_url;
+                document.getElementById('final-link').innerText = data.secure_url;
             } else {
-                alert("अपलोड फेल हो गया। कृपया अपना 'Upload Preset' चेक करें।");
+                alert("अपलोड एरर: " + data.error.message);
             }
         })
         .catch(err => {
-            loader.style.display = 'none';
-            console.error(err);
-            alert("कुछ गड़बड़ हुई!");
+            document.getElementById('loader').style.display = 'none';
+            alert("नेटवर्क एरर!");
         });
     }
 </script>
