@@ -4,187 +4,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Success Point Hub</title>
+    <meta name="description" content="Class 10 Study Hub">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        body { background-color: #f0f2f5; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; overflow: hidden; }
+        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        /* SMOOTH ANIMATIONS */
-        .btn-click { transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .btn-click:active { transform: scale(0.95); }
+        /* HEADER & DOCK */
+        .app-header { height: 60px; position: fixed; top: 0; width: 100%; z-index: 50; background: #008069; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .app-dock { position: fixed; bottom: 0; width: 100%; height: 65px; z-index: 50; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; padding-bottom: 5px; }
         
-        /* SKELETON SHIMMER */
-        .skeleton { background: #e4e6eb; position: relative; overflow: hidden; }
-        .skeleton::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); animation: shimmer 1.5s infinite; }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+        .dock-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; font-size: 10px; font-weight: 500; transition: color 0.2s; }
+        .dock-btn i { font-size: 20px; margin-bottom: 4px; }
+        .dock-btn.active { color: #008069; }
 
-        /* HIDE SCROLLBAR */
-        .no-scroll::-webkit-scrollbar { display: none; }
-        
-        /* META CARD STYLE */
-        .meta-card { background: white; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: all 0.2s; }
-        .nav-active { color: #008069; font-weight: 700; }
-        .nav-inactive { color: #65676b; font-weight: 500; }
+        /* SCROLL AREA FIX (SST Button Cutoff Solved) */
+        .main-scroll { height: 100vh; overflow-y: auto; padding-top: 70px; padding-bottom: 100px; } 
+
+        /* CARDS */
+        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 12px; }
+        .subject-card { background: white; border-radius: 16px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-bottom: 4px solid transparent; transition: transform 0.1s; cursor: pointer; }
+        .subject-card:active { transform: scale(0.97); }
+
+        /* CHAT BUBBLES */
+        .msg-me { align-self: flex-end; background: #d9fdd3; border-radius: 8px 0 8px 8px; }
+        .msg-other { align-self: flex-start; background: white; border-radius: 0 8px 8px 8px; }
+
+        /* LOADING SPINNER */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #008069; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body class="overflow-hidden">
 
-    <div id="skeleton-view" class="fixed inset-0 z-[9999] bg-white p-4 flex flex-col gap-4">
-        <div class="h-14 w-full skeleton rounded-xl mb-2"></div>
-        <div class="h-40 w-full skeleton rounded-2xl mb-2"></div>
-        <div class="grid grid-cols-2 gap-4">
-            <div class="h-28 skeleton rounded-xl"></div>
-            <div class="h-28 skeleton rounded-xl"></div>
-            <div class="h-28 skeleton rounded-xl"></div>
-            <div class="h-28 skeleton rounded-xl"></div>
-        </div>
-        <div class="h-16 w-full skeleton rounded-t-2xl mt-auto"></div>
-    </div>
-
-    <div id="auth-view" class="hidden fixed inset-0 z-[5000] bg-[#f0f2f5] flex flex-col items-center justify-center p-6">
-        <div class="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm text-center">
-            <h1 class="text-3xl font-bold text-[#008069] mb-2">Success Point</h1>
-            <p class="text-gray-500 mb-8">Class 10th Digital Hub</p>
-            
-            <button id="google-btn" class="w-full btn-click bg-white border border-gray-300 py-3 rounded-xl font-bold flex items-center justify-center gap-3 shadow-sm mb-6">
-                <i class="fa-brands fa-google text-xl text-red-500"></i> Continue with Google
-            </button>
-            
-            <div class="border-t border-gray-200 my-4 relative"><span class="absolute top-[-10px] left-1/2 translate-x-[-50%] bg-white px-2 text-gray-400 text-sm">OR</span></div>
-            
-            <input id="auth-email" type="email" placeholder="Email Address" class="w-full p-3 bg-gray-100 rounded-xl mb-3 outline-none focus:ring-2 ring-[#008069]">
-            <input id="auth-pass" type="password" placeholder="Password" class="w-full p-3 bg-gray-100 rounded-xl mb-4 outline-none focus:ring-2 ring-[#008069]">
-            
-            <button id="login-btn" class="w-full btn-click bg-[#008069] text-white py-3 rounded-xl font-bold shadow-lg">Login</button>
-        </div>
-    </div>
-
-    <div id="app-view" class="hidden flex-grow flex flex-col h-full relative">
-        
-        <header class="h-[60px] bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shadow-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-[#008069] rounded-lg flex items-center justify-center text-white font-bold">SP</div>
-                <h1 class="font-bold text-gray-800 text-lg">Hub</h1>
+    <div id="auth-view" class="fixed inset-0 z-[100] bg-[#008069] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-[#008069]">Success Point</h1>
+                <p class="text-gray-500 text-sm">Class 10th Study Hub</p>
             </div>
-            <div class="flex gap-4 items-center">
-                <button onclick="sendOTP()" class="btn-click text-gray-600"><i class="fa-solid fa-envelope text-xl"></i></button>
-                <img id="head-av" src="" class="w-9 h-9 rounded-full bg-gray-200 border border-gray-300">
+
+            <div id="login-form">
+                <input type="email" id="l-email" placeholder="Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none focus:border-[#008069]">
+                <input type="password" id="l-pass" placeholder="Password" class="w-full p-3 bg-gray-50 border rounded-lg mb-2 outline-none focus:border-[#008069]">
+                <div class="text-right mb-4">
+                    <span onclick="toggleForgot()" class="text-xs text-[#008069] font-bold cursor-pointer">Forgot Password?</span>
+                </div>
+                <button id="btn-login" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-md active:scale-95 transition-transform">Login</button>
+                <div class="my-4 flex items-center gap-2"><div class="h-[1px] bg-gray-200 flex-grow"></div><span class="text-gray-400 text-xs">OR</span><div class="h-[1px] bg-gray-200 flex-grow"></div></div>
+                <button id="btn-google" class="w-full border border-gray-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 active:bg-gray-50"><i class="fa-brands fa-google text-red-500"></i> Google Login</button>
+                <p class="text-center mt-4 text-sm">New here? <span onclick="toggleMode()" class="text-[#008069] font-bold cursor-pointer">Create Account</span></p>
+            </div>
+
+            <div id="signup-form" class="hidden">
+                <input type="text" id="s-name" placeholder="Full Name" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none">
+                <input type="email" id="s-email" placeholder="Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-3 outline-none">
+                <input type="password" id="s-pass" placeholder="Create Password" class="w-full p-3 bg-gray-50 border rounded-lg mb-4 outline-none">
+                <button id="btn-signup" class="w-full bg-[#008069] text-white py-3 rounded-lg font-bold shadow-md">Sign Up</button>
+                <p class="text-center mt-4 text-sm">Have account? <span onclick="toggleMode()" class="text-[#008069] font-bold cursor-pointer">Login</span></p>
+            </div>
+
+            <div id="forgot-form" class="hidden text-center">
+                <h3 class="font-bold text-gray-700 mb-2">Reset Password</h3>
+                <p class="text-xs text-gray-500 mb-4">Enter email to receive reset link</p>
+                <input type="email" id="f-email" placeholder="Your Email" class="w-full p-3 bg-gray-50 border rounded-lg mb-4 outline-none">
+                <button id="btn-forgot" class="w-full bg-orange-500 text-white py-3 rounded-lg font-bold mb-3">Send Link</button>
+                <span onclick="toggleForgot()" class="text-sm text-gray-400 cursor-pointer">Cancel</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-view" class="hidden h-screen flex flex-col bg-[#f0f2f5]">
+        
+        <header class="app-header">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white font-bold">SP</div>
+                <h1 class="font-bold text-lg tracking-wide">Hub</h1>
+            </div>
+            <div class="flex gap-3 items-center">
+                <button onclick="doLogout()" class="text-white text-xs bg-white/20 px-2 py-1 rounded">Logout</button>
+                <img id="head-av" src="https://ui-avatars.com/api/?name=User&background=random" class="w-8 h-8 rounded-full border border-white">
             </div>
         </header>
 
-        <div id="main-content" class="flex-grow overflow-y-auto p-4 pb-24 no-scroll">
+        <div id="main-content" class="main-scroll px-4">
             
             <div id="tab-home" class="animate-fade">
-                <div id="countdown-box" class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-5 rounded-2xl shadow-lg mb-6 flex items-center justify-between relative overflow-hidden">
-                    <div class="z-10">
-                        <p class="text-xs opacity-90 uppercase tracking-widest mb-1">Board Exam 2026</p>
-                        <h2 class="text-2xl font-bold" id="days-left">Loading...</h2>
-                    </div>
-                    <i class="fa-solid fa-hourglass-half text-5xl opacity-20 absolute right-[-5px] bottom-[-10px] rotate-12"></i>
+                <div class="bg-gradient-to-r from-[#008069] to-[#00a884] text-white p-4 rounded-xl shadow-lg mb-6 flex items-center justify-between">
+                    <div><p class="text-xs opacity-80 uppercase">Board Exam 2026</p><h2 class="text-2xl font-bold" id="days-left">Loading...</h2></div>
+                    <i class="fa-solid fa-hourglass-half text-4xl opacity-30"></i>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div onclick="openList('science', 'Science Q-Bank')" class="meta-card p-4 h-32 flex flex-col items-center justify-center btn-click border-b-4 border-blue-500">
-                        <i class="fa-solid fa-flask text-3xl text-blue-500 mb-2"></i>
-                        <span class="font-bold text-gray-700">Science</span>
-                        <span class="text-[10px] text-gray-400">PYQ 2020-25</span>
-                    </div>
-                    <div onclick="openList('math', 'Math Q-Bank')" class="meta-card p-4 h-32 flex flex-col items-center justify-center btn-click border-b-4 border-red-500">
-                        <i class="fa-solid fa-calculator text-3xl text-red-500 mb-2"></i>
-                        <span class="font-bold text-gray-700">Math</span>
-                        <span class="text-[10px] text-gray-400">All Sets</span>
-                    </div>
-                    <div onclick="switchV('v-hindi-menu')" class="meta-card p-4 h-32 flex flex-col items-center justify-center btn-click border-b-4 border-orange-500">
-                        <i class="fa-solid fa-book-open text-3xl text-orange-500 mb-2"></i>
-                        <span class="font-bold text-gray-700">Hindi</span>
-                        <span class="text-[10px] text-gray-400">Gadya/Kavya</span>
-                    </div>
-                    <div onclick="openList('sst', 'SST Q-Bank')" class="meta-card p-4 h-32 flex flex-col items-center justify-center btn-click border-b-4 border-purple-500">
-                        <i class="fa-solid fa-landmark text-3xl text-purple-500 mb-2"></i>
-                        <span class="font-bold text-gray-700">SST</span>
-                        <span class="text-[10px] text-gray-400">History/Civics</span>
-                    </div>
-                    <div onclick="openList('sanskrit', 'Sanskrit')" class="col-span-2 meta-card p-4 h-24 flex items-center justify-center gap-4 btn-click border-b-4 border-yellow-500">
-                        <i class="fa-solid fa-om text-3xl text-yellow-600"></i>
-                        <div class="text-left">
-                            <span class="font-bold text-gray-700 block">Sanskrit</span>
-                            <span class="text-xs text-gray-400">Full Chapters (1-14)</span>
-                        </div>
-                    </div>
+                    <div onclick="openList('science', 'Science Q-Bank')" class="subject-card border-blue-500 text-blue-600"><i class="fa-solid fa-flask text-2xl mb-2"></i><b class="text-sm">Science</b></div>
+                    <div onclick="openList('math', 'Math Q-Bank')" class="subject-card border-red-500 text-red-600"><i class="fa-solid fa-calculator text-2xl mb-2"></i><b class="text-sm">Math</b></div>
+                    <div onclick="switchV('v-hindi-menu')" class="subject-card border-orange-500 text-orange-600"><i class="fa-solid fa-book-open text-2xl mb-2"></i><b class="text-sm">Hindi</b></div>
+                    <div onclick="openList('sst', 'SST Q-Bank')" class="subject-card border-purple-500 text-purple-600"><i class="fa-solid fa-landmark text-2xl mb-2"></i><b class="text-sm">SST</b></div>
+                    <div onclick="openList('sanskrit', 'Sanskrit')" class="col-span-2 subject-card border-yellow-500 text-yellow-600 h-16 flex-row gap-3"><i class="fa-solid fa-om text-2xl"></i><b class="text-sm">Sanskrit (Full)</b></div>
                 </div>
             </div>
 
             <div id="tab-people" class="hidden">
-                <div class="bg-white p-3 rounded-xl shadow-sm mb-4 sticky top-0 z-10 flex items-center gap-2">
-                    <i class="fa-solid fa-search text-gray-400"></i>
-                    <input id="p-search" onkeyup="filterPeople()" class="flex-grow outline-none text-sm" placeholder="Find friends...">
+                <div class="bg-white p-3 rounded-lg shadow-sm mb-4 sticky top-0 z-10 flex gap-2 border">
+                    <i class="fa-solid fa-search text-gray-400 mt-1"></i>
+                    <input id="p-search" onkeyup="filterPeople()" class="flex-grow outline-none text-sm" placeholder="Search friends...">
                 </div>
-                <div id="people-list" class="space-y-3"></div>
+                <div id="people-list" class="space-y-2 pb-20">Loading Users...</div>
             </div>
 
             <div id="tab-chat" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Messages</h2>
-                <div id="recent-chats" class="space-y-2"></div>
+                <h2 class="font-bold text-gray-700 mb-4 px-2">Your Conversations</h2>
+                <div id="recent-chats" class="space-y-2 pb-20">
+                    <div class="text-center text-gray-400 mt-10 text-sm">No chats yet. Go to People tab to start!</div>
+                </div>
             </div>
 
             <div id="v-hindi-menu" class="hidden">
-                <button onclick="switchV('tab-home')" class="mb-4 text-gray-500 font-bold flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <button onclick="switchV('tab-home')" class="mb-4 text-gray-500 font-bold text-sm"><i class="fa-solid fa-arrow-left"></i> Back</button>
                 <div class="space-y-3">
-                    <div onclick="openList('gad', 'Gadya Khand')" class="meta-card p-4 flex items-center justify-between btn-click"><b>📖 Gadya Khand</b><i class="fa-solid fa-chevron-right text-gray-400"></i></div>
-                    <div onclick="openList('kav', 'Kavya Khand')" class="meta-card p-4 flex items-center justify-between btn-click"><b>🎼 Kavya Khand</b><i class="fa-solid fa-chevron-right text-gray-400"></i></div>
-                    <div onclick="openList('var', 'Varnika')" class="meta-card p-4 flex items-center justify-between btn-click"><b>📚 Varnika</b><i class="fa-solid fa-chevron-right text-gray-400"></i></div>
+                    <div onclick="openList('gad', 'Gadya Khand')" class="card flex justify-between items-center cursor-pointer"><b>📖 Gadya</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
+                    <div onclick="openList('kav', 'Kavya Khand')" class="card flex justify-between items-center cursor-pointer"><b>🎼 Kavya</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
+                    <div onclick="openList('var', 'Varnika')" class="card flex justify-between items-center cursor-pointer"><b>📚 Varnika</b> <i class="fa-solid fa-chevron-right text-gray-300"></i></div>
                 </div>
             </div>
 
             <div id="v-list" class="hidden">
-                <div class="flex items-center gap-3 mb-4">
+                <div class="flex items-center gap-3 mb-4 sticky top-0 bg-[#f0f2f5] py-2 z-10">
                     <button onclick="goBack()" class="w-8 h-8 rounded-full bg-white shadow flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-                    <b id="list-title" class="text-xl text-[#008069]">Files</b>
+                    <b id="list-title" class="text-[#008069]">Files</b>
                 </div>
-                <div id="list-container" class="space-y-3"></div>
+                <div id="list-container" class="space-y-2 pb-20"></div>
             </div>
 
-        </div>
-
-        <div id="v-room" class="fixed inset-0 bg-[#e5ddd5] z-[3000] hidden flex flex-col">
+        </div> <div id="v-room" class="fixed inset-0 bg-[#e5ddd5] z-[200] hidden flex flex-col">
             <div class="h-[60px] bg-[#008069] flex items-center px-3 gap-3 shadow text-white">
                 <button onclick="switchV('tab-chat')"><i class="fa-solid fa-arrow-left text-xl"></i></button>
-                <div id="rm-av" class="w-9 h-9 bg-white text-[#008069] rounded-full flex items-center justify-center font-bold text-sm"></div>
-                <b id="rm-name" class="truncate flex-grow text-lg">User</b>
+                <div id="rm-av" class="w-9 h-9 bg-white text-[#008069] rounded-full flex items-center justify-center font-bold"></div>
+                <div class="flex-grow overflow-hidden"><b id="rm-name" class="truncate block">User</b><span class="text-[10px] opacity-80">Online</span></div>
             </div>
-            <div id="msg-log" class="flex-grow overflow-y-auto p-4 space-y-2"></div>
-            <div class="p-2 bg-white flex items-center gap-2 shadow-inner">
-                <input id="m-in" class="flex-grow bg-gray-100 p-3 rounded-full outline-none" placeholder="Message...">
-                <button onclick="sndMsg()" class="w-10 h-10 bg-[#008069] text-white rounded-full flex items-center justify-center btn-click"><i class="fa-solid fa-paper-plane"></i></button>
+            <div id="msg-log" class="flex-grow overflow-y-auto p-4 flex flex-col gap-2"></div>
+            <div class="p-2 bg-white flex items-center gap-2">
+                <input id="m-in" class="flex-grow bg-gray-100 p-3 rounded-full outline-none" placeholder="Type a message...">
+                <button onclick="sndMsg()" class="w-10 h-10 bg-[#008069] text-white rounded-full flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
             </div>
         </div>
 
-        <div id="v-frame" class="fixed inset-0 bg-white z-[4000] hidden flex flex-col">
-            <div class="h-[50px] bg-white border-b flex items-center justify-between px-4">
-                <button onclick="closeFrame()" class="text-gray-800 font-bold"><i class="fa-solid fa-xmark text-xl"></i></button>
-                <b id="file-title" class="truncate text-sm">Document</b>
-                <div class="w-5"></div>
+        <div id="v-frame" class="fixed inset-0 bg-white z-[300] hidden flex flex-col">
+            <div class="h-[50px] border-b flex items-center justify-between px-4 bg-gray-50">
+                <button onclick="closeFrame()" class="text-red-600 font-bold text-sm">Close</button>
+                <b id="file-title" class="truncate text-sm max-w-[200px]">Doc</b>
+                <div class="w-8"></div>
             </div>
             <iframe id="main-frame" class="flex-grow w-full border-none"></iframe>
         </div>
 
-        <nav class="fixed bottom-0 w-full bg-white h-[65px] border-t border-gray-200 flex justify-around items-center z-40 pb-1 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]">
-            <button onclick="switchV('tab-home')" class="nav-btn nav-active flex flex-col items-center w-1/4 btn-click">
-                <i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px]">Home</span>
-            </button>
-            <button onclick="switchV('tab-people')" class="nav-btn nav-inactive flex flex-col items-center w-1/4 btn-click">
-                <i class="fa-solid fa-users text-xl mb-1"></i><span class="text-[10px]">People</span>
-            </button>
-            <button onclick="switchV('tab-chat')" class="nav-btn nav-inactive flex flex-col items-center w-1/4 btn-click">
-                <i class="fa-solid fa-comment-dots text-xl mb-1"></i><span class="text-[10px]">Chat</span>
-            </button>
+        <nav class="app-dock">
+            <button onclick="switchV('tab-home')" class="dock-btn active"><i class="fa-solid fa-house"></i>Home</button>
+            <button onclick="switchV('tab-people')" class="dock-btn"><i class="fa-solid fa-users"></i>People</button>
+            <button onclick="switchV('tab-chat')" class="dock-btn"><i class="fa-solid fa-comment-dots"></i>Chat</button>
         </nav>
     </div>
 
-    <script src="send.js"></script>
+    <script>
+        // UI Helpers
+        function toggleMode() { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('signup-form').classList.toggle('hidden'); }
+        function toggleForgot() { document.getElementById('login-form').classList.toggle('hidden'); document.getElementById('forgot-form').classList.toggle('hidden'); }
+    </script>
     <script type="module" src="login.js"></script>
 </body>
 </html>
