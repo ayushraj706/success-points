@@ -3,64 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infinity Key - Educational OS</title>
+    <title>Infinity Key - Firebase OS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
-        :root { --bg: #050505; --card: #111; --text: #fff; --accent: #00ffcc; --border: 1px solid rgba(255,255,255,0.08); }
+        :root {
+            --bg: #050505; --card: #111; --text: #fff; --accent: #00ffcc;
+            --glass: rgba(10, 10, 10, 0.85); --border: 1px solid rgba(255,255,255,0.08);
+        }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
 
-        /* LOGIN SCREEN */
-        #auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--accent); text-align: center; width: 300px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; box-sizing: border-box; }
-        .btn { background: var(--accent); color: #000; border: none; padding: 12px; border-radius: 25px; width: 100%; font-weight: bold; cursor: pointer; }
+        /* --- AUTH SCREEN --- */
+        #auth-overlay {
+            position: fixed; inset: 0; background: var(--bg); z-index: 10000;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        .auth-card {
+            background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--accent);
+            width: 85%; max-width: 320px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.1);
+        }
+        input {
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px;
+            background: #222; color: #fff; border: 1px solid #333; box-sizing: border-box;
+        }
+        .btn {
+            background: var(--accent); color: #000; border: none; padding: 12px;
+            border-radius: 25px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
 
-        /* VIDEO MODAL */
-        #video-modal { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: none; padding: 20px; }
-        .v-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 20px; }
-        iframe { width: 100%; height: 250px; border-radius: 15px; border: 1px solid var(--accent); }
+        /* --- MAIN OS UI --- */
+        #main-os { display: none; height: 100vh; overflow-y: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; padding: 20px; }
+        .card { background: var(--card); border-radius: 18px; padding: 20px; text-align: center; border: var(--border); transition: 0.3s; }
+        .card:active { transform: scale(0.95); }
+
+        /* --- VIDEO PLAYER --- */
+        #video-modal {
+            position: fixed; inset: 0; background: var(--bg); z-index: 5000;
+            display: none; flex-direction: column; padding: 20px;
+        }
+        iframe { width: 100%; height: 220px; border-radius: 15px; border: 1px solid var(--accent); }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
     <div id="auth-overlay">
         <div class="auth-card">
-            <h2 style="color:var(--accent)">BaseKey Login</h2>
+            <i class="fas fa-infinity" style="font-size: 3rem; color: var(--accent); margin-bottom: 10px;"></i>
+            <h2 id="auth-title">BaseKey Login</h2>
             <div id="email-step">
-                <input type="email" id="u-email" placeholder="Enter Email">
-                <button onclick="sendOTP()" class="btn">Send OTP</button>
+                <input type="email" id="user-email" placeholder="Enter Email Address">
+                <button onclick="sendOTP()" class="btn">Get 6-Digit OTP</button>
             </div>
             <div id="otp-step" style="display:none;">
-                <input type="number" id="u-otp" placeholder="Enter 6-Digit OTP">
-                <button onclick="verifyOTP()" class="btn">Verify & Enter</button>
+                <input type="number" id="user-otp" placeholder="Enter 6-Digit Code">
+                <button onclick="verifyOTP()" class="btn">Verify & Access</button>
+                <p style="font-size: 0.7rem; opacity: 0.6; margin-top: 10px;">Check your email/sim for code</p>
             </div>
         </div>
     </div>
 
-    <div id="main-os" style="display:none;">
-        <header style="padding: 20px; display: flex; justify-content: space-between;">
-            <div><i class="fas fa-infinity"></i> BaseKey OS</div>
-            <i class="fas fa-sign-out-alt" onclick="logout()" style="color:red; cursor:pointer;"></i>
+    <div id="main-os">
+        <header style="padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--glass);">
+            <div><i class="fas fa-infinity"></i> BaseKey Chief</div>
+            <i class="fas fa-sign-out-alt" onclick="logout()" style="color:red; cursor:pointer; font-size: 1.2rem;"></i>
         </header>
 
-        <div style="padding: 20px;">
-            <div id="app-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
-                </div>
+        <div style="padding: 10px 20px;">
+            <div class="grid" id="app-grid"></div>
         </div>
     </div>
 
     <div id="video-modal">
-        <button onclick="closeVideo()" style="color:white; background:none; border:none; font-size: 20px;"><i class="fas fa-arrow-left"></i> Back</button>
-        <div style="margin: 20px 0;">
-            <input type="text" id="v-search" placeholder="Search Open Video..." style="width:70%;">
-            <button onclick="searchVideo()" class="btn" style="width:25%; display:inline-block; margin-left:5px;">Search</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button onclick="closeVideo()" style="background:none; border:none; color:white; font-size: 1.5rem;"><i class="fas fa-times"></i></button>
+            <input type="text" id="v-search" placeholder="Search Open Video..." style="flex: 1;">
+            <button onclick="searchVideo()" style="background:var(--accent); border:none; padding: 10px; border-radius: 50%;"><i class="fas fa-search"></i></button>
         </div>
         <div id="player-container"></div>
-        <div id="v-results" class="v-grid"></div>
+        <div id="v-results" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; overflow-y: auto; margin-top: 15px;"></div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIG ---
+        // --- 1. FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCDmDsi_JMQgx_QO4p8bnvfh-vKdN4Bmk8",
             authDomain: "success-points.firebaseapp.com",
@@ -70,79 +99,102 @@
             appId: "1:51177935348:web:33fc4a6810790a3cbd29a1",
             measurementId: "G-64DR1TSTKY"
         };
+        firebase.initializeApp(firebaseConfig);
 
-        let generatedOTP = null;
+        let simulatedOTP = null;
 
-        // --- AUTH LOGIC ---
-        async function sendOTP() {
-            const email = document.getElementById('u-email').value;
-            if(!email) return alert("Email dalo bhai!");
-            generatedOTP = Math.floor(100000 + Math.random() * 900000);
+        // --- 2. AUTH LOGIC ---
+        function sendOTP() {
+            const email = document.getElementById('user-email').value;
+            if(!email.includes('@')) return alert("Sahi email dalo bhai!");
             
-            const res = await fetch('/api/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp: generatedOTP })
-            });
-
-            if(res.ok) {
-                document.getElementById('email-step').style.display = 'none';
-                document.getElementById('otp-step').style.display = 'block';
-                alert("OTP sent to your email!");
-            } else { alert("Error sending email!"); }
+            // Simulating OTP (Firebase se real email OTP ke liye Cloud Function chahiye hota hai)
+            simulatedOTP = Math.floor(100000 + Math.random() * 900000);
+            console.log("System OTP:", simulatedOTP); // For Testing
+            
+            document.getElementById('email-step').style.display = 'none';
+            document.getElementById('otp-step').style.display = 'block';
+            alert("OTP Bhej diya gaya hai (Check Console for now)!");
         }
 
         function verifyOTP() {
-            if(document.getElementById('u-otp').value == generatedOTP) {
-                localStorage.setItem('isAuth', 'true');
-                showOS();
-            } else { alert("Wrong OTP!"); }
+            const input = document.getElementById('user-otp').value;
+            if(input == simulatedOTP) {
+                localStorage.setItem('basekey_session', 'active');
+                enterOS();
+            } else {
+                alert("Galat OTP! Fir se koshish karein.");
+            }
         }
 
-        function showOS() {
+        function enterOS() {
             document.getElementById('auth-overlay').style.display = 'none';
             document.getElementById('main-os').style.display = 'block';
             renderApps();
         }
 
-        function logout() { localStorage.removeItem('isAuth'); location.reload(); }
+        function logout() {
+            localStorage.removeItem('basekey_session');
+            location.reload();
+        }
 
-        // --- APPS & VIDEO LOGIC ---
+        // --- 3. APPS DATA ---
         const apps = [
-            { n: "Infinity Video", i: "fas fa-play-circle", t: "video", action: openVideo },
-            { n: "BaseKey AI", i: "fas fa-robot", t: "ai", u: "https://ayus.fun" }
+            { n: "Infinity Video", i: "fas fa-play-circle", c: "#ff4444", action: () => openVideo() },
+            { n: "BaseKey AI", i: "fas fa-robot", c: "#00ffcc", u: "https://ayus.fun" },
+            { n: "Science Lab", i: "fas fa-flask", c: "#ffcc00", u: "alchemy.html" },
+            { n: "Math Solver", i: "fas fa-calculate", c: "#aa66ff", u: "math.html" }
         ];
 
         function renderApps() {
             const grid = document.getElementById('app-grid');
             grid.innerHTML = apps.map(app => `
-                <div onclick="${app.action ? 'openVideo()' : 'window.location.href=\''+app.u+'\''}" style="background:var(--card); padding:20px; border-radius:15px; text-align:center; border:var(--border);">
-                    <i class="${app.i}" style="font-size:30px; color:var(--accent);"></i>
-                    <h4>${app.n}</h4>
+                <div class="card" onclick="${app.action ? 'app.action()' : 'window.location.href=\''+app.u+'\''}">
+                    <i class="${app.i}" style="font-size: 2.5rem; color: ${app.c}; margin-bottom: 10px;"></i>
+                    <div style="font-weight: bold; font-size: 0.9rem;">${app.n}</div>
                 </div>
             `).join('');
         }
 
-        function openVideo() { document.getElementById('video-modal').style.display = 'block'; }
+        // --- 4. VIDEO LOGIC (OPEN SOURCE) ---
+        function openVideo() { document.getElementById('video-modal').style.display = 'flex'; }
         function closeVideo() { document.getElementById('video-modal').style.display = 'none'; }
 
         async function searchVideo() {
             const query = document.getElementById('v-search').value;
-            const res = await fetch(`https://vid.puffyan.us/api/v1/search?q=${query}`);
-            const data = await res.json();
-            document.getElementById('v-results').innerHTML = data.map(v => `
-                <div onclick="playVideo('${v.videoId}')" style="font-size:10px; cursor:pointer;">
-                    <img src="${v.videoThumbnails[0].url}" style="width:100%; border-radius:8px;">
-                    <p>${v.title}</p>
-                </div>
-            `).join('');
+            if(!query) return;
+            const results = document.getElementById('v-results');
+            results.innerHTML = "<p>Searching Colony...</p>";
+            
+            try {
+                const res = await fetch(`https://inv.vern.cc/api/v1/search?q=${query}`);
+                const data = await res.json();
+                results.innerHTML = data.map(v => `
+                    <div onclick="playVideo('${v.videoId}')" style="font-size: 0.7rem; cursor:pointer;">
+                        <img src="${v.videoThumbnails[0].url}" style="width:100%; border-radius: 10px;">
+                        <p>${v.title}</p>
+                    </div>
+                `).join('');
+            } catch (e) { results.innerHTML = "<p>Colony Busy. Try again!</p>"; }
         }
 
         function playVideo(id) {
-            document.getElementById('player-container').innerHTML = `<iframe src="https://vid.puffyan.us/embed/${id}" allowfullscreen></iframe>`;
+            document.getElementById('player-container').innerHTML = `
+                <iframe src="https://inv.vern.cc/embed/${id}" frameborder="0" allowfullscreen></iframe>
+                <button onclick="sharePlay('${id}')" class="btn" style="background: #25d366; color: white;">
+                    <i class="fab fa-whatsapp"></i> Share Play
+                </button>
+            `;
         }
 
-        window.onload = () => { if(localStorage.getItem('isAuth')) showOS(); };
+        function sharePlay(id) {
+            const url = `https://www.youtube.com/watch?v=${id}`;
+            window.open(`https://api.whatsapp.com/send?text=Bhai ye dekh BaseKey par: ${url}`);
+        }
+
+        window.onload = () => {
+            if(localStorage.getItem('basekey_session')) enterOS();
+        };
     </script>
 </body>
 </html>
